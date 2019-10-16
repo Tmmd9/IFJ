@@ -1,13 +1,13 @@
 /*****************************************************************************
- *	Predmet : Formální jazyky a pøekladaèe									 *
- *	Projekt : Implementace pøekladaèe imperativního jazyka IFJ19			 *
- *	Súbor	: scanner.h														 *
- *				-hlavièkovı súbor pre náš scanner (lexikálny analyzátor)	 *
- *	Tím		: èíslo 10 / varianta II										 *
- *	Autori	: Dominik Boboš (xbobos00)										 *
- *			  Peter Hudeèek (xhudec34)										 *
- *			  Timotej Kováèik (xkovac49)									 *
- *			  Dávid Oravec (xorave05)										 *
+ *	Predmet : FormÃ¡lnÃ­ jazyky a pÅ™ekladaÄe									 *
+ *	Projekt : Implementace pÅ™ekladaÄe imperativnÃ­ho jazyka IFJ19			 *
+ *	SÃºbor	: scanner.h														 *
+ *				-hlaviÄkovÃ½ sÃºbor pre nÃ¡Å¡ scanner (lexikÃ¡lny analyzÃ¡tor)	 *
+ *	TÃ­m		: ÄÃ­slo 10 / varianta II										 *
+ *	Autori	: Dominik BoboÅ¡ (xbobos00)										 *
+ *			  Peter HudeÄek (xhudec34)										 *
+ *			  Timotej KovÃ¡Äik (xkovac49)									 *
+ *			  DÃ¡vid Oravec (xorave05)										 *
  *																			 *
  *****************************************************************************/
 
