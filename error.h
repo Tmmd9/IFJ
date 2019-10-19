@@ -1,9 +1,9 @@
 /*
  *	Predmet : Formální jazyky a překladače
  *	Projekt : Implementace překladače imperativního jazyka IFJ19
- *	S�bor	: error.h
+ *	Súbor	: error.h
  *				-hlavičkový súbor pre error kódy
- *	T�m		: číslo 10 / varianta II
+ *	Tím		: číslo 10 / varianta II
  *	Autori	: Dominik Boboš (xbobos00)
  *			  Peter Hudeček (xhudec34)
  *			  Timotej Kováčik (xkovac49)
