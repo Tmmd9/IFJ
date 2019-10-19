@@ -34,7 +34,7 @@ typedef enum {
 	STATE_MINUS,				// konecny stav operatoru -
 	STATE_MULTIPLY,				// konecny stav operatoru *
 	STATE_DIVIDE,				// konecny stav operatoru /
-	STATE_DIVIDE_INT,
+	STATE_DIVIDE_INT,			// konecny stav {F8}
 	STATE_GREATER_THAN,
 	STATE_LESS_THAN,
 	STATE_GREATER_EQUAL,
