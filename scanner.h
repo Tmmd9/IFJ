@@ -14,6 +14,7 @@
 #ifndef _SCANNER_H_
 #define _SCANNER_H_
 
+#include <stdio.h>
 
 typedef enum {
 	STATE_START,					// startovaci stav {S}
@@ -56,8 +57,108 @@ typedef enum {
 	STATE_EOL,						// konecny stav {F22}
 } state;
 
+typedef enum
+{									//V ZADANI 3.1 !!PY je CASE SENSITIVE!!
+	//TODO vstavane funkcie su tiez  klucove slova
+	KEYWORD_DEF,					//def
+	KEYWORD_ELSE,					//else
+	KEYWORD_IF,						//if
+	KEYWORD_NONE,					//None
+	KEYWORD_PASS,					//pass - prikaz ktory nic nerobi
+	KEYWORD_RETURN,					//return
+	KEYWORD_WHILE,					//while
+
+	//KEYWORD_AND,					//su v py3 ale neviem ci aj v IFJ19
+	//KEYWORD_AS,
+	//KEYWORD_ASSERT,
+	//KEYWORD_CLASS,
+	//KEYWORD_DEL,
+	//KEYWORD_EXCEPT,
+	//KEYWORD_FINALLY,
+	//KEYWORD_FROM,
+	//KEYWORD_GLOBAL,
+	//KEYWORD_IMPORT,
+	//KEYWORD_IN,					//v zadani sa o nich nehovori, aspon som 
+	//KEYWORD_IS,					//ich tam ja nikde nevidel spomenute
+	//KEYWORD_LAMBDA,				//ale pre python su viacere z nich dost
+	//KEYWORD_NONLOCAL,				//dolezite tak neviem
+	//KEYWORD_NOT,
+	//KEYWORD_OR,
+	//KEYWORD_RAISE,
+	//KEYWORD_TRY,
+	//KEYWORD_WITH,
+	//KEYWORD_YIELD,				
+
+	//KEYWORD_FOR,					//v rozsireniach (12.7.1)
+	//KEYWORD_BREAK,
+	//KEYWORD_CONINUE,
+	//KEYWORD_ELIF,
+	//KEYWORD_TRUE,
+	//KEYWORD_FALSE,
+} Keyword;
+
+typedef enum 		///TODO need help with these check-if there are all we need
+{	
+	/*
+		Datove typy
+	*/
+	TYPE_INT,				
+	TYPE_FLOAT,						///float or double?
+	TYPE_STRING,
+	/*
+		ID / Keyword / OtherStuff
+	*/
+	TYPE_IDENTIFIER, 				/// Identifier
+	TYPE_KEYWORD, 					/// Keyword
+	TYPE_EOL,
+	TYPE_EOF,
+	TYPE_EMPTY,	///ak ani jeden z tychto, prip. placeholder dokym nenajdeme dalsie
+	/*
+		matematicke operacie
+	*/
+	//TYPE_BACKSLASH,				///backslash je vlastne na delenie ci?		
+	TYPE_PLUS,						//	'+'
+	TYPE_MINUS,						//	'-'
+	TYPE_MULTIPLY,					//	'*'
+	TYPE_DIVIDE,					//	'/'
+	TYPE_DIVIDE_INT,				//	'//'
+	TYPE_ASSIGN_VALUE,//mame toto vobec popisane v stavoch? ked priradzujeme hodnotu?
+	/*
+		logicke operacie
+	*/		
+	TYPE_GREATER_THAN,				//	>
+	TYPE_LESS_THAN,					// 	<
+	TYPE_GREATER_EQUAL,				//	>=
+	TYPE_LESS_EQUAL,				//  <=
+	TYPE_EQUALS,			//tieto harmim nema :D ale podla mna su useful
+	TYPE_NOT_EQUAL,			// 			--||--...alebo je to ekvivalent equals?
+	/*
+		Znaky + Space
+	*/		
+	TYPE_LEFT_PAR,					//	'('
+	TYPE_RIGHT_PAR,					//	')'
+	TYPE_COMMA,						// 	','
+	TYPE_SEMICOLON,					//	';'
+	TYPE_SPACE,						///kvoli indentom je to fajn sledovat nie?				
+} token_type;
+
 typedef struct {
 	//TODO
+	/**
+*	type -bud identifier, keyword, alebo specialny znak eg. EOL 
+	**/
+	token_type;
+
+	/** attribute
+* 	string that will hold string or identifier value-harmimova dynamicstring.c
+* 	integer value
+* 	double value
+* 	klucove slova - keyword
+	**/
+	//DynamicString dyn_string;			//TODO
+	int int_value;
+	double float_value;
+	Keyword keyword;
 } token;
 
 token getNextToken();
