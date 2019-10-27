@@ -68,26 +68,26 @@ typedef enum
 	KEYWORD_RETURN,					//return
 	KEYWORD_WHILE,					//while
 
-	//KEYWORD_AND,					//su v py3 ale neviem ci aj v IFJ19
-	//KEYWORD_AS,
-	//KEYWORD_ASSERT,
-	//KEYWORD_CLASS,
-	//KEYWORD_DEL,
-	//KEYWORD_EXCEPT,
-	//KEYWORD_FINALLY,
-	//KEYWORD_FROM,
-	//KEYWORD_GLOBAL,
-	//KEYWORD_IMPORT,
-	//KEYWORD_IN,					//v zadani sa o nich nehovori, aspon som 
-	//KEYWORD_IS,					//ich tam ja nikde nevidel spomenute
-	//KEYWORD_LAMBDA,				//ale pre python su viacere z nich dost
-	//KEYWORD_NONLOCAL,				//dolezite tak neviem
-	//KEYWORD_NOT,
-	//KEYWORD_OR,
-	//KEYWORD_RAISE,
-	//KEYWORD_TRY,
-	//KEYWORD_WITH,
-	//KEYWORD_YIELD,				
+	KEYWORD_AND,					//su v py3 ale neviem ci aj v IFJ19
+	KEYWORD_AS,
+	KEYWORD_ASSERT,
+	KEYWORD_CLASS,
+	KEYWORD_DEL,
+	KEYWORD_EXCEPT,
+	KEYWORD_FINALLY,
+	KEYWORD_FROM,
+	KEYWORD_GLOBAL,
+	KEYWORD_IMPORT,
+	KEYWORD_IN,					//v zadani sa o nich nehovori, aspon som 
+	KEYWORD_IS,					//ich tam ja nikde nevidel spomenute
+	KEYWORD_LAMBDA,				//ale pre python su viacere z nich dost
+	KEYWORD_NONLOCAL,				//dolezite tak neviem
+	KEYWORD_NOT,
+	KEYWORD_OR,
+	KEYWORD_RAISE,
+	KEYWORD_TRY,
+	KEYWORD_WITH,
+	KEYWORD_YIELD,				
 
 	//KEYWORD_FOR,					//v rozsireniach (12.7.1)
 	//KEYWORD_BREAK,
