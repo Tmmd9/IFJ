@@ -15,6 +15,7 @@
 #define _SCANNER_H_
 
 #include <stdio.h>
+#include "str.h"
 
 typedef enum {
 	STATE_START,					// startovaci stav {S}
@@ -143,24 +144,28 @@ typedef enum 		///TODO need help with these check-if there are all we need
 } token_type;
 
 typedef struct {
-	//TODO
-	/**
+    //TODO
+    /**
 *	type -bud identifier, keyword, alebo specialny znak eg. EOL 
-	**/
-	token_type;
+    **/
+    token_type type;
+    tokenAttribute attribute;
+} token;
 
 	/** attribute
 * 	string that will hold string or identifier value-harmimova dynamicstring.c
 * 	integer value
 * 	double value
 * 	klucove slova - keyword
-	**/
-	//DynamicString dyn_string;			//TODO
+
+*///
+typedef struct {
+	string *string;			//TODO
 	int int_value;
 	double float_value;
 	Keyword keyword;
-} token;
+} tokenAttribute;
 
-token getNextToken();
+int getNextToken(token *token);
 
 #endif	// !_SCANNER_H_
