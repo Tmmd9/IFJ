@@ -54,3 +54,48 @@ int stringAddChar(string *s, char c){
     s->str[s->length] = '\0';   //ukoncujeme retazec
     return STR_SUCCESS;
 }
+
+int stringCat(string *s, const char *str){
+    unsigned int newStrLength = strlen(str);
+    /*
+        pokial je dlzka 7 znamena to 7znakov + '\0'
+        t.j. 8alokovanych Bytov
+        preto chcem reallokovat pokial je aj dlzka slova 7
+        preto je takato podmienka
+    */
+    if (s->length + newStrLength + 1 >= s->allocSize)
+    {
+        //	+1 kvoli '\0'
+        unsigned int newLength = s->length + newStrLength + 1;
+        if((s->str = (char*) realloc(s->str, newLength)) == NULL)
+        {						//realloc(pointer, size)
+            return STR_ERR;
+        }
+        s->allocSize = newLength;
+    }
+    s->length = s->length + newStrLength;
+    strcat(s->str, str);
+    s->str[s->length] = '\0';
+
+    return STR_SUCCESS;
+}
+
+//kopiruje string zo source do dest
+int stringCpy(string *source, string *dest){
+	unsigned newStrLength = source->length;
+	//pokial je velkost source vacsia ako dest velkost musim realokovat
+	if (newStrLength >= dest->allocSize)
+	{
+		//realokujem dest->str pointer na velkost source = new_str_length
+		// +1 kvoli '\0'
+		if ((dest->str = (char *) realloc(dest->str, newStrLength + 1)) == NULL)
+		{
+			return STR_ERR;
+		}
+		//inkrementujem +1 kvoli '\0'
+		dest->allocSize = newStrLength + 1;
+	}
+	strcpy(dest->str, source->str);
+	dest->length = new_StrLength;
+	return STR_SUCCESS;
+}

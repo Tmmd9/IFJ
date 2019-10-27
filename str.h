@@ -28,9 +28,8 @@ int stringInit(string *s);
 void stringStrFree(string *s);
 void stringFree(string *s);
 int stringAddChar(string *s, char c);
-
-
-
+int stringCat(string *s, const char *str);
+int stringCpy(string *source, string *dest);
 
 
 #endif //IFJ_STR_H
