@@ -181,7 +181,7 @@ token getNextToken();
 //inicializuje (malloc) string
 int DynamicString_init(dyn_string *s);
 //realokuje a pridava znak ch
-int DynamicString_add_char(dyn_string *s, char ch)
+int DynamicString_add_char(dyn_string *s, char ch);
 // uvolnenie pamate alokovanej stringom
 void DynamicString_free(dyn_string *s);
 // realloc , concatuje new string na koniec stareho stringu
@@ -200,8 +200,6 @@ neviem kedy to budeme potrebovat ale v takom pripade to staci len odkomentovat :
 //kopiruje string zo source do dest
 int DynamicString_copy(DynamicString *source, DynamicString *dest)
 */
-void DynamicString_free(dyn_string *s);
-
 void DynamicString_clear(dyn_string *s);
 
 
