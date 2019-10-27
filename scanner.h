@@ -103,7 +103,7 @@ typedef enum 		///TODO need help with these check-if there are all we need
 		Datove typy
 	*/
 	TYPE_INT,				
-	TYPE_FLOAT,						///float or double?
+	TYPE_FLOAT,					//actually float v PY je ako double v C :D
 	TYPE_STRING,
 	/*
 		ID / Keyword / OtherStuff
@@ -140,14 +140,23 @@ typedef enum 		///TODO need help with these check-if there are all we need
 	TYPE_COMMA,						// 	','
 	TYPE_SEMICOLON,					//	';'
 	TYPE_SPACE,						///kvoli indentom je to fajn sledovat nie?				
-} token_type;
+} Token_type;
+
+
+///struktura ku stringu, ktory uchovava hodnoty napr. komentaru alebo tak.
+typedef struct  
+{									
+	char *string; 						// samotny string s \0 nakonci
+	unsigned length; 				// dlzka stringu -nemozu byt zaporne
+	unsigned alloc_size; 			// alokovana velkost stringu -nemozu byt zaporne
+} DynamicString;
 
 typedef struct {
 	//TODO
 	/**
 *	type -bud identifier, keyword, alebo specialny znak eg. EOL 
 	**/
-	token_type;
+	Token_type token_type;
 
 	/** attribute
 * 	string that will hold string or identifier value-harmimova dynamicstring.c
@@ -155,12 +164,45 @@ typedef struct {
 * 	double value
 * 	klucove slova - keyword
 	**/
-	//DynamicString dyn_string;			//TODO
+	DynamicString dyn_string;			//TODO like DH probably"
 	int int_value;
 	double float_value;
 	Keyword keyword;
 } token;
 
+// nastavi source file ktory sa bude spracovavat
+void set_source(FILE *f);
+
 token getNextToken();
+
+/*
+	DynamicString things
+*/
+//inicializuje (malloc) string
+int DynamicString_init(dyn_string *s);
+//realokuje a pridava znak ch
+int DynamicString_add_char(dyn_string *s, char ch)
+// uvolnenie pamate alokovanej stringom
+void DynamicString_free(dyn_string *s);
+// realloc , concatuje new string na koniec stareho stringu
+int DynamicString_add_string(dyn_string *s, char *str);
+/*
+//setovat bude treba asi az v inych .c suboroch, 
+tuto to totizto mam vsetko deklarovane
+takze tuto funkciu potom asi bude treba inde
+
+void DynamicString_set(Dynamic_string *string);
+*/
+
+/*
+neviem kedy to budeme potrebovat ale v takom pripade to staci len odkomentovat :D 
+
+//kopiruje string zo source do dest
+int DynamicString_copy(DynamicString *source, DynamicString *dest)
+*/
+void DynamicString_free(dyn_string *s);
+
+void DynamicString_clear(dyn_string *s);
+
 
 #endif	// !_SCANNER_H_
