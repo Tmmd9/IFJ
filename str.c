@@ -36,6 +36,7 @@ void stringStrFree(string *s){
 //struct string uvedeny do povodneho stavu
 void stringFree(string *s){
     s->length = 0;
+	s->allocSize = 0;   //toto tam nechybalo nahodou?
     stringStrFree(s);
 }
 
