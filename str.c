@@ -100,3 +100,8 @@ int stringCpy(string *source, string *dest){
 	dest->length = new_StrLength;
 	return STR_SUCCESS;
 }
+
+// porovnava retazec ulozeny v structe s konstantnym retazcom
+int stringCmp(string* s, const char* str) {
+	return (!(strcmp(s->str, str))) ? 1 : 0;
+}

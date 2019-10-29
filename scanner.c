@@ -56,10 +56,45 @@ int decimalValue(string *s, token *token){
     returnCode(TOKEN_OK,s);
 }
 
+int identifierOrKeyword(string* s, token* token) {
+	if (stringCmp(s, "def")) token->attribute.keyword = KEYWORD_DEF;
+	else if (stringCmp(s, "else")) token->attribute.keyword = KEYWORD_ELSE;
+	else if (stringCmp(s, "if")) token->attribute.keyword = KEYWORD_IF;
+	else if (stringCmp(s, "None")) token->attribute.keyword = KEYWORD_NONE;
+	else if (stringCmp(s, "pass")) token->attribute.keyword = KEYWORD_PASS;
+	else if (stringCmp(s, "return")) token->attribute.keyword = KEYWORD_RETURN;
+	else if (stringCmp(s, "while")) token->attribute.keyword = KEYWORD_WHILE;
+	else if (stringCmp(s, "inputs")) token->attribute.keyword = KEYWORD_INPUTS;
+	else if (stringCmp(s, "inputi")) token->attribute.keyword = KEYWORD_INPUTI;
+	else if (stringCmp(s, "inputf")) token->attribute.keyword = KEYWORD_INPUTF;
+	else if (stringCmp(s, "print")) token->attribute.keyword = KEYWORD_PRINT;
+	else if (stringCmp(s, "len")) token->attribute.keyword = KEYWORD_LEN;
+	else if (stringCmp(s, "substr")) token->attribute.keyword = KEYWORD_SUBSTR;
+	else if (stringCmp(s, "chr")) token->attribute.keyword = KEYWORD_CHR;
+	else if (stringCmp(s, "ord")) token->attribute.keyword = KEYWORD_ORD;
+	else token->type = TYPE_IDENTIFIER;
+
+	if (token->type != TYPE_IDENTIFIER) {
+		token->type = TYPE_KEYWORD;
+		return returnCode(TOKEN_OK, s);
+	}
+
+	if (!stringCpy(s, token->attribute.string)) {
+		return returnCode(ERROR_INTERN, s);
+	}
+	
+	return returnCode(TOKEN_OK, s);
+}
+
 int getNextToken(token *token){
 	//TODO
     if (!source) return ERROR_INTERN;
-    int state = STATE_START;	//pociatocny stav
+	string* string;
+	string* s = &string;
+	if (!stringInit(s)) return returnCode(ERROR_INTERN, s);
+
+
+    state state = STATE_START;	//pociatocny stav
     token->type = TYPE_EMPTY;	//pociatocny typ tokenu
     char c, *endptr;
 	char arr[3] = { 0,0,0 };
@@ -236,7 +271,7 @@ int getNextToken(token *token){
                 } else if (c == '\\'){	//escape sekvencia
                     state = STATE_BACKSLASH;
                 } else if (c == '\'') {	//koniec stringu
-					if (!(stringCpy(s, token->attribute.string) {
+					if (!(stringCpy(s, token->attribute.string))) {
 						return returnCode(ERROR_INTERN, s);
 					}
 					token->type = TYPE_STRING;
@@ -248,6 +283,17 @@ int getNextToken(token *token){
                     }
                 }
                 break;
+
+			case (STATE_ID_OR_KEYWORD):
+				if (isalnum(c) || c == '_') {
+					if (!(stringAddChar(s, (char) tolower(c))) {
+						returnCode(ERROR_INTERN, s);
+					}
+				} else {
+					ungetc(c,source);
+					return identifierOrKeyword(s,token);
+				}
+				break;
 
             case (STATE_BACKSLASH):
                 if (c == '\\'){
@@ -419,8 +465,6 @@ int getNextToken(token *token){
 				ungetc(c, source);
 				token->type = TYPE_EOL;
 				return returnCode(TOKEN_OK, s);
-
-				//TODO IDENTIFIERS
         }
     }
 }

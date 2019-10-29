@@ -55,7 +55,14 @@ typedef enum
 	KEYWORD_PASS,					//pass - prikaz ktory nic nerobi
 	KEYWORD_RETURN,					//return
 	KEYWORD_WHILE,					//while
-
+	KEYWORD_INPUTS,
+	KEYWORD_INPUTI,
+	KEYWORD_INPUTF,
+	KEYWORD_PRINT,
+	KEYWORD_LEN,
+	KEYWORD_SUBSTR,
+	KEYWORD_CHR,
+	KEYWORD_ORD,
 	//KEYWORD_AND,					//su v py3 ale neviem ci aj v IFJ19
 	//KEYWORD_AS,
 	//KEYWORD_ASSERT,
@@ -132,27 +139,17 @@ typedef enum 		///TODO need help with these check-if there are all we need
 } token_type;
 
 typedef struct {
-    //TODO
-    /**
-*	type -bud identifier, keyword, alebo specialny znak eg. EOL 
-    **/
     token_type type;
-    tokenAttribute attribute;
+    token_attribute attribute;
 } token;
 
-	/** attribute
-* 	string that will hold string or identifier value-harmimova dynamicstring.c
-* 	integer value
-* 	double value
-* 	klucove slova - keyword
 
-*///
 typedef struct {
-	string *string;			//TODO
+	string *string;		
 	int int_value;
 	double float_value;
 	Keyword keyword;
-} tokenAttribute;
+} token_attribute;
 
 int getNextToken(token *token);
 
