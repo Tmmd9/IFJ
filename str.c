@@ -13,7 +13,7 @@
 
 #include "str.h"
 #include <string.h>
-#include <stlib.h>
+#include <stdlib.h>
 
 //inicializacia stringu, berie paramater structu
 int stringInit(string *s){
@@ -45,8 +45,8 @@ int stringAddChar(string *s, char c){
     //pokial dlzka retazca presahuje alokovane miesto, musime realokovat
     //s novou dlzkou
     if (s->length + 1 >= s->allocSize){
-        unsigned int = newSize = s->length + INT_ALLOC_SIZE;
-        if ((s->str = (char *) realloc(s->length, newSize)) == NULL){
+        unsigned int newSize = s->length + INT_ALLOC_SIZE;
+        if ((s->str = (char *) realloc(s->str, newSize)) == NULL){
             return STR_ERR;
         }
         s->allocSize = newSize;
@@ -97,7 +97,7 @@ int stringCpy(string *source, string *dest){
 		dest->allocSize = newStrLength + 1;
 	}
 	strcpy(dest->str, source->str);
-	dest->length = new_StrLength;
+	dest->length = newStrLength;
 	return STR_SUCCESS;
 }
 

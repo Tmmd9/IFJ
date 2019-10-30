@@ -13,19 +13,18 @@
 
 
 #include "scanner.h"
-#include "error.h"
-
 #include <stdio.h>
 #include <ctype.h>					// na isdigit a take srance
+#include <stdlib.h>
 
 FILE *source;
-string *string;
+//string *tString;
 
 void sourceFile(FILE *f){
     source = f;
 }
 
-int returnCode(int exitCode, string *s){
+static int returnCode(int exitCode, string *s){
     stringStrFree(s);
     return exitCode;
 }
@@ -40,7 +39,7 @@ int intValue(string *s, token *token){
     token->attribute.int_value = value;
     token->type = TYPE_INT;
 
-    returnCode(TOKEN_OK,s);
+    return returnCode(TOKEN_OK,s);
 }
 
 // funkcia na ziskanie tokenu typu float
@@ -53,7 +52,7 @@ int decimalValue(string *s, token *token){
     token->attribute.decimal_value = value;
     token->type = TYPE_FLOAT;
 
-    returnCode(TOKEN_OK,s);
+    return returnCode(TOKEN_OK,s);
 }
 
 int identifierOrKeyword(string* s, token* token) {
@@ -79,7 +78,7 @@ int identifierOrKeyword(string* s, token* token) {
 		return returnCode(TOKEN_OK, s);
 	}
 
-	if (!stringCpy(s, token->attribute.string)) {
+	if (stringCpy(s, token->attribute.string)) {
 		return returnCode(ERROR_INTERN, s);
 	}
 	
@@ -89,9 +88,18 @@ int identifierOrKeyword(string* s, token* token) {
 int getNextToken(token *token){
 	//TODO
     if (!source) return ERROR_INTERN;
-	string* string;
-	string* s = &string;
-	if (!stringInit(s)) return returnCode(ERROR_INTERN, s);
+	string str;
+	string* s = &str;
+	if (stringInit(s)) {
+        return returnCode(ERROR_INTERN, s);
+    }
+	// toto tu je docasne
+	string String;
+	string *tString = &String;
+    if (stringInit(tString)){
+        return returnCode(ERROR_INTERN, s);
+    }
+    token->attribute.string = tString;
 
 
     state state = STATE_START;	//pociatocny stav
@@ -100,7 +108,7 @@ int getNextToken(token *token){
 	char arr[3] = { 0,0,0 };
 
     while(1){
-        c = getchar();
+        c = (char) getc(source);
         switch (state) {
             case (STATE_START):
                 if (isspace(c)) {		//whitespaces - vraciame sa na start
@@ -109,12 +117,12 @@ int getNextToken(token *token){
                 } else if (c == '\n') {		//novy riadok
                     state = STATE_EOL;
                 } else if (c == '#') {		//riadkovy komentar
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_COMMENT;
                 } else if (isdigit(c)) {	//cislo
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_INT;
@@ -123,7 +131,7 @@ int getNextToken(token *token){
                 } else if (c == '"') {		//zaciatok blokoveho komentara
                     state = STATE_BLOCK_COMMENT_START;
                 } else if (isalpha(c) || c == '_') {	//id or keyword
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_ID_OR_KEYWORD;
@@ -167,17 +175,17 @@ int getNextToken(token *token){
             case (STATE_INT):
 				//ak dostaneme cislo, pridavame do vysledneho retazca
                 if (isdigit(c)){
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                 } else if (c == '.'){
                     state = STATE_FLOAT_POINT;
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
-                } else if (toupper(c) == 'e'){
+                } else if (tolower(c) == 'e'){
                     state = STATE_FLOAT_EXP;
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                 } else {
@@ -192,7 +200,7 @@ int getNextToken(token *token){
 
             case (STATE_FLOAT_POINT):
                 if (isdigit(c)){
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_FLOAT_POINT_NUMBER;
@@ -203,12 +211,12 @@ int getNextToken(token *token){
 
             case (STATE_FLOAT_EXP):
                 if (isdigit(c)){
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_FLOAT;
                 } else if (c == '+' || c == '-'){
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_FLOAT_EXP_OP;
@@ -220,12 +228,12 @@ int getNextToken(token *token){
 
             case (STATE_FLOAT_POINT_NUMBER):
                 if (isdigit(c)){
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                 } else if (toupper(c) == 'e') {
                     state = STATE_FLOAT_EXP;
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                 } else {
@@ -236,7 +244,7 @@ int getNextToken(token *token){
 
             case (STATE_FLOAT_EXP_OP):
                 if (isdigit(c)) {
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_FLOAT;
@@ -248,7 +256,7 @@ int getNextToken(token *token){
 
             case (STATE_FLOAT):
                 if (isdigit(c)) {
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                 } else {
@@ -271,14 +279,14 @@ int getNextToken(token *token){
                 } else if (c == '\\'){	//escape sekvencia
                     state = STATE_BACKSLASH;
                 } else if (c == '\'') {	//koniec stringu
-					if (!(stringCpy(s, token->attribute.string))) {
+					if (stringCpy(s, token->attribute.string)) {
 						return returnCode(ERROR_INTERN, s);
 					}
 					token->type = TYPE_STRING;
 
 					return returnCode(TOKEN_OK, s);
                 } else {
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                 }
@@ -286,7 +294,7 @@ int getNextToken(token *token){
 
 			case (STATE_ID_OR_KEYWORD):
 				if (isalnum(c) || c == '_') {
-					if (!(stringAddChar(s, (char) tolower(c))) {
+					if (stringAddChar(s, (char) tolower(c))) {
 						returnCode(ERROR_INTERN, s);
 					}
 				} else {
@@ -298,43 +306,43 @@ int getNextToken(token *token){
             case (STATE_BACKSLASH):
                 if (c == '\\'){
                     c = '\\';
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_STRING_START;
                 } else if (c == '"') {
                     c = '"';
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_STRING_START;
                 } else if (c == 'n'){
                     c = '\n';
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_STRING_START;
                 } else if (c == 't'){
                     c = '\t';
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_STRING_START;
                 } else if (c == '\''){
                     c = '\'';
-                    if (!(stringAddChar(s, c))) {
+                    if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_STRING_START;
 				} else if (c == 'x') {
-					if (!(stringAddChar(s, c))) {
+					if (stringAddChar(s, c)) {
 						returnCode(ERROR_INTERN, s);
 					}
 					state = STATE_BACKSLASH_X;
-				} else if (c == EOL) {
+				} else if (c == EOF) {
 					return returnCode(ERROR_SCANNER, s);
 				} else {
-					if (!(stringAddChar(s, c))) {
+					if (stringAddChar(s, c)) {
 						returnCode(ERROR_INTERN, s);
 					}
 					state = STATE_STRING_START;
@@ -361,7 +369,7 @@ int getNextToken(token *token){
 
 					c = (char)value;
 
-					if (!(stringAddChar(s, c))) {
+					if (stringAddChar(s, c)) {
 						returnCode(ERROR_INTERN, s);
 					}
 					state = STATE_STRING_START;
@@ -468,3 +476,13 @@ int getNextToken(token *token){
         }
     }
 }
+/* na testiky
+int main(){
+    FILE *f = fopen("test.txt","r");
+    sourceFile(f);
+    token *token;
+    while(f) {
+        //if (f == NULL) return 1;
+        getNextToken(token);
+    }
+}*/

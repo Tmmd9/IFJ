@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include "str.h"
+#include "error.h"
 
 typedef enum {
 	STATE_START,					// startovaci stav {S}
@@ -26,13 +27,11 @@ typedef enum {
 	STATE_FLOAT_POINT_NUMBER,		// konecny stav {F2}
 	STATE_FLOAT_EXP,				// medzisstav {Q2}
 	STATE_FLOAT_EXP_OP,				// medzistav {Q3}
-	STATE_STRING,					// konecny stav {F21}
 	STATE_STRING_START,				// medzistav {Q6}
 	STATE_BACKSLASH,				// medzistav {Q7}
 	STATE_BACKSLASH_X,				// medzistav {Q8}
 	STATE_BACKSLASH_X_NUM,			// medzistav {Q9}		
 	STATE_DIVIDE,					// konecny stav {F7}
-	STATE_DIVIDE_INT,				// konecny stav {F8}
 	STATE_GREATER_THAN,				// konecny stav {F11}
 	STATE_LESS_THAN,				// konecny stav {F9}
 	STATE_EQUALS,					// konecny stav {F17}
@@ -43,6 +42,7 @@ typedef enum {
 	STATE_BLOCK_COMMENT,			// medzistav {Q12}
 	STATE_BLOCK_COMMENT_LEAVE_TRY,	// medzistav {Q13}
 	STATE_BLOCK_COMMENT_LEAVE,		// medzistav {Q14}
+	STATE_EOL,
 } state;
 
 typedef enum
@@ -139,17 +139,17 @@ typedef enum 		///TODO need help with these check-if there are all we need
 } token_type;
 
 typedef struct {
+    string *string;
+    int int_value;
+    double decimal_value;
+    Keyword keyword;
+} token_attribute;
+
+typedef struct {
     token_type type;
     token_attribute attribute;
 } token;
 
-
-typedef struct {
-	string *string;		
-	int int_value;
-	double float_value;
-	Keyword keyword;
-} token_attribute;
 
 int getNextToken(token *token);
 
