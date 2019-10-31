@@ -1,3 +1,7 @@
+/// aboslutne nekompletne, prototyp feel free to doplnit ///
+
+
+
 
 <prog> -> KEYWORD_DEF TYPE_INENTIFIER(<params>): TYPE_EOL 
 		<statement> TYPE_EOL
