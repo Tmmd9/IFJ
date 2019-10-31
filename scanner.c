@@ -13,6 +13,7 @@
 
 
 #include "scanner.h"
+#include "stack.h"
 #include <stdio.h>
 #include <ctype.h>					// na isdigit a take srance
 #include <stdlib.h>
@@ -85,7 +86,7 @@ int identifierOrKeyword(string* s, token* token) {
 	return returnCode(TOKEN_OK, s);
 }
 
-int getNextToken(token *token){
+int getNextToken(FILE *source,token *token, tStack *stack){
 	//TODO
     if (!source) return ERROR_INTERN;
 	string str;
@@ -93,44 +94,59 @@ int getNextToken(token *token){
 	if (stringInit(s)) {
         return returnCode(ERROR_INTERN, s);
     }
+	static int firstToken = 1;  //kvoli indentom a dedentom
 	// toto tu je docasne
-	string String;
+/*	string String;
 	string *tString = &String;
     if (stringInit(tString)){
         return returnCode(ERROR_INTERN, s);
     }
-    token->attribute.string = tString;
-
+    token->attribute.string = tString;*/
+    /*tStack *stack = (tStack *) malloc(STACK_SIZE * sizeof(tStack));
+    if (!stack){
+        return returnCode(ERROR_INTERN,s);
+    }
+    stackInit(stack);
+    stackPush(stack,(char)0);*/
 
     state state = STATE_START;	//pociatocny stav
     token->type = TYPE_EMPTY;	//pociatocny typ tokenu
-    char c, *endptr;
+    char c, *endptr,top;
 	char arr[3] = { 0,0,0 };
+	int spaceCount = 0; //counter na pocet medzier
 
     while(1){
         c = (char) getc(source);
         switch (state) {
             case (STATE_START):
-                if (isspace(c)) {		//whitespaces - vraciame sa na start
-					//probably bude TODO na INDENT DEDENT
-                    state = STATE_START;
-                } else if (c == '\n') {		//novy riadok
+                if (c == ' ') {        //ak je znak medzera
+                    //ak je priznak firstToken true a dalsi znak nie je
+                    //whitespace, generujeme dedent
+                    if (firstToken && !isspace(c)) {
+                        state = STATE_DEDENT;
+                    } else if (!firstToken) {
+                        state = STATE_START;
+                    }else {
+                        spaceCount++;
+                        state = STATE_INDENT;
+                    }
+                } else if (c == '\n' || c == '\r') {        //novy riadok
                     state = STATE_EOL;
-                } else if (c == '#') {		//riadkovy komentar
+                } else if (c == '#') {        //riadkovy komentar
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_COMMENT;
-                } else if (isdigit(c)) {	//cislo
+                } else if (isdigit(c)) {    //cislo
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_INT;
-                } else if (c == '\'') {		//zaciatok stringu
+                } else if (c == '\'') {        //zaciatok stringu
                     state = STATE_STRING_START;
-                } else if (c == '"') {		//zaciatok blokoveho komentara
+                } else if (c == '"') {        //zaciatok blokoveho komentara
                     state = STATE_BLOCK_COMMENT_START;
-                } else if (isalpha(c) || c == '_') {	//id or keyword
+                } else if (isalpha(c) || c == '_') {    //id or keyword
                     if (stringAddChar(s, c)) {
                         returnCode(ERROR_INTERN, s);
                     }
@@ -139,54 +155,97 @@ int getNextToken(token *token){
                     state = STATE_NOT_EQUAL_START;
                 } else if (c == '<') {
                     state = STATE_LESS_THAN;
-                } else if (c == '>'){
+                } else if (c == '>') {
                     state = STATE_GREATER_THAN;
-                } else if (c == '='){
+                } else if (c == '=') {
                     state = STATE_EQUALS;
                 } else if (c == '/') {
                     state = STATE_DIVIDE;
-                } else if (c == '+'){
+                } else if (c == '+') {
                     token->type = TYPE_PLUS;
-                    returnCode(TOKEN_OK, s);
-                } else if (c == '-'){
+                    return returnCode(TOKEN_OK, s);
+                } else if (c == '-') {
                     token->type = TYPE_MINUS;
-                    returnCode(TOKEN_OK, s);
-                } else if (c == '*'){
+                    return returnCode(TOKEN_OK, s);
+                } else if (c == '*') {
                     token->type = TYPE_MULTIPLY;
-                    returnCode(TOKEN_OK, s);
-                } else if (c == ';'){
-                    token->type = TYPE_SEMICOLON;
-                    returnCode(TOKEN_OK, s);
-                } else if (c == ','){
+                    return returnCode(TOKEN_OK, s);
+                } else if (c == ':') {
+                    token->type = TYPE_COLON;
+                    return returnCode(TOKEN_OK, s);
+                } else if (c == ',') {
                     token->type = TYPE_COMMA;
-                    returnCode(TOKEN_OK, s);
-                } else if (c == '('){
+                    return returnCode(TOKEN_OK, s);
+                } else if (c == '(') {
                     token->type = TYPE_LEFT_PAR;
-                    returnCode(TOKEN_OK, s);
-                } else if (c == ')'){
+                    return returnCode(TOKEN_OK, s);
+                } else if (c == ')') {
                     token->type = TYPE_RIGHT_PAR;
-                    returnCode(TOKEN_OK, s);
-                } else if (c == EOF){
-                    token->type = TYPE_EOF;
-                    returnCode(TOKEN_OK,s);
+                    return returnCode(TOKEN_OK, s);
+                } else if (c == EOF) {
+                    //ak pride EOF a stack nie je prazdny, musime vyprazdnit
+                    //a generovat dedenty
+                    if (!stackEmpty(stack)){
+                        state = STATE_FREE_STACK;
+                    } else {
+                        token->type = TYPE_EOF;
+                        return returnCode(TOKEN_OK, s);
+                    }
                 } else returnCode(ERROR_SCANNER, s);
+                break;
+
+            case (STATE_INDENT):
+                if (isspace(c)) {
+                    spaceCount++;
+                } else if (c == '\n') {
+                    spaceCount = 0;
+                    state = STATE_START;
+                } else {
+                    stackTop(stack, &top);
+                    if (top < spaceCount) {
+                        stackPush(stack, (char) spaceCount);
+                        spaceCount = 0;
+                        firstToken = 0;
+                        ungetc(c, source);
+                        token->type = TYPE_INDENT;
+                        return returnCode(TOKEN_OK, s);
+                    } else if (top > spaceCount) {
+                        state = STATE_DEDENT;
+                    }
+                }
+                break;
+
+            case (STATE_DEDENT):
+                stackTop(stack, &top);
+                while (top != spaceCount) {
+                    stackTop(stack, &top);
+                    if (top == 0) {
+                        return returnCode(ERROR_PARSER, s);
+                    }
+                    if (top == spaceCount) break;
+                    stackPop(stack);
+                }
+                ungetc(c, source);
+                token->type = TYPE_DEDENT;
+                return returnCode(TOKEN_OK, s);
+
                 break;
 
             case (STATE_INT):
 				//ak dostaneme cislo, pridavame do vysledneho retazca
                 if (isdigit(c)){
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                 } else if (c == '.'){
                     state = STATE_FLOAT_POINT;
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                 } else if (tolower(c) == 'e'){
                     state = STATE_FLOAT_EXP;
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                 } else {
 					//ak je dalsim znakom nieco ine ako cislo, E or .
@@ -201,23 +260,23 @@ int getNextToken(token *token){
             case (STATE_FLOAT_POINT):
                 if (isdigit(c)){
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_FLOAT_POINT_NUMBER;
                 } else {
-                    returnCode(ERROR_SCANNER,s);
+                    return returnCode(ERROR_SCANNER,s);
                 }
                 break;
 
             case (STATE_FLOAT_EXP):
                 if (isdigit(c)){
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_FLOAT;
                 } else if (c == '+' || c == '-'){
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_FLOAT_EXP_OP;
                 } else {
@@ -229,12 +288,12 @@ int getNextToken(token *token){
             case (STATE_FLOAT_POINT_NUMBER):
                 if (isdigit(c)){
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                 } else if (toupper(c) == 'e') {
                     state = STATE_FLOAT_EXP;
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                 } else {
                     ungetc(c,source);
@@ -245,7 +304,7 @@ int getNextToken(token *token){
             case (STATE_FLOAT_EXP_OP):
                 if (isdigit(c)) {
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_FLOAT;
                 } else {
@@ -257,7 +316,7 @@ int getNextToken(token *token){
             case (STATE_FLOAT):
                 if (isdigit(c)) {
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                 } else {
                     ungetc(c,source);
@@ -287,7 +346,7 @@ int getNextToken(token *token){
 					return returnCode(TOKEN_OK, s);
                 } else {
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                 }
                 break;
@@ -295,7 +354,7 @@ int getNextToken(token *token){
 			case (STATE_ID_OR_KEYWORD):
 				if (isalnum(c) || c == '_') {
 					if (stringAddChar(s, (char) tolower(c))) {
-						returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
 					}
 				} else {
 					ungetc(c,source);
@@ -307,43 +366,43 @@ int getNextToken(token *token){
                 if (c == '\\'){
                     c = '\\';
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_STRING_START;
                 } else if (c == '"') {
                     c = '"';
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_STRING_START;
                 } else if (c == 'n'){
                     c = '\n';
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_STRING_START;
                 } else if (c == 't'){
                     c = '\t';
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_STRING_START;
                 } else if (c == '\''){
                     c = '\'';
                     if (stringAddChar(s, c)) {
-                        returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
                     }
                     state = STATE_STRING_START;
 				} else if (c == 'x') {
 					if (stringAddChar(s, c)) {
-						returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
 					}
 					state = STATE_BACKSLASH_X;
 				} else if (c == EOF) {
 					return returnCode(ERROR_SCANNER, s);
 				} else {
 					if (stringAddChar(s, c)) {
-						returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
 					}
 					state = STATE_STRING_START;
 				}
@@ -370,7 +429,7 @@ int getNextToken(token *token){
 					c = (char)value;
 
 					if (stringAddChar(s, c)) {
-						returnCode(ERROR_INTERN, s);
+                        return returnCode(ERROR_INTERN, s);
 					}
 					state = STATE_STRING_START;
 				} else {
@@ -467,22 +526,23 @@ int getNextToken(token *token){
 				return returnCode(TOKEN_OK, s);
 
 			case (STATE_EOL):
-				if (isspace(c)) {
+				if (isspace(c) && c != ' ') {
 					break;
 				}
 				ungetc(c, source);
+				firstToken = 1;
+				spaceCount = 0;
 				token->type = TYPE_EOL;
 				return returnCode(TOKEN_OK, s);
+
+            case (STATE_FREE_STACK):
+                stackTop(stack,&top);
+                while (top != 0){
+                    stackPop(stack);
+                    token->type = TYPE_DEDENT;
+                    return returnCode(TOKEN_OK,s);
+                }
+                state = STATE_START;
         }
     }
 }
-/* na testiky
-int main(){
-    FILE *f = fopen("test.txt","r");
-    sourceFile(f);
-    token *token;
-    while(f) {
-        //if (f == NULL) return 1;
-        getNextToken(token);
-    }
-}*/

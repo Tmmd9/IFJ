@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include "str.h"
 #include "error.h"
+#include "stack.h"
 
 typedef enum {
 	STATE_START,					// startovaci stav {S}
@@ -43,6 +44,9 @@ typedef enum {
 	STATE_BLOCK_COMMENT_LEAVE_TRY,	// medzistav {Q13}
 	STATE_BLOCK_COMMENT_LEAVE,		// medzistav {Q14}
 	STATE_EOL,
+    STATE_INDENT,
+    STATE_DEDENT,
+    STATE_FREE_STACK,
 } state;
 
 typedef enum
@@ -134,8 +138,9 @@ typedef enum 		///TODO need help with these check-if there are all we need
 	TYPE_LEFT_PAR,					//	'('
 	TYPE_RIGHT_PAR,					//	')'
 	TYPE_COMMA,						// 	','
-	TYPE_SEMICOLON,					//	';'
-	TYPE_SPACE,						///kvoli indentom je to fajn sledovat nie?				
+	TYPE_COLON,					//	';'
+	TYPE_INDENT,					//typ INDENT
+	TYPE_DEDENT,                    //typ DEDENT
 } token_type;
 
 typedef struct {
@@ -151,6 +156,6 @@ typedef struct {
 } token;
 
 
-int getNextToken(token *token);
+int getNextToken(FILE *source,token *token, tStack *stack);
 
 #endif	// !_SCANNER_H_
