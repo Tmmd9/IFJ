@@ -1,0 +1,26 @@
+
+<prog> -> KEYWORD_DEF TYPE_INENTIFIER(<params>): TYPE_EOL 
+		<statement> TYPE_EOL
+	  <prog>
+<prog> -> TYPE_EOL <prog>
+<prog> -> <statement> TYPE_EOL <prog>
+
+<statement> -> KEYWORD_IF <expression>: TYPE_EOL
+		<statement>
+		KEYWORD_ELSE: TYPE_EOL
+		<statement>
+
+<statement> -> KEYWORD_WHILE: <expression>: TYPE_EOL
+		<statement>
+
+<statement> -> KEYWORD_RETURN <expression>
+<statement> -> TYPE_IDENTIFIER = <expression>
+<statement> -> <statement> TYPE_EOL
+<statement> -> KEYWORD_PRINT(<expression>)
+<statement> -> KEYWORD_PASS
+
+
+
+
+
+
