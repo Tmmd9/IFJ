@@ -23,6 +23,11 @@
 <statement> -> KEYWORD_PRINT(<expression>)
 <statement> -> KEYWORD_PASS
 
+<params> -> TYPE_IDENTIFIER <param_next>
+<params> -> ε
+<param_next> -> , TYPE_IDENTIFIER <param_next>
+<param_next> -> ε
+
 
 
 
