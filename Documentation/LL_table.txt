@@ -1,32 +1,29 @@
-/// aboslutne nekompletne, prototyp feel free to doplnit ///
 
 
-
-
-<prog> -> KEYWORD_DEF TYPE_INENTIFIER(<params>): TYPE_EOL 
+1. <prog> -> KEYWORD_DEF TYPE_INENTIFIER(<params>): TYPE_EOL 
 		<statement> TYPE_EOL
 	  <prog>
-<prog> -> TYPE_EOL <prog>
-<prog> -> <statement> TYPE_EOL <prog>
+2. <prog> -> TYPE_EOL <prog>
+3. <prog> -> <statement> TYPE_EOL <prog>
 
-<statement> -> KEYWORD_IF <expression>: TYPE_EOL
+4. <statement> -> KEYWORD_IF <expression>: TYPE_EOL
 		<statement>
 		KEYWORD_ELSE: TYPE_EOL
 		<statement>
 
-<statement> -> KEYWORD_WHILE: <expression>: TYPE_EOL
+5. <statement> -> KEYWORD_WHILE: <expression>: TYPE_EOL
 		<statement>
 
-<statement> -> KEYWORD_RETURN <expression>
-<statement> -> TYPE_IDENTIFIER = <expression>
-<statement> -> <statement> TYPE_EOL <statement>		//aby mohlo byt viac statementov zasebou
-<statement> -> KEYWORD_PRINT(<expression>)
-<statement> -> KEYWORD_PASS
+6. <statement> -> KEYWORD_RETURN <expression>
+7. <statement> -> TYPE_IDENTIFIER = <expression>
+8. <statement> -> <statement> TYPE_EOL <statement>		//aby mohlo byt viac statementov zasebou
+9. <statement> -> KEYWORD_PRINT(<expression>)
+10. <statement> -> KEYWORD_PASS
 
-<params> -> TYPE_IDENTIFIER <param_next>
-<params> -> ε
-<param_next> -> , TYPE_IDENTIFIER <param_next>
-<param_next> -> ε
+11. <params> -> TYPE_IDENTIFIER <param_next>
+12. <params> -> ε
+13. <param_next> -> , TYPE_IDENTIFIER <param_next>
+14. <param_next> -> ε
 
 
 
