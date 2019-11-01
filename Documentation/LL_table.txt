@@ -19,7 +19,7 @@
 
 <statement> -> KEYWORD_RETURN <expression>
 <statement> -> TYPE_IDENTIFIER = <expression>
-<statement> -> <statement> TYPE_EOL <statement>			//aby mohlo byt viacero statementov zasebou
+<statement> -> <statement> TYPE_EOL
 <statement> -> KEYWORD_PRINT(<expression>)
 <statement> -> KEYWORD_PASS
 
@@ -28,13 +28,36 @@
 <param_next> -> , TYPE_IDENTIFIER <param_next>
 <param_next> -> ε
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//// neplati ////
+
 <expression> -> TYPE_IDENTIFIER
 <expression> -> 'TYPE_CHR'
 <expression> -> 'TYPE_CHR', TYPE_IDENTIFIER , <expression_n>
 <expression> -> ε
 <expression_n> -> ,<expression_n>
 <expression_n> -> ε
-
+//////////////////
 
 
 
