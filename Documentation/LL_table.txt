@@ -6,9 +6,9 @@
 2. <prog> -> TYPE_EOL <prog>
 3. <prog> -> <statement> TYPE_EOL <prog>
 
-4. <statement> -> KEYWORD_IF <expression>: TYPE_EOL
+4. <statement> -> KEYWORD_IF <expression>: TYPE_EOL     
 		<statement>
-		KEYWORD_ELSE: TYPE_EOL
+		KEYWORD_ELSE: TYPE_EOL			///nemusi byt ELSE TODO
 		<statement>
 
 5. <statement> -> KEYWORD_WHILE: <expression>: TYPE_EOL
