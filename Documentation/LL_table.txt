@@ -25,6 +25,10 @@
 13. <param_next> -> , TYPE_IDENTIFIER <param_next>
 14. <param_next> -> ε
 
+15. <statement> -> KEYWORD_INPUTS()
+16. <statement> -> KEYWORD_INPUTI()
+17. <statement> -> KEYWORD_INPUTF()
+
 
 
 
