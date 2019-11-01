@@ -19,7 +19,7 @@
 
 <statement> -> KEYWORD_RETURN <expression>
 <statement> -> TYPE_IDENTIFIER = <expression>
-<statement> -> <statement> TYPE_EOL
+<statement> -> <statement> TYPE_EOL <statement>		//aby mohlo byt viac statementov zasebou
 <statement> -> KEYWORD_PRINT(<expression>)
 <statement> -> KEYWORD_PASS
 
