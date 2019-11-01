@@ -17,7 +17,7 @@
 6. <statement> -> KEYWORD_RETURN <expression>
 7. <statement> -> TYPE_IDENTIFIER = <expression>
 8. <statement> -> <statement> TYPE_EOL <statement>		//aby mohlo byt viac statementov zasebou
-9. <statement> -> KEYWORD_PRINT(<expression>)
+9. <statement> -> KEYWORD_PRINT(<expression>)          //co ked je prazdny print/komentar v printe
 10. <statement> -> KEYWORD_PASS
 
 11. <params> -> TYPE_IDENTIFIER <param_next>
