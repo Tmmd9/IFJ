@@ -41,13 +41,19 @@ typedef struct {
 } tStack;
 
 /* Hlavičky funkcí pro práci se zásobníkem. */
-void stackError ( int error_code );
-void stackInit ( tStack* s );
-int stackEmpty ( const tStack* s );
-int stackFull ( const tStack* s );
-void stackTop ( const tStack* s, char* c );
-void stackPop ( tStack* s );
-void stackPush ( tStack* s, char c );
+void stackError(int error_code);
+
+void stackInit(tStack *s);
+
+int stackEmpty(const tStack *s);
+
+int stackFull(const tStack *s);
+
+void stackTop(const tStack *s, char *c);
+
+void stackPop(tStack *s);
+
+void stackPush(tStack *s, char c);
 
 #endif // !_STACK_H_
 
