@@ -9,8 +9,11 @@
 
 4. <statement> -> KEYWORD_IF <expression>: TYPE_EOL     
 		<statement>
-		KEYWORD_ELSE: TYPE_EOL			///nemusi byt ELSE TODO
+		KEYWORD_ELSE: TYPE_EOL			///IF s ELSE
 		<statement>
+		
+19. <statement> -> KEYWORD_IF <expression>: TYPE_EOL     
+		<statement>				///IF bez ELSE
 
 5. <statement> -> KEYWORD_WHILE: <expression>: TYPE_EOL
 		<statement>
