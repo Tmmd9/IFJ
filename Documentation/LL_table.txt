@@ -5,6 +5,7 @@
 	  <prog>
 2. <prog> -> TYPE_EOL <prog>
 3. <prog> -> <statement> TYPE_EOL <prog>
+* CORRECT ME IF BAD BUT * <prog> -> TYPE_EOF <end> //po kazdom statemente alebo progu sa znova zacina prog, cize posledny krok pri parsovani sa podla mna bude zacinat iba <prog> , dalej ziska token TYPE_EOF a skoci to koncoveho stavu <end> kde uz neparsuje 
 
 4. <statement> -> KEYWORD_IF <expression>: TYPE_EOL     
 		<statement>
