@@ -3,26 +3,27 @@
 1. 	<prog> -> KEYWORD_DEF TYPE_INENTIFIER(<params>): TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <prog>
 2. 	<prog> -> TYPE_EOL <prog>
 3. 	<prog> -> <statement> TYPE_EOL <prog>
-18. <prog> -> TYPE_EOF <end> 				//po kazdom statemente alebo progu sa znova zacina prog, 
-											cize posledny krok pri parsovani sa podla mna bude zacinat 
-											iba <prog> , dalej ziska token TYPE_EOF a skoci to 
-											koncoveho stavu <end> kde uz neparsuje 									
-4. 	<statement> -> KEYWORD_IF <expression>: TYPE_EOL TYPE_INDENT <statement> KEYWORD_ELSE: TYPE_EOL <statement> TYPE_DEDENT
-5. 	<statement> -> KEYWORD_WHILE: <expression>: TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT
-6. 	<statement> -> KEYWORD_RETURN <expression>
-7. 	<statement> -> TYPE_IDENTIFIER = <expression>
-8. 	<statement> -> <statement> TYPE_EOL <statement>		//aby mohlo byt viac statementov zasebou
-9. 	<statement> -> KEYWORD_PRINT(<expression>)          //co ked je prazdny print/komentar v printe
-10. <statement> -> KEYWORD_PASS
+4. 	<prog> -> TYPE_EOF <end> 							//po kazdom statemente alebo progu sa znova zacina prog, 
+														cize posledny krok pri parsovani sa podla mna bude zacinat 
+														iba <prog> , dalej ziska token TYPE_EOF a skoci to 
+														koncoveho stavu <end> kde uz neparsuje 	
 
-11. <params> -> TYPE_IDENTIFIER <param_next>
-12. <params> -> ε
-13. <param_next> -> , TYPE_IDENTIFIER <param_next>
-14. <param_next> -> ε
+5. 	<statement> -> KEYWORD_IF <expression>: TYPE_EOL TYPE_INDENT <statement> KEYWORD_ELSE: TYPE_EOL <statement> TYPE_DEDENT
+6. 	<statement> -> KEYWORD_WHILE: <expression>: TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT
+7. 	<statement> -> KEYWORD_RETURN <expression>
+8. 	<statement> -> TYPE_IDENTIFIER = <expression>
+9. 	<statement> -> <statement> TYPE_EOL <statement>		//aby mohlo byt viac statementov zasebou
+10. <statement> -> KEYWORD_PRINT(<expression>)          //co ked je prazdny print/komentar v printe
+11. <statement> -> KEYWORD_PASS
 
-15. <statement> -> KEYWORD_INPUTS()
-16. <statement> -> KEYWORD_INPUTI()
-17. <statement> -> KEYWORD_INPUTF()
+12. <params> -> TYPE_IDENTIFIER <param_next>
+13. <params> -> ε
+14. <param_next> -> , TYPE_IDENTIFIER <param_next>
+15. <param_next> -> ε
+
+16. <statement> -> KEYWORD_INPUTS()
+17. <statement> -> KEYWORD_INPUTI()
+18. <statement> -> KEYWORD_INPUTF()
 
 
 
