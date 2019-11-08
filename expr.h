@@ -25,7 +25,7 @@ typedef enum
 	STR_SYM,			///4 string
 	DOLLAR_SYM,			///5 $	//eol a ':' (then)
 	STOP,				///6 stop symbol used when reducing
-	NON_TERM			///7 non-terminal
+	NON_TERM,			///7 non-terminal
 	PLUS_SYM,			///8 +
 	MINUS_SYM,			///9 -
 	MUL_SYM,			///10 *
