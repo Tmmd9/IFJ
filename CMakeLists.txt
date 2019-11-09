@@ -9,4 +9,4 @@ FILE(GLOB SOURCES "*.c")
 FILE(GLOB HEADERS "*.h")
 FILE(GLOB TEXT "*.txt")
 
-ADD_EXECUTABLE(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${TEXT} main.c stack.c stack.h parser.c)
+ADD_EXECUTABLE(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${TEXT} main.c stack.c stack.h parser.c parser.h)
