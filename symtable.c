@@ -37,6 +37,12 @@ void htabInit(htab *table){
 
 Data *htabAddSymbol(htab *table, const char *key, bool *allocErr){
     *allocErr = false;      //bool ktory sa nastavi na true pri chybe alokacii
+
+    if (!table || !key){
+        *allocErr = true;
+        return NULL;
+    }
+
     unsigned int hash = htab_hash_function(key);
 
     htabItem *tmp = (*table)[hash];
@@ -112,6 +118,8 @@ bool htabAddParam(Data *data, unsigned int DataType){
 }
 
 Data *htabSearch(htab *table, const char *key){
+    if (!table || !key) return NULL;
+
     unsigned int hash = htab_hash_function(key);
 
     htabItem* tmp = (*table)[hash];	//pristup k polozke v tabulke na indexe
@@ -150,6 +158,8 @@ void htabFree(htab *table){
 }
 
 bool htabDelete(htab *table, const char *key){
+    if (!table || !key) return NULL;
+
     unsigned int hash = htab_hash_function(key);
     htabItem *item = (*table)[hash];
     htabItem *nextItem, *prevItem = NULL;
