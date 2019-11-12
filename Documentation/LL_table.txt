@@ -1,5 +1,5 @@
 
-1. 	<prog> -> KEYWORD_DEF TYPE_IDENTIFIER TYPE_LEFT_PAR<params>TYPE_RIGHT_PAR TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <prog>
+1. 	<prog> -> KEYWORD_DEF TYPE_IDENTIFIER(<params>)TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <prog>
 2. 	<prog> -> TYPE_EOL <prog>
 3. 	<prog> -> <statement> TYPE_EOL <prog>
 4. 	<prog> -> TYPE_EOF <end> 							//po kazdom statemente alebo progu sa znova zacina prog, 
@@ -7,31 +7,31 @@
 											iba <prog> , dalej ziska token TYPE_EOF a skoci to 
 											koncoveho stavu <end> kde uz neparsuje 	
 
-5. 	<statement> -> KEYWORD_IF <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> KEYWORD_ELSETYPE_COLON TYPE_EOL <statement> TYPE_DEDENT
-6. 	<statement> -> KEYWORD_WHILE TYPE_COLON <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT
+5. 	<statement> -> KEYWORD_IF <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT KEYWORD_ELSE TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>
+6. 	<statement> -> KEYWORD_WHILE TYPE_COLON <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>
 7. 	<statement> -> KEYWORD_RETURN <expression>
-8. 	<statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression>
+8. 	<statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> TYPE_EOL <statement_next>
+9. 	<statement_next> -> TYPE_EOL <statement> 		//aby mohlo byt viac statementov zasebou
+10. 	<statement> -> KEYWORD_PRINT(<expression>) TYPE_EOL <statement_next>        	//co ked je prazdny print/komentar v printe
+11. 	<statement> -> KEYWORD_PASS TYPE_EOL <statement_next>
+12. 	<statement> -> KEYWORD_INPUTS() TYPE_EOL <statement_next>
+13. 	<statement> -> KEYWORD_INPUTI() TYPE_EOL <statement_next>
+14. 	<statement> -> KEYWORD_INPUTF() TYPE_EOL <statement_next>
+15. 	<statement> -> KEYWORD_LEN(TYPE_STRING) TYPE_EOL <statement_next>
+16. 	<statement> -> KEYWORD_SUBSTR(TYPE_STRING TYPE_COMMA TYPE_INT TYPE_COMMA TYPE_INT) TYPE_EOL <statement_next>
+17. 	<statement> -> KEYWORD_CHR(TYPE_STRING TYPE_COMMA TYPE_INT) TYPE_EOL <statement_next>
+18. 	<statement> -> KEYWORD_ORD(TYPE_INT) TYPE_EOL <statement_next>
 
-9. 	<statement> -> KEYWORD_PRINT TYPE_LEFT_PAR<expression>TYPE_RIGHT_PAR        	//co ked je prazdny print/komentar v printe
-10. 	<statement> -> KEYWORD_PASS
-11. 	<statement> -> KEYWORD_INPUTS TYPE_LEFT_PAR TYPE_RIGHT_PAR
-12. 	<statement> -> KEYWORD_INPUTI TYPE_LEFT_PAR TYPE_RIGHT_PAR
-13. 	<statement> -> KEYWORD_INPUTF TYPE_LEFT_PAR TYPE_RIGHT_PAR
-14. 	<statement> -> KEYWORD_LEN TYPE_LEFT_PAR TYPE_STRING TYPE_RIGHT_PAR
-15. 	<statement> -> KEYWORD_SUBSTR TYPE_LEFT_PAR TYPE_STRING TYPE_COMMA TYPE_INT TYPE_COMMA TYPE_INT TYPE_RIGHT_PAR
-16. 	<statement> -> KEYWORD_CHR TYPE_LEFT_PAR TYPE_STRING TYPE_COMMA TYPE_INT TYPE_RIGHT_PAR
-17. 	<statement> -> KEYWORD_ORD TYPE_LEFT_PAR TYPE_INT TYPE_RIGHT_PAR
-
-18.	<params> -> TYPE_IDENTIFIER <param_next>
-19. 	<params> -> ε
-20. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next>
-21. 	<param_next> -> ε
-22.	<end>-> ε	//riesenie <end> chybalo
+19.	<params> -> TYPE_IDENTIFIER <param_next> 
+20. 	<params> -> ε
+21. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next>
+22. 	<param_next> -> ε
+23. 	<end> -> ε
+24. 	<statement_next> -> ε
 
 
 
- <statement> -> <statement> TYPE_EOL <statement>		//aby mohlo byt viac statementov zasebou
-								//lave rekurzie chyba.
+
 
 /// <statement> -> EOF <end> ///neplati viz.3 a 18
 

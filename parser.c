@@ -113,3 +113,4 @@ static int params(ParserData *data)
             return ERROR_PARSER; ///param index bol vacsi ako nula ale dosla mi hned zatvorka
     }                            ///pripadne za ciarkou neprisiel dalsi identif
 }
+
