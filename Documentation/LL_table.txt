@@ -7,26 +7,27 @@
 											iba <prog> , dalej ziska token TYPE_EOF a skoci to 
 											koncoveho stavu <end> kde uz neparsuje 	
 
-5. 	<statement> -> KEYWORD_IF <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> KEYWORD_ELSETYPE_COLON TYPE_EOL <statement> TYPE_DEDENT
-6. 	<statement> -> KEYWORD_WHILE TYPE_COLON <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT
+5. 	<statement> -> KEYWORD_IF <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT KEYWORD_ELSE TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>
+6. 	<statement> -> KEYWORD_WHILE TYPE_COLON <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>
 7. 	<statement> -> KEYWORD_RETURN <expression>
-8. 	<statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression>
-9. 	<statement> -> <statement> TYPE_EOL <statement>		//aby mohlo byt viac statementov zasebou
-10. 	<statement> -> KEYWORD_PRINT(<expression>)          	//co ked je prazdny print/komentar v printe
-11. 	<statement> -> KEYWORD_PASS
-12. 	<statement> -> KEYWORD_INPUTS()
-13. 	<statement> -> KEYWORD_INPUTI()
-14. 	<statement> -> KEYWORD_INPUTF()
-15. 	<statement> -> KEYWORD_LEN(TYPE_STRING)
-16. 	<statement> -> KEYWORD_SUBSTR(TYPE_STRING TYPE_COMMA TYPE_INT TYPE_COMMA TYPE_INT)
-17. 	<statement> -> KEYWORD_CHR(TYPE_STRING TYPE_COMMA TYPE_INT)
-18. 	<statement> -> KEYWORD_ORD(TYPE_INT)
+8. 	<statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> TYPE_EOL <statement_next>
+9. 	<statement_next> -> TYPE_EOL <statement> 		//aby mohlo byt viac statementov zasebou
+10. 	<statement> -> KEYWORD_PRINT(<expression>) TYPE_EOL <statement_next>        	//co ked je prazdny print/komentar v printe
+11. 	<statement> -> KEYWORD_PASS TYPE_EOL <statement_next>
+12. 	<statement> -> KEYWORD_INPUTS() TYPE_EOL <statement_next>
+13. 	<statement> -> KEYWORD_INPUTI() TYPE_EOL <statement_next>
+14. 	<statement> -> KEYWORD_INPUTF() TYPE_EOL <statement_next>
+15. 	<statement> -> KEYWORD_LEN(TYPE_STRING) TYPE_EOL <statement_next>
+16. 	<statement> -> KEYWORD_SUBSTR(TYPE_STRING TYPE_COMMA TYPE_INT TYPE_COMMA TYPE_INT) TYPE_EOL <statement_next>
+17. 	<statement> -> KEYWORD_CHR(TYPE_STRING TYPE_COMMA TYPE_INT) TYPE_EOL <statement_next>
+18. 	<statement> -> KEYWORD_ORD(TYPE_INT) TYPE_EOL <statement_next>
 
-19.	<params> -> TYPE_IDENTIFIER <param_next>
+19.	<params> -> TYPE_IDENTIFIER <param_next> 
 20. 	<params> -> ε
 21. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next>
 22. 	<param_next> -> ε
-
+23. 	<end> -> ε
+24. 	<statement_next> -> ε
 
 
 
