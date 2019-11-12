@@ -7,6 +7,8 @@
 
 #include "scanner.h"
 #include "stack.h"
+#include "parser.h"
+#include "symtable.h"
 
 int main(void) {
     FILE *f = fopen("test.txt", "r");
@@ -16,13 +18,47 @@ int main(void) {
     }
     stackInit(stack);
     stackPush(stack, (char) 0);
-    while (true) {
+   
         token token;
         string string;
+        ParserData data;
         if (stringInit(&string)) {
             return ERROR_INTERN;
         }
-        token.attribute.string = &string;
+
+        int SyntaxCheck = prog(data); //premena kde nahram return parsera a podla toho printujem err alebo syntax ok
+        if(SyntaxCheck == SYNTAX_OK){
+        	printf("Syntax is OK. \n");
+        	return SyntaxCheck;
+        }s
+        else if(SyntaxCheck == ERROR_PARSER){
+        	printf("Syntax error. \n");
+        	return SyntaxCheck;
+        }
+        else if(SyntaxCheck == ERROR_PROGRAM_SEMANTIC){
+        	printf("Semantical error. \n");
+        	return SyntaxCheck;
+        }
+        else if(SyntaxCheck == ERROR_ARITHMETIC){
+        	printf("Arithmetical error. \n");
+        	return SyntaxCheck;
+        }
+        else if(SyntaxCheck == ERROR_WRONG_NUMBER_OF_PARAMS){
+        	printf("Wrong number of parameters. \n");
+        	return SyntaxCheck;
+        }
+        else if(SyntaxCheck == ERROR_SEMANTIC_OTHERS) {
+        	printf("Semantical error. \n");
+      		return SyntaxCheck;
+    	}
+        else if(SyntaxCheck == ERROR_DIVIDING_ZERO)
+        	printf("Dividing with the value of zero. \n")
+    	}
+        else if(SyntaxCheck == ERROR_INTERN) {
+        	printf("Internal error. \n");
+        	return SyntaxCheck;
+        }
+ /*       token.attribute.string = &string;
         int code = getNextToken(f, &token, stack);
 
         if (code) {
@@ -68,8 +104,9 @@ int main(void) {
             stringStrFree(&string);
             break;
         }
+        */
         stringStrFree(&string);
-    }
+    
 
 
     return EXIT_SUCCESS;
