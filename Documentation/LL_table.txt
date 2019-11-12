@@ -11,26 +11,27 @@
 6. 	<statement> -> KEYWORD_WHILE TYPE_COLON <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT
 7. 	<statement> -> KEYWORD_RETURN <expression>
 8. 	<statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression>
-9. 	<statement> -> <statement> TYPE_EOL <statement>		//aby mohlo byt viac statementov zasebou
-10. 	<statement> -> KEYWORD_PRINT(<expression>)          	//co ked je prazdny print/komentar v printe
-11. 	<statement> -> KEYWORD_PASS
-12. 	<statement> -> KEYWORD_INPUTS()
-13. 	<statement> -> KEYWORD_INPUTI()
-14. 	<statement> -> KEYWORD_INPUTF()
-15. 	<statement> -> KEYWORD_LEN(TYPE_STRING)
-16. 	<statement> -> KEYWORD_SUBSTR(TYPE_STRING TYPE_COMMA TYPE_INT TYPE_COMMA TYPE_INT)
-17. 	<statement> -> KEYWORD_CHR(TYPE_STRING TYPE_COMMA TYPE_INT)
-18. 	<statement> -> KEYWORD_ORD(TYPE_INT)
 
-19.	<params> -> TYPE_IDENTIFIER <param_next>
-20. 	<params> -> ε
-21. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next>
-22. 	<param_next> -> ε
+9. 	<statement> -> KEYWORD_PRINT(<expression>)          	//co ked je prazdny print/komentar v printe
+10. 	<statement> -> KEYWORD_PASS
+11. 	<statement> -> KEYWORD_INPUTS()
+12. 	<statement> -> KEYWORD_INPUTI()
+13. 	<statement> -> KEYWORD_INPUTF()
+14. 	<statement> -> KEYWORD_LEN(TYPE_STRING)
+15. 	<statement> -> KEYWORD_SUBSTR(TYPE_STRING TYPE_COMMA TYPE_INT TYPE_COMMA TYPE_INT)
+16. 	<statement> -> KEYWORD_CHR(TYPE_STRING TYPE_COMMA TYPE_INT)
+17. 	<statement> -> KEYWORD_ORD(TYPE_INT)
 
-
-
+18.	<params> -> TYPE_IDENTIFIER <param_next>
+19. 	<params> -> ε
+20. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next>
+21. 	<param_next> -> ε
+22.	<end>-> ε	//riesenie <end> chybalo
 
 
+
+ <statement> -> <statement> TYPE_EOL <statement>		//aby mohlo byt viac statementov zasebou
+								//lave rekurzie chyba.
 
 /// <statement> -> EOF <end> ///neplati viz.3 a 18
 
