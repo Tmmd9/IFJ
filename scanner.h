@@ -138,6 +138,7 @@ typedef enum        ///TODO need help with these check-if there are all we need
     TYPE_COLON,                      //	':'             23
     TYPE_INDENT,                     //typ INDENT       24
     TYPE_DEDENT,                     //typ DEDENT       25
+    TYPE_COMMENT,                    //dokumentacny     26
 } token_type;
 
 typedef struct {

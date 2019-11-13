@@ -120,7 +120,7 @@ int getNextToken(FILE *source, token *token, tStack *stack) {
             case (STATE_START):
                 if (c == ' ') {        //ak je znak medzera
                     //vraciam znak do source a nastavime state
-                    ungetc(c,source);
+                    ungetc(c, source);
                     state = STATE_INDENT_OR_DEDENT;
                 } else if (c == '\n') {        //novy riadok
                     state = STATE_EOL;
@@ -141,11 +141,11 @@ int getNextToken(FILE *source, token *token, tStack *stack) {
                     state = STATE_BLOCK_STRING_START;
                 } else if (isalpha(c) || c == '_') {//id or keyword
                     //zistime co je na tope stacku
-                    stackTop(stack,&top);
+                    stackTop(stack, &top);
                     //pokial je na tope cislo vacsie ako momentalny pocet medzier
                     //prechadzame do stavu dedent
-                    if (firstToken && (top > spaceCount)){
-                        ungetc(c,source);
+                    if (firstToken && (top > spaceCount)) {
+                        ungetc(c, source);
                         state = STATE_DEDENT;
                         break;
                     }
@@ -195,11 +195,14 @@ int getNextToken(FILE *source, token *token, tStack *stack) {
                     //ak pride EOF a stack nie je prazdny, musime vyprazdnit
                     //a generovat dedenty
                     if (!stackEmpty(stack)) {
-                        stackTop(stack,&top);
+                        stackTop(stack, &top);
                         if (top == 0) {
                             token->type = TYPE_EOF;
                             return returnCode(TOKEN_OK, s);
-                        } else {freeStack = true; state = STATE_DEDENT;}
+                        } else {
+                            freeStack = true;
+                            state = STATE_DEDENT;
+                        }
                     } else {
                         token->type = TYPE_EOF;
                         return returnCode(TOKEN_OK, s);
@@ -224,7 +227,7 @@ int getNextToken(FILE *source, token *token, tStack *stack) {
                 } else if (c == '\n') {
                     spaceCount = 0;
                     state = STATE_START;
-                } else if (isalnum(c)){
+                } else if (isalnum(c)) {
                     stackTop(stack, &top);
                     if (top < spaceCount) {
                         stackPush(stack, (char) spaceCount);
@@ -233,10 +236,10 @@ int getNextToken(FILE *source, token *token, tStack *stack) {
                         token->type = TYPE_INDENT;
                         return returnCode(TOKEN_OK, s);
                     } else if (top > spaceCount) {
-                        ungetc(c,source);
+                        ungetc(c, source);
                         state = STATE_DEDENT;
                     } else {
-                        ungetc(c,source);
+                        ungetc(c, source);
                         state = STATE_START;
                     }
                 } else {
@@ -258,10 +261,10 @@ int getNextToken(FILE *source, token *token, tStack *stack) {
                     if (top > spaceCount && spaceCount > helpStack) {
                         return returnCode(ERROR_SCANNER, s);
                     }
-                    if (freeStack){
+                    if (freeStack) {
                         while (top != 0) {
                             if (helpStack == 0 && spaceCount == 0 &&
-                                top == 0 && spaceCountBeforeEOL != top){
+                                top == 0 && spaceCountBeforeEOL != top) {
                                 return returnCode(ERROR_SCANNER, s);
                             }
                             token->type = TYPE_DEDENT;
@@ -503,6 +506,9 @@ int getNextToken(FILE *source, token *token, tStack *stack) {
                     state = STATE_BLOCK_STRING_LEAVE_TRY;
                 } else if (c == EOF) {
                     return returnCode(ERROR_SCANNER, s);
+                } else if (firstToken) {
+                    commentary = true;
+                    break;
                 } else {
                     //ak je znak hocijaky iny nez EOF alebo ", pridavame do retazca
                     if (stringAddChar(s,c)) {
@@ -518,6 +524,8 @@ int getNextToken(FILE *source, token *token, tStack *stack) {
                     state = STATE_BLOCK_STRING_LEAVE;
                 } else if (c == EOF) {
                     return returnCode(ERROR_SCANNER, s);
+                } else if (firstToken) {
+                    state = STATE_BLOCK_STRING;
                 } else {
                     /* pokial to je iny znak, nulujeme count a do retazca
                      * pridavame explicitne " a aktualne spracovany znak*/
@@ -537,6 +545,11 @@ int getNextToken(FILE *source, token *token, tStack *stack) {
                  * a nulujeme counter */
                 if (c == '"' && quoteCount == 2) {
                     quoteCount = 0;
+                    if (commentary){
+                        firstToken = 0;
+                        token->type = TYPE_COMMENT;
+                        return returnCode(TOKEN_OK,s);
+                    }
                     if (stringCpy(s, token->attribute.string)) {
                         return returnCode(ERROR_INTERN, s);
                     }
