@@ -111,7 +111,7 @@ int getNextToken(FILE *source, token *token, tStack *stack) {
     token->type = TYPE_EMPTY;    //pociatocny typ tokenu
     char c, *endptr, top;
     char arr[3] = {0, 0, 0};
-    static int spaceCount = 0, spaceCountBeforeEOL = 0;
+    static int spaceCount = 0, spaceCountBeforeEOL = 0, quoteCount = 0;
     bool commentary = false, freeStack = false;
 
     while (1) {
@@ -138,7 +138,7 @@ int getNextToken(FILE *source, token *token, tStack *stack) {
                 } else if (c == '\'') {        //zaciatok stringu
                     state = STATE_STRING_START;
                 } else if (c == '"') {        //zaciatok blokoveho komentara
-                    state = STATE_BLOCK_COMMENT_START;
+                    state = STATE_BLOCK_STRING_START;
                 } else if (isalpha(c) || c == '_') {//id or keyword
                     //zistime co je na tope stacku
                     stackTop(stack,&top);
@@ -480,48 +480,84 @@ int getNextToken(FILE *source, token *token, tStack *stack) {
                 }
                 break;
 
-            case (STATE_BLOCK_COMMENT_START):
+            case (STATE_BLOCK_STRING_START):
                 if (c == '"') {
-                    state = STATE_BLOCK_COMMENT_CONTINUE;
+                    state = STATE_BLOCK_STRING_CONTINUE;
                 } else if (c == EOF) {
                     return returnCode(ERROR_SCANNER, s);
                 }
                 break;
 
-            case (STATE_BLOCK_COMMENT_CONTINUE):
+            case (STATE_BLOCK_STRING_CONTINUE):
                 if (c == '"') {
-                    state = STATE_BLOCK_COMMENT;
+                    state = STATE_BLOCK_STRING;
                 } else if (c == EOF) {
                     return returnCode(ERROR_SCANNER, s);
                 }
                 break;
 
-            case (STATE_BLOCK_COMMENT):
-                commentary = true;
+            case (STATE_BLOCK_STRING):  //sme v dokumentacnom retazci
+                // pokial je dalsi znak uvodzovka, prechadzame dalej a pocitame "
                 if (c == '"') {
-                    state = STATE_BLOCK_COMMENT_LEAVE_TRY;
-                } else if (c == EOF) {
-                    return returnCode(ERROR_SCANNER, s);
-                }
-                break;
-
-            case (STATE_BLOCK_COMMENT_LEAVE_TRY):
-                if (c == '"') {
-                    state = STATE_BLOCK_COMMENT_LEAVE;
+                    quoteCount += 1;
+                    state = STATE_BLOCK_STRING_LEAVE_TRY;
                 } else if (c == EOF) {
                     return returnCode(ERROR_SCANNER, s);
                 } else {
-                    state = STATE_BLOCK_COMMENT;
+                    //ak je znak hocijaky iny nez EOF alebo ", pridavame do retazca
+                    if (stringAddChar(s,c)) {
+                        return returnCode(ERROR_SCANNER,s);
+                    }
                 }
                 break;
 
-            case (STATE_BLOCK_COMMENT_LEAVE):
-                if (c == '"') {
-                    state = STATE_START;
+            case (STATE_BLOCK_STRING_LEAVE_TRY):
+                // pokial je dalsi znak uvodzovka, prechadzame dalej a pocitame "
+                if (c == '"' && quoteCount == 1) {
+                    quoteCount += 1;
+                    state = STATE_BLOCK_STRING_LEAVE;
                 } else if (c == EOF) {
                     return returnCode(ERROR_SCANNER, s);
                 } else {
-                    state = STATE_BLOCK_COMMENT;
+                    /* pokial to je iny znak, nulujeme count a do retazca
+                     * pridavame explicitne " a aktualne spracovany znak*/
+                    quoteCount = 0;
+                    if (stringAddChar(s,'"')) {
+                        return returnCode(ERROR_SCANNER,s);
+                    }
+                    if (stringAddChar(s,c)) {
+                        return returnCode(ERROR_SCANNER,s);
+                    }
+                    state = STATE_BLOCK_STRING;
+                }
+                break;
+
+            case (STATE_BLOCK_STRING_LEAVE):
+                /* pokial pridu tretie " v rade, ukladame vysledny string
+                 * a nulujeme counter */
+                if (c == '"' && quoteCount == 2) {
+                    quoteCount = 0;
+                    if (stringCpy(s, token->attribute.string)) {
+                        return returnCode(ERROR_INTERN, s);
+                    }
+                    token->type = TYPE_STRING;
+                    return returnCode(TOKEN_OK,s);
+                } else if (c == EOF) {
+                    return returnCode(ERROR_SCANNER, s);
+                } else {
+                    /* ak pride iny znak, opat nulujeme count a explicitne
+                     * pridavame 2x " a aktualny znak*/
+                    quoteCount = 0;
+                    if (stringAddChar(s,'"')) {
+                        return returnCode(ERROR_SCANNER,s);
+                    }
+                    if (stringAddChar(s,'"')) {
+                        return returnCode(ERROR_SCANNER,s);
+                    }
+                    if (stringAddChar(s,c)) {
+                        return returnCode(ERROR_SCANNER,s);
+                    }
+                    state = STATE_BLOCK_STRING;
                 }
                 break;
 
