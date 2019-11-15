@@ -34,14 +34,14 @@ typedef enum {
 
 typedef struct {
     DataType type;      //jeden z datovych typov
-    string *param;      //parametre
-    char *identifier;   //identifikator
+    string *param;      //parametre        
+    char *identifier;   //identifikator                     
     bool isDefined;     //bool ci bola funkcia definovana
     bool isGlobal;      //bool na globalne premenne
 } Data;
 
 typedef struct item {
-    char *key;      //identifikator (kluc)
+    char *key;      //identifikator (kluc)              ///toto bude nazov definicie funkcie/premennej?
     Data data;      //data o polozke
     struct item *next;  //ukazatel na dalsiu polozku
 } htabItem;
