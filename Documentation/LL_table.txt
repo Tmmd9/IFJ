@@ -8,7 +8,7 @@
 											koncoveho stavu <end> kde uz neparsuje 	
 
 5. 	<statement> -> KEYWORD_IF <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT KEYWORD_ELSE TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT <statement_next>
-6. 	<statement> -> KEYWORD_WHILE TYPE_COLON <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>
+6. 	<statement> -> KEYWORD_WHILE <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>
 7. 	<statement> -> KEYWORD_RETURN <expression>
 8. 	<statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> <statement_next>
 9.	<statement> -> TYPE_IDENTIFIER(<params>) <statement_next> ///nasa LL nevedela volat nadefinovane funkcie

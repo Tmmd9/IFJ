@@ -191,45 +191,70 @@ static int params(ParserData *data)
 static int statement(ParserData *data)
 { 
     int result;
-    // 5. <statement> -> KEYWORD_IF <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL
-    // TYPE_DEDENT KEYWORD_ELSE TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL 
-    // TYPE_DEDENT <statement_next>
-
-    //IF
+	/*
+	*	5. 	<statement> -> KEYWORD_IF <expression> TYPE_COLON 
+	*	TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT KEYWORD_ELSE TYPE_COLON 
+	*	TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT <statement_next>
+    */
     if ( ((result = checkTokenType(f, &data->Token, data->stack, TYPE_KEYWORD)) == 0) && 
     	(data->Token.attribute.keyword == KEYWORD_IF)) {
     	data->in_while_or_if = 1;
     	data->uniqLabel +=1;
-    	if ((result = checkTokenType(f, &data->Token, data->stack, TYPE_IDENTIFIER)) == 0) {
-        	if ((data->leftID = htabSearch(&data->localT, data->Token->attribute.string)) == NULL){ //ak nie je v local
-        		if ((data->leftID = htabSearch(&data->globalT, data->Token->attribute.string)) == NULL) //ak nie je v global
+    	///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj 
+    	if ((result = checkTokenType(f, &data->Token, data->stack, TYPE_IDENTIFIER)) == 0 || 
+    		data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT || 
+    		data->Token.type == TYPE_STRING) {
+        	if (data->Token.type == TYPE_IDENTIFIER && 
+        	(data->leftID = htabSearch(&data->localT, data->Token->attribute.string)) == NULL) { //ak nie je v local
+        		if (data->Token.type == TYPE_IDENTIFIER && 
+        		(data->leftID = htabSearch(&data->globalT, data->Token->attribute.string)) == NULL) //ak nie je v global
         			return ERROR_PROGRAM_SEMANTIC;   
         	}
-    	}
-    	else return result;
-    	if ((result = checkTokenType(f, &data->Token, data->stack, TYPE_IDENTIFIER)) == 0) { //porovnavac
-    		
-    	}	//ulozim si na stack co to bolo za porovnavac
-    	else return result;	//prisiel nevalidny porovnavac
-    	if ((result = checkTokenType(f, &data->Token, data->stack, TYPE_IDENTIFIER)) == 0) {
-        	if ((data->rightID = htabSearch(&data->localT, data->Token->attribute.string)) == NULL){ //ak nie je v local
-        		if ((data->rightID = htabSearch(&data->globalT, data->Token->attribute.string)) == NULL) //ak nie je v global
-        			return ERROR_PROGRAM_SEMANTIC;   
+        	else  {
+        		//ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
         	}
-    	}
-    	else return result;
-		/*
-    	if ( (result = expression funkcii poslem (laveID, porovnavac, praveID)) == 0){
-    		if ((result = codegenerator(nejakeMakro, lava hodnota, prava, porovnavac?))!=0 )
-    			return result;
-    	}
-    	else return result;
-		*/
-        //COLON a.k.a dvojbodka
-        if((result = checkTokenType(f, &data->Token, data->stack, TYPE_COLON)) == 0) {
-           
-        if((result = checkTokenType(f, &data->Token, data->stack, TYPE_EOL)) == 0) {
-                
+        	//implicitne hodnoty relacneho operatora, kt poslem expression 'relacny operator' = NULL
+        	//implicitne hodnoty druheho operandu, kt, poslem expression 'rightID' = NULL
+    	
+	    	if ((result = checkTokenType(f, &data->Token, data->stack, TYPE_GREATER_THAN)) == 0 ||
+	    		data->Token.type == TYPE_INT || data->Token.type == TYPE_LESS_THAN ||
+	    		data->Token.type == TYPE_GREATER_EQUAL || data->Token.type == TYPE_LESS_EQUAL ||
+	    		data->Token.type == TYPE_EQUALS || data->Token.type == TYPE_NOT_EQUAL) { //porovnavac
+	    		//ulozim na stack stackADD(data->Token.attribute.string)
+	    		//ulozim si na stack co to bolo za relacny operator
+	    		//PREPISEM IMPLICITNE  hodnoty
+		    	if ((result = checkTokenType(f, &data->Token, data->stack, TYPE_IDENTIFIER)) == 0 || 
+    				data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT || 
+    				data->Token.type == TYPE_STRING) {
+		        	if (data->Token.type == TYPE_IDENTIFIER && 
+		        	(data->rightID = htabSearch(&data->localT, data->Token->attribute.string)) == NULL){ //ak nie je v local
+		        		if (data->Token.type == TYPE_IDENTIFIER && 
+		        		(data->rightID = htabSearch(&data->globalT, data->Token->attribute.string)) == NULL) //ak nie je v global
+		        			return ERROR_PROGRAM_SEMANTIC;   
+		        	}
+		        	else  {
+        				//PREPISEM IMPLICITNE hodnoty
+        				//ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
+		        		//lebo colon si sam nepyta token
+		        		result = checkTokenType(f, &data->Token, data->stack, TYPE_COLON);
+        			}
+		    	}
+		    	else return result;
+	    	}	//cele telo IF relacneho operatora
+    		else if (data->Token.type == TYPE_COLON)	; 	//do nothing
+    		else return result;								//prisiel nevalidny porovnavac,chyba
+	    	
+	    	/*
+	    	if ( (result = expression funkcii poslem (laveID, porovnavac, praveID)) == 0){
+	    		if ((result = codegenerator(nejakeMakro, lava hodnota, prava, porovnavac?))!=0 )
+	    			return result;
+	    	}
+	    	else return result;
+			*/
+
+        //COLON a.k.a dvojbodka	, pytal som si token v expression
+        if(data->Token.type == TYPE_COLON) {      
+        if((result = checkTokenType(f, &data->Token, data->stack, TYPE_EOL)) == 0) {            
         if((result = checkTokenType(f, &data->Token, data->stack, TYPE_INDENT)) == 0) {
         	data->deepLabel +=1;	//mam indent, zmena urovne
             //rekurzia pre vnutro IF-u
@@ -239,11 +264,8 @@ static int statement(ParserData *data)
 			data->deepLabel -=1;
 		if ((result = checkTokenType(f, &data->Token, data->stack, TYPE_KEYWORD)) && 
 			data->token.attribute.keyword == KEYWORD_ELSE) {
-                                //COLON a.k.a dvojbodka
 		if((result = checkTokenType(f, &data->Token, data->stack, TYPE_COLON)) == 0) {
-                                    //EOL
 		if((result = checkTokenType(f, &data->Token, data->stack, TYPE_EOL)) == 0) {
-                                        //INDENT
 		if((result = checkTokenType(f, &data->Token, data->stack, TYPE_INDENT)) == 0) {
 			data->deepLabel +=1;	//mam indent, zmena urovne
 			//rekurzia pre vnutro ELSE
@@ -251,6 +273,7 @@ static int statement(ParserData *data)
 			//DEDENT zo statement_next sa mi vypytal dalsi token, nemusim pytat novy
 		if(data->Token.type == TYPE_DEDENT) {
 			data->deepLabel -=1;
+			data->in_while_or_if = 0;
 			//pokracovanie statementov
 			if((result = statement_next(&data)) != SYNTAX_OK) return result;
 		} 
@@ -271,40 +294,98 @@ static int statement(ParserData *data)
 		else return result;
 		} 		//SYNTAX ERR -> not really could be scanner or syntax or semantic
 		else return result;
-		}
+		}		//prva cast expression
+    	else return result;		//ak nebol prvy znak v expression spravny
+    }//IF
 
     // 6. <statement> -> KEYWORD_WHILE TYPE_COLON <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>
     //WHILE
     else if ((data->Token.type == TYPE_KEYWORD) && (data->token.attribute.keyword == KEYWORD_WHILE)) {
-        //COLON a.k.a dvojbodka
-        if((result = checkTokenType(f, &data->Token, data->stack, TYPE_COLON)) == 0) {
+		data->in_while_or_if = 1;
+    	data->uniqLabel +=1;
+            ///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj 
+    	if ((result = checkTokenType(f, &data->Token, data->stack, TYPE_IDENTIFIER)) == 0 || 
+    		data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT || 
+    		data->Token.type == TYPE_STRING) {
+        	if (data->Token.type == TYPE_IDENTIFIER && 
+        	(data->leftID = htabSearch(&data->localT, data->Token->attribute.string)) == NULL) { //ak nie je v local
+        		if (data->Token.type == TYPE_IDENTIFIER && 
+        		(data->leftID = htabSearch(&data->globalT, data->Token->attribute.string)) == NULL) //ak nie je v global
+        			return ERROR_PROGRAM_SEMANTIC;   
+        	}
+        	else  {
+        		//ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
+        	}
+        	//implicitne hodnoty relacneho operatora, kt poslem expression 'relacny operator' = NULL
+        	//implicitne hodnoty druheho operandu, kt, poslem expression 'rightID' = NULL
+    	
+	    	if ((result = checkTokenType(f, &data->Token, data->stack, TYPE_GREATER_THAN)) == 0 ||
+	    		data->Token.type == TYPE_INT || data->Token.type == TYPE_LESS_THAN ||
+	    		data->Token.type == TYPE_GREATER_EQUAL || data->Token.type == TYPE_LESS_EQUAL ||
+	    		data->Token.type == TYPE_EQUALS || data->Token.type == TYPE_NOT_EQUAL) { //porovnavac
+	    		//ulozim na stack stackADD(data->Token.attribute.string)
+	    		//ulozim si na stack co to bolo za relacny operator
+	    		//PREPISEM IMPLICITNE  hodnoty
+		    	if ((result = checkTokenType(f, &data->Token, data->stack, TYPE_IDENTIFIER)) == 0 || 
+    				data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT || 
+    				data->Token.type == TYPE_STRING) {
+		        	if (data->Token.type == TYPE_IDENTIFIER && 
+		        	(data->rightID = htabSearch(&data->localT, data->Token->attribute.string)) == NULL){ //ak nie je v local
+		        		if (data->Token.type == TYPE_IDENTIFIER && 
+		        		(data->rightID = htabSearch(&data->globalT, data->Token->attribute.string)) == NULL) //ak nie je v global
+		        			return ERROR_PROGRAM_SEMANTIC;   
+		        	}
+		        	else  {
+        				//PREPISEM IMPLICITNE hodnoty
+        				//ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
+		        		//lebo colon si sam nepyta token
+		        		result = checkTokenType(f, &data->Token, data->stack, TYPE_COLON);
+        			}
+		    	}
+		    	else return result;
+	    	}	//cele telo IF relacneho operatora
+    		else if (data->Token.type == TYPE_COLON)	; 	//do nothing
+    		else return result;								//prisiel nevalidny porovnavac,chyba
+	    	
+	    	/*
+	    	if ( (result = expression funkcii poslem (laveID, porovnavac, praveID)) == 0){
+	    		if ((result = codegenerator(nejakeMakro, lava hodnota, prava, porovnavac?))!=0 )
+	    			return result;
+	    	}
+	    	else return result;
+			*/
+		if(data->Token.type == TYPE_COLON) {
+	    if((result = checkTokenType(f, &data->Token, data->stack, TYPE_EOL)) == 0) {
+	    if((result = checkTokenType(f, &data->Token, data->stack, TYPE_INDENT)) == 0) {
+			data->deepLabel +=1;	//mam indent, zmena urovne
+	    //vnutro while-u rekurzia statementu
+	    if((result = statement(&data)) != SYNTAX_OK) return result;
+	    if((result = checkTokenType(f, &data->Token, data->stack, TYPE_DEDENT)) == 0) {
+			data->deepLabel -=1;	//mam dedent, zmena urovne
+			data->in_while_or_if = 0;
+	        //pokracovanie kodiku, koniec tohto LL pravidla
+	        if((result = statement_next(&data)) != SYNTAX_OK) return result;
+	    }
+	    else return result;
+	    }
+	    else return result;
+	    }
+	    else return result;
+	    }
+	    else return result;
+	    }		//prva cast expression
+		else return result;		//ak nebol prvy znak v expression spravny
+    } //WHILE
 
-            /**** TODO EXPRESSION ****/
 
-            //COLON a.k.a dvojbodka
-            if((result = checkTokenType(f, &data->Token, data->stack, TYPE_COLON)) == 0) {
-            //EOL
-                if((result = checkTokenType(f, &data->Token, data->stack, TYPE_EOL)) == 0) {
-                //INDENT
-                    if((result = checkTokenType(f, &data->Token, data->stack, TYPE_INDENT)) == 0) {
-                        //vnutro while-u rekurzia statementu
-                        statement(&data);
-                        //EOL
-                        if((result = checkTokenType(f, &data->Token, data->stack, TYPE_EOL)) == 0) {
-                            //DEDENT
-                            if((result = checkTokenType(f, &data->Token, data->stack, TYPE_DEDENT)) == 0) {
-                                //pokracovanie kodiku, koniec tohto LL pravidla
-                                statement_next(&data);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        //SYNTAX ERR 
-        else
-            return result;
-    }
+/****************************************I*ENDED*UP*HERE*****************************************
+*				__________ 					 ________ 	 _______	.		 . 					*
+*					|		|		|		|			|		|	|\      /|					*
+*					|		|		|		|_______ 	|		|	| \    / |					*
+*			 		|		|		|				|	|		|	|  \  /  |					*
+*					|		|_______|		________|	|_______|	|   \/   |					*
+*																								*
+*****************************************TU*SOM*SKONČIL******************************************/
 
     // 7. <statement> -> KEYWORD_RETURN <expression>
      else if ((data->Token.type == TYPE_KEYWORD) && (data->token.attribute.keyword == KEYWORD_RETURN)) {
