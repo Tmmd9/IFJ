@@ -49,9 +49,8 @@ typedef enum {
     STATE_INDENT_OR_DEDENT,         //  medzistav (Q15}        26
 } state;
 
-typedef enum {                                    //V ZADANI 3.1 !!PY je CASE SENSITIVE!!
-    //TODO vstavane funkcie su tiez  klucove slova
-            KEYWORD_DEF,                    //def                       0
+typedef enum {
+    KEYWORD_DEF,                    //def                       0
     KEYWORD_ELSE,                   //else                      1
     KEYWORD_IF,                     //if                        2
     KEYWORD_NONE,                   //None                      3
@@ -66,27 +65,6 @@ typedef enum {                                    //V ZADANI 3.1 !!PY je CASE SE
     KEYWORD_SUBSTR,                 //substr funkcia            12
     KEYWORD_CHR,                    //chr funkcia               13
     KEYWORD_ORD,                    //ord funkcia               14
-    //KEYWORD_AND,					//su v py3 ale neviem ci aj v IFJ19
-    //KEYWORD_AS,
-    //KEYWORD_ASSERT,
-    //KEYWORD_CLASS,
-    //KEYWORD_DEL,
-    //KEYWORD_EXCEPT,
-    //KEYWORD_FINALLY,
-    //KEYWORD_FROM,
-    //KEYWORD_GLOBAL,
-    //KEYWORD_IMPORT,
-    //KEYWORD_IN,					//v zadani sa o nich nehovori, aspon som
-    //KEYWORD_IS,					//ich tam ja nikde nevidel spomenute
-    //KEYWORD_LAMBDA,				//ale pre python su viacere z nich dost
-    //KEYWORD_NONLOCAL,				//dolezite tak neviem
-    //KEYWORD_NOT,
-    //KEYWORD_OR,
-    //KEYWORD_RAISE,
-    //KEYWORD_TRY,
-    //KEYWORD_WITH,
-    //KEYWORD_YIELD,
-
     //KEYWORD_FOR,					//v rozsireniach (12.7.1)
     //KEYWORD_BREAK,
     //KEYWORD_CONINUE,
@@ -95,18 +73,18 @@ typedef enum {                                    //V ZADANI 3.1 !!PY je CASE SE
     //KEYWORD_FALSE,
 } Keyword;
 
-typedef enum        ///TODO need help with these check-if there are all we need
+typedef enum
 {
     /*
         Datove typy
     */
-            TYPE_INT,                       //int               0
+    TYPE_INT,                       //int               0
     TYPE_FLOAT,                     //actually double   1
     TYPE_STRING,                    //string            2
     /*
         ID / Keyword / OtherStuff
     */
-            TYPE_IDENTIFIER,                // Identifier       3
+    TYPE_IDENTIFIER,                // Identifier       3
     TYPE_KEYWORD,                   // Keyword          4
     TYPE_EOL,                       // typ EOL          5
     TYPE_EOF,                       // typ EOF          6
@@ -114,7 +92,7 @@ typedef enum        ///TODO need help with these check-if there are all we need
     /*
         matematicke operacie
     */
-            TYPE_PLUS,                      //	'+'             8
+    TYPE_PLUS,                      //	'+'             8
     TYPE_MINUS,                     //	'-'             9
     TYPE_MULTIPLY,                  //	'*'             10
     TYPE_DIVIDE,                    //	'/'             11
@@ -123,7 +101,7 @@ typedef enum        ///TODO need help with these check-if there are all we need
     /*
         logicke operacie
     */
-            TYPE_GREATER_THAN,              //	>               14
+    TYPE_GREATER_THAN,              //	>               14
     TYPE_LESS_THAN,                 // 	<               15
     TYPE_GREATER_EQUAL,             //	>=              16
     TYPE_LESS_EQUAL,                //  <=              17
@@ -132,7 +110,7 @@ typedef enum        ///TODO need help with these check-if there are all we need
     /*
         Znaky + Space
     */
-            TYPE_LEFT_PAR,                   //	'('             20
+    TYPE_LEFT_PAR,                   //	'('             20
     TYPE_RIGHT_PAR,                  //	')'             21
     TYPE_COMMA,                      //	','             22
     TYPE_COLON,                      //	':'             23
@@ -154,6 +132,8 @@ typedef struct {
 } token;
 
 // hlavicka funkcia ktora je docasna, kvoli testovaniu
-int getNextToken(FILE *source, token *token, tStack *stack);
+int getNextToken(token *token);
+void sourceFile(FILE *f);
+void setString(string *s);
 
 #endif    // !_SCANNER_H_

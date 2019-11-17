@@ -20,12 +20,11 @@
 #include <stdbool.h>
 
 FILE *source;
-//string *tString;
+tStack *stack;
+string *parserStr;
 static int firstToken = 1;  //kvoli indentom a dedentom
+static bool initStack = false;
 
-void sourceFile(FILE *f) {
-    source = f;
-}
 
 static int returnCode(int exitCode, string *s) {
     stringStrFree(s);
@@ -91,21 +90,33 @@ int identifierOrKeyword(string *s, token *token) {
     return returnCode(TOKEN_OK, s);
 }
 
-int getNextToken(FILE *source, token *token, tStack *stack) {
-    //TODO
+void sourceFile(FILE *f) {
+    source = f;
+}
+
+void setString(string *s) {
+    parserStr = s;
+}
+
+int getNextToken(token *token) {
     if (!source) return ERROR_INTERN;
+    if (!parserStr) return ERROR_INTERN;
+    token->attribute.string = parserStr;
+
     string str;
     string *s = &str;
     if (stringInit(s)) {
         return returnCode(ERROR_INTERN, s);
     }
-    // toto tu je docasne
-/*	string String;
-	string *tString = &String;
-    if (stringInit(tString)){
-        return returnCode(ERROR_INTERN, s);
+    if (!initStack){
+        stack = (tStack *) malloc(STACK_SIZE * sizeof(tStack));
+        if (!stack) {
+            return ERROR_INTERN;
+        }
+        stackInit(stack);
+        stackPush(stack, (char) 0);
+        initStack = 1;
     }
-    token->attribute.string = tString;*/
 
     state state = STATE_START;    //pociatocny stav
     token->type = TYPE_EMPTY;    //pociatocny typ tokenu
@@ -467,7 +478,7 @@ int getNextToken(FILE *source, token *token, tStack *stack) {
                 if (isxdigit(c)) {
                     arr[1] = c;
 
-                    int value = strtol(arr, &endptr, 16);
+                    int value = (int) strtol(arr, &endptr, 16);
                     if (*endptr) {
                         return returnCode(ERROR_INTERN, s);
                     }
@@ -636,6 +647,8 @@ int getNextToken(FILE *source, token *token, tStack *stack) {
                 spaceCount = 0;
                 token->type = TYPE_EOL;
                 return returnCode(TOKEN_OK, s);
+
+            default: ;
         }
     }
 }
