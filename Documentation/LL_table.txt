@@ -7,27 +7,28 @@
 											iba <prog> , dalej ziska token TYPE_EOF a skoci to 
 											koncoveho stavu <end> kde uz neparsuje 	
 
-5. 	<statement> -> KEYWORD_IF <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT KEYWORD_ELSE TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>
+5. 	<statement> -> KEYWORD_IF <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT KEYWORD_ELSE TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT <statement_next>
 6. 	<statement> -> KEYWORD_WHILE TYPE_COLON <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>
 7. 	<statement> -> KEYWORD_RETURN <expression>
-8. 	<statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> TYPE_EOL <statement_next>
-9. 	<statement_next> -> TYPE_EOL <statement> 		//aby mohlo byt viac statementov zasebou
-10. 	<statement> -> KEYWORD_PRINT(<expression>) <statement_next>        	//co ked je prazdny print/komentar v printe
-11. 	<statement> -> KEYWORD_PASS <statement_next>
-12. 	<statement> -> KEYWORD_INPUTS() <statement_next>
-13. 	<statement> -> KEYWORD_INPUTI() <statement_next>
-14. 	<statement> -> KEYWORD_INPUTF() <statement_next>
-15. 	<statement> -> KEYWORD_LEN(TYPE_STRING) <statement_next>
-16. 	<statement> -> KEYWORD_SUBSTR(TYPE_STRING TYPE_COMMA TYPE_INT TYPE_COMMA TYPE_INT) <statement_next>
-17. 	<statement> -> KEYWORD_CHR(TYPE_STRING TYPE_COMMA TYPE_INT) <statement_next>
-18. 	<statement> -> KEYWORD_ORD(TYPE_INT) <statement_next>
+8. 	<statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> <statement_next>
+9.	<statement> -> TYPE_IDENTIFIER(<params>) <statement_next> ///nasa LL nevedela volat nadefinovane funkcie
+10. 	<statement_next> -> TYPE_EOL <statement> 		//aby mohlo byt viac statementov zasebou
+11. 	<statement> -> KEYWORD_PRINT(<expression>) <statement_next>        	//co ked je prazdny print/komentar v printe
+12. 	<statement> -> KEYWORD_PASS <statement_next>
+13. 	<statement> -> KEYWORD_INPUTS() <statement_next>
+14. 	<statement> -> KEYWORD_INPUTI() <statement_next>
+15. 	<statement> -> KEYWORD_INPUTF() <statement_next>
+16. 	<statement> -> KEYWORD_LEN(TYPE_STRING) <statement_next>
+17. 	<statement> -> KEYWORD_SUBSTR(TYPE_STRING TYPE_COMMA TYPE_INT TYPE_COMMA TYPE_INT) <statement_next>
+18. 	<statement> -> KEYWORD_CHR(TYPE_STRING TYPE_COMMA TYPE_INT) <statement_next>
+19. 	<statement> -> KEYWORD_ORD(TYPE_INT) <statement_next>
 
-19.	<params> -> TYPE_IDENTIFIER <param_next> 
-20. 	<params> -> ε
-21. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next>
-22. 	<param_next> -> ε
-23. 	<end> -> ε
-24. 	<statement_next> -> ε
+20.	<params> -> TYPE_IDENTIFIER <param_next> 
+21. 	<params> -> ε
+22. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next>
+23. 	<param_next> -> ε
+24. 	<end> -> ε
+25. 	<statement_next> -> ε
 
 
 

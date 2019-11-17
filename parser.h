@@ -7,16 +7,16 @@
 
 //struktura co bude uchovavat vsetko dolezite pre parser
 typedef struct {
-    symTable globalT;               //na tabulku globalnych symbolov (identifikatorov etc)
-    symTable localT;                //na tabulku localnych symbolov (identifikatorov etc)
-	/*Neni dokoncene, ked ta napadne co
-	sem pridat tak to sem pridaj a daj koment ze preco */
-	token Token;
-    tStack *stack;                  //dunno if necessary ale tak kvoli INDENTOM pre scanner
+    symTable globalT;      	//na tabulku globalnych symbolov (identifikatorov etc)
+    symTable localT;        //na tabulku localnych symbolov (identifikatorov etc)
 
-	Data * currentID;
-	Data * leftID;
-	Data * rightID;
+	token Token;
+	/*
+	*	veci potrebne k tvorbe stromu 
+	*/
+	Data * currentID;		//momentalne spracovavane
+	Data * leftID;			//lava strana premennej
+	Data * rightID;			//prava strana funkcie, vyrazu
 
     // ked checkujem parametre, tak index toho ktory momentalne spracovavam
 	unsigned paramIndex;
@@ -26,8 +26,11 @@ typedef struct {
     unsigned in_declaration;        //bool ci sa momentalne nachadzam v deklaracii funkcie
     unsigned not_declared_function; //bool ci sa nachadzam este v nedeklarovanej funkci
     unsigned in_function;
-    unsigned 
+    unsigned in_if_while;
 
+  	//  tStack *stack;                  
+	//dunno if necessary ale tak kvoli INDENTOM pre 
+	//scanner mal by si to skener sam initnut
 } ParserData;
 
 //Main parsera
