@@ -75,7 +75,7 @@ Data *htabAddSymbol(htab *table, const char *key, bool *allocErr){
         return NULL;
     }
     //inicializacia parametrov v polozke
-    if (!stringInit(newItem->data.param)){
+    if (stringInit(newItem->data.param)){
         free(newItem->data.param);
         free(newItem->key);
         free(newItem);

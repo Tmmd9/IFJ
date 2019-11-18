@@ -181,7 +181,7 @@ static int params(ParserData *data)
                 //ulozim ze dana funkcia ma zatial N paramaterov podla data->paramIndex
                 return SYNTAX_OK;
             }
-            else ERROR_PARSER;
+            else return ERROR_PARSER;
         }   
             //nacitany token je prava zatvorka -> <params> -> ε
         else if ((data->Token.type == TYPE_RIGHT_PAR) && (data->paramIndex == 0)) {
@@ -467,7 +467,7 @@ int variablesInit(ParserData *data)
 	*	vstavanych 
 	*	funkcii
 	*/
-	bool errIntern;
+/*	bool errIntern;
 	Data* id;
 
 	// Len(s) returns int
@@ -515,7 +515,7 @@ int variablesInit(ParserData *data)
 	id->type = DTYPE_STRING;
 	if (!htabAddParam(id, DTYPE_INT)) 
 		return ERROR_INTERN;
-
+*/
 /*
 	// Global variable %exp_result for storing result of expression.
 	id = htabAddSymbol(&data->globalT, "%exp_result", &errIntern);
@@ -544,18 +544,18 @@ int parse()
 	int result; 
 
 	string parserStr;
-	if (!stringInit(&parserStr)) 
+	if (stringInit(&parserStr))
 		return ERROR_INTERN;
 	setString(&parserStr);
 
-	ParserData *data = NULL;
-	if (variablesInit(data) == ERROR_INTERN)
+	ParserData data;
+	if (variablesInit(&data) == ERROR_INTERN)
 	{
 		stringStrFree(&parserStr);
 		return ERROR_INTERN;
 	}
 
-	if ((result = getNextToken(&data->Token)) == TOKEN_OK)
+	if ((result = getNextToken(&data.Token)) == TOKEN_OK)
 	///need to change skener as well aby sa tam initoval stack
 	///aby som pri kazdom volani getnexttoken pouzival len &data.Token
 	{
@@ -568,11 +568,11 @@ int parse()
 			return ERROR_INTERN;
 		}*/
 
-		result = prog(data);
+		result = prog(&data);
 	}
 
 	stringStrFree(&parserStr);
-	variablesFree(data);
+	variablesFree(&data);
 
 	return result;
 }
