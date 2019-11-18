@@ -7,8 +7,8 @@
 
 //struktura co bude uchovavat vsetko dolezite pre parser
 typedef struct {
-    symTable globalT;      	//na tabulku globalnych symbolov (identifikatorov etc)
-    symTable localT;        //na tabulku localnych symbolov (identifikatorov etc)
+    htab globalT;      	//na tabulku globalnych symbolov (identifikatorov etc)
+    htab localT;        //na tabulku localnych symbolov (identifikatorov etc)
 
 	token Token;
 	/*
