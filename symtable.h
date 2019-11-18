@@ -38,6 +38,7 @@ typedef struct {
     char *identifier;   //identifikator                     
     bool isDefined;     //bool ci bola funkcia definovana
     bool isGlobal;      //bool na globalne premenne
+    unsigned paramCount; //pocet parametrov vo funkci -neviem ci to je uplne potreba ked DH to nemal ale mne by t mohlo pomoct
 } Data;
 
 typedef struct item {
