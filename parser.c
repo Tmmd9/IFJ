@@ -111,19 +111,25 @@ static int prog(ParserData* data)
         if (data->Token.type == TYPE_RIGHT_PAR) {  //toto je hlavne test, ptom sa toto ifko moze odstranit
         	//todo-> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <prog>
         if ((result = checkTokenType(&data->Token, TYPE_COLON)) == 0) {
-        	data->in_declaration = 0;
-    		//tu musime ochranit TypeComent pokial nebude ani jedna z podmienok true, 
-    		//je to syntax err ->vlastne nie ocheckoval som to a nemusim
     	if (((result = checkTokenType(&data->Token, TYPE_EOL)) == 0)) {
-		if ((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
-			data->in_declaration = 1;
-			data->in_function = 1;
-			data->deepLabel +=1;	//mam indent, zmena urovne
-			if ((result = statement(data)) == 0) {
-				
-			}
-		}
-		else return result;	//neprisiel indent
+        if ((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
+            data->in_declaration = 1;
+            data->in_function = 1;
+            data->deepLabel += 1;    //mam indent, zmena urovne
+        if ((result = statement(data)) != 0) return result;      //nieco sa posralo v statement
+        if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
+        if ((result = checkTokenType(&data->Token, TYPE_DEDENT)) == 0) {
+            data->in_declaration = 0;
+            data->in_function = 0;
+            data->deepLabel -= 1;
+            data->currentID->isDefined = true;
+            return SYNTAX_OK;
+        }
+        else return result; //neprisiel DEDENT
+        }
+        else return result; //neprisiel EOL
+        }
+        else return result;	//neprisiel indent
    		}
    		else return result; //nebol EOL 
         }
@@ -170,7 +176,7 @@ static int params(ParserData *data)
             bool errIntern;
             if (!(data->rightID = htabAddSymbol(&data->localT, data->Token.attribute.string->str, &errIntern))){
 				if (errIntern == true) return ERROR_INTERN;
-				else return ERROR_PROGRAM_SEMANTIC;
+				else return ERROR_PROGRAM_SEMANTIC; ///redefinicia
 			}
             //nacitavam dalsi token ak je ciarka ocakavam dalsi param.
             //21. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next> 
@@ -181,7 +187,7 @@ static int params(ParserData *data)
                 //ulozim ze dana funkcia ma zatial N paramaterov podla data->paramIndex
                 return SYNTAX_OK;
             }
-            else return ERROR_PARSER;
+            else return ERROR_PARSER;   //neprisla ciarka ani prava zatvorka
         }   
             //nacitany token je prava zatvorka -> <params> -> ε
         else if ((data->Token.type == TYPE_RIGHT_PAR) && (data->paramIndex == 0)) {
@@ -210,48 +216,56 @@ static int statement(ParserData *data)
     	///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj 
     	if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 || 
     		data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT || 
-    		data->Token.type == TYPE_STRING) {
-        	if (data->Token.type == TYPE_IDENTIFIER && 
-        	(data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) { //ak nie je v local
-        		if (data->Token.type == TYPE_IDENTIFIER && 
-        		(data->leftID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL) //ak nie je v global
-        			return ERROR_PROGRAM_SEMANTIC;   
-        	}
-        	else  {
-        		//ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
-        	}
-        	//implicitne hodnoty relacneho operatora, kt poslem expression 'relacny operator' = NULL
-        	//implicitne hodnoty druheho operandu, kt, poslem expression 'rightID' = NULL
-    	
-	    	if ((result = checkTokenType(&data->Token, TYPE_GREATER_THAN)) == 0 ||
-	    		data->Token.type == TYPE_INT || data->Token.type == TYPE_LESS_THAN ||
-	    		data->Token.type == TYPE_GREATER_EQUAL || data->Token.type == TYPE_LESS_EQUAL ||
-	    		data->Token.type == TYPE_EQUALS || data->Token.type == TYPE_NOT_EQUAL) { //porovnavac
-	    		//ulozim na stack stackADD(data->Token.attribute.string->str)
-	    		//ulozim si na stack co to bolo za relacny operator
-	    		//PREPISEM IMPLICITNE  hodnoty
-		    	if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 || 
-    				data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT || 
-    				data->Token.type == TYPE_STRING) {
-
+    		data->Token.type == TYPE_STRING || data->Token.attribute.keyword == KEYWORD_NONE ||
+    		data->Token.type == TYPE_COLON) {       ///TYPE_COLON situacia ked je prazdny retazec ''
+    		if (data->Token.type != TYPE_COLON) {   ///pripad ked by nastal prazdny retazec
+            if (data->Token.type == TYPE_IDENTIFIER &&
+                (data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) ==
+                NULL) { //ak nie je v local
                 if (data->Token.type == TYPE_IDENTIFIER &&
-                (data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) { //ak nie je v local
-
-                if (data->Token.type == TYPE_IDENTIFIER &&
-                (data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL) //ak nie je v global
+                    (data->leftID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==
+                    NULL) //ak nie je v global
                     return ERROR_PROGRAM_SEMANTIC;
-                }
-                else  {
-                    //PREPISEM IMPLICITNE hodnoty
-                    //ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo mam davat token? probably question to myself
-                    //lebo colon si sam nepyta token
-                    result = checkTokenType(&data->Token, TYPE_COLON);
-                }
-		    	}
-		    	else return result;
-	    	}	//cele telo IF relacneho operatora
-    		else if (data->Token.type == TYPE_COLON)	; 	//do nothing
+            }
+            //kvazi else
+            //{
+            //ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
+            //}
+            //implicitne hodnoty relacneho operatora, kt poslem expression 'relacny operator' = NULL
+            //implicitne hodnoty druheho operandu, kt, poslem expression 'rightID' = NULL
+
+            if ((result = checkTokenType(&data->Token, TYPE_GREATER_THAN)) == 0 ||
+                data->Token.type == TYPE_INT || data->Token.type == TYPE_LESS_THAN ||
+                data->Token.type == TYPE_GREATER_EQUAL || data->Token.type == TYPE_LESS_EQUAL ||
+                data->Token.type == TYPE_EQUALS || data->Token.type == TYPE_NOT_EQUAL) { //porovnavac
+                //ulozim na stack stackADD(data->Token.attribute.string->str)
+                //ulozim si na stack co to bolo za relacny operator
+                //PREPISEM IMPLICITNE  hodnoty
+                if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 ||
+                    data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT ||
+                    data->Token.type == TYPE_STRING) {
+
+                    if (data->Token.type == TYPE_IDENTIFIER &&
+                        (data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) ==
+                        NULL) { //ak nie je v local
+
+                        if (data->Token.type == TYPE_IDENTIFIER &&
+                            (data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==
+                            NULL) //ak nie je v global
+                            return ERROR_PROGRAM_SEMANTIC;
+                    } else {
+                        //PREPISEM IMPLICITNE hodnoty
+                        //ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa /alebo mam davat token? probably question to myself
+                        //lebo colon si sam nepyta token
+                        result = checkTokenType(&data->Token, TYPE_COLON);
+                    }
+                } else return result;
+            }    //cele telo IF relacneho operatora
+            else if (result == 2 && data->Token.type == TYPE_COLON) result = 0;    //do nothing
     		else return result;								//prisiel nevalidny porovnavac,chyba
+            }
+            else if (result == 2 && data->Token.type == TYPE_COLON) result = 0 ;   ///do EXPRESSION poslem '' prazdny retazec
+            else return result;
 	    	
 	    	/*
 	    	if ( (result = expression funkcii poslem (laveID, porovnavac, praveID)) == 0){
@@ -271,7 +285,7 @@ static int statement(ParserData *data)
 			//DEDENT zo statement_next sa mi vypytal dalsi token, nemusim pytat novy
 		if(data->Token.type == TYPE_DEDENT) {
 			data->deepLabel -=1;
-		if ((result = checkTokenType(&data->Token, TYPE_KEYWORD)) && 
+		if (((result = checkTokenType(&data->Token, TYPE_KEYWORD)) == 0) &&
 			data->Token.attribute.keyword == KEYWORD_ELSE) {
 		if((result = checkTokenType(&data->Token, TYPE_COLON)) == 0) {
 		if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
@@ -285,26 +299,26 @@ static int statement(ParserData *data)
 			data->in_if_while = 0;
 			//pokracovanie statementov
 			if((result = statement_next(data)) != SYNTAX_OK) return result;
-		} 
+		}       //neprisiel DEDENT
 		else return ERROR_PARSER;
-		}
+		}       //neprisiel INDENT
 		else return result;
-		}
+		}       //neprisiel EOL
 		else return result;
-		}
+		}       //neprisiel COLON
 		else return result;
-		}
+		}       //neprisiel ELSE
 		else return result;
-		}
+		}       //neprisiel DEDENT
 		else return ERROR_PARSER;
-		} 
+		}       //neprisiel INDENT
 		else return result;
-		}
+		}       //neprisiel EOL
 		else return result;
-		} 		//SYNTAX ERR -> not really could be scanner or syntax or semantic
+		} 		//neprisiel COLON
 		else return result;
 		}		//prva cast expression
-    	else return result;		//ak nebol prvy znak v expression spravny
+    	else return result;		//ak nebol prvy znak v expression spravny //prisiel nevalidny porovnavac,chyba
     }//IF
 
     // 6. <statement> -> KEYWORD_WHILE TYPE_COLON <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>
@@ -315,46 +329,52 @@ static int statement(ParserData *data)
             ///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj 
     	if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 || 
     		data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT || 
-    		data->Token.type == TYPE_STRING) {
-        	if (data->Token.type == TYPE_IDENTIFIER && 
-        	(data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) { //ak nie je v local
-        		if (data->Token.type == TYPE_IDENTIFIER && 
-        		(data->leftID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL) //ak nie je v global
-        			return ERROR_PROGRAM_SEMANTIC;   
-        	}
-        	else  {
-        		//ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
-        	}
-        	//implicitne hodnoty relacneho operatora, kt poslem expression 'relacny operator' = NULL
-        	//implicitne hodnoty druheho operandu, kt, poslem expression 'rightID' = NULL
-    	
-	    	if ((result = checkTokenType(&data->Token, TYPE_GREATER_THAN)) == 0 ||
-	    		data->Token.type == TYPE_INT || data->Token.type == TYPE_LESS_THAN ||
-	    		data->Token.type == TYPE_GREATER_EQUAL || data->Token.type == TYPE_LESS_EQUAL ||
-	    		data->Token.type == TYPE_EQUALS || data->Token.type == TYPE_NOT_EQUAL) { //porovnavac
-	    		//ulozim na stack stackADD(data->Token.attribute.string)
-	    		//ulozim si na stack co to bolo za relacny operator
-	    		//PREPISEM IMPLICITNE  hodnoty
-		    	if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 || 
-    				data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT || 
-    				data->Token.type == TYPE_STRING) {
-		        	if (data->Token.type == TYPE_IDENTIFIER && 
-		        	(data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL){ //ak nie je v local
-		        		if (data->Token.type == TYPE_IDENTIFIER && 
-		        		(data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL) //ak nie je v global
-		        			return ERROR_PROGRAM_SEMANTIC;   
-		        	}
-		        	else  {
-        				//PREPISEM IMPLICITNE hodnoty
-        				//ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
-		        		//lebo colon si sam nepyta token
-		        		result = checkTokenType(&data->Token, TYPE_COLON);
-        			}
-		    	}
-		    	else return result;
-	    	}	//cele telo IF relacneho operatora
-    		else if (data->Token.type == TYPE_COLON)	; 	//do nothing
-    		else return result;								//prisiel nevalidny porovnavac,chyba
+    		data->Token.type == TYPE_STRING || data->Token.attribute.keyword == KEYWORD_NONE ||
+    		data->Token.type == TYPE_COLON) {           //prazdny retazec
+            if (data->Token.type != TYPE_COLON) {   ///pripad ked by nastal prazdny retazec
+            if (data->Token.type == TYPE_IDENTIFIER &&
+                (data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) ==
+                NULL) { //ak nie je v local
+                if (data->Token.type == TYPE_IDENTIFIER &&
+                    (data->leftID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==
+                    NULL) //ak nie je v global
+                    return ERROR_PROGRAM_SEMANTIC;
+            } else {
+                //ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
+            }
+            //implicitne hodnoty relacneho operatora, kt poslem expression 'relacny operator' = NULL
+            //implicitne hodnoty druheho operandu, kt, poslem expression 'rightID' = NULL
+
+            if ((result = checkTokenType(&data->Token, TYPE_GREATER_THAN)) == 0 ||
+                data->Token.type == TYPE_INT || data->Token.type == TYPE_LESS_THAN ||
+                data->Token.type == TYPE_GREATER_EQUAL || data->Token.type == TYPE_LESS_EQUAL ||
+                data->Token.type == TYPE_EQUALS || data->Token.type == TYPE_NOT_EQUAL) { //porovnavac
+                //ulozim na stack stackADD(data->Token.attribute.string)
+                //ulozim si na stack co to bolo za relacny operator
+                //PREPISEM IMPLICITNE  hodnoty
+                if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 ||
+                    data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT ||
+                    data->Token.type == TYPE_STRING) {
+                    if (data->Token.type == TYPE_IDENTIFIER &&
+                        (data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) ==
+                        NULL) { //ak nie je v local
+                        if (data->Token.type == TYPE_IDENTIFIER &&
+                            (data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==
+                            NULL) //ak nie je v global
+                            return ERROR_PROGRAM_SEMANTIC;
+                    } else {
+                        //PREPISEM IMPLICITNE hodnoty
+                        //ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
+                        ///vyhodnoti pocet opakovani, to sa posle generatoru
+                        //lebo colon si sam nepyta token
+                        result = checkTokenType(&data->Token, TYPE_COLON);
+                    }
+                } else return result;
+            }    //cele telo IF relacneho operatora
+            else if (result == 2 && data->Token.type == TYPE_COLON) result = 0;    //do nothing
+            else return result;                                //prisiel nevalidny porovnavac,chyba
+            }
+            else result = 0;      ///do EXPRESSION poslem '' prazdny retazec  cize false
 	    	
 	    	/*
 	    	if ( (result = expression funkcii poslem (laveID, porovnavac, praveID)) == 0){
@@ -375,13 +395,13 @@ static int statement(ParserData *data)
 	        //pokracovanie kodiku, koniec tohto LL pravidla
 	        if((result = statement_next(data)) != SYNTAX_OK) return result;
 	    }
-	    else return result;
+	    else return result; //neprisiel dedent
 	    }
-	    else return result;
+	    else return result; //neprisiel indent
 	    }
-	    else return result;
+	    else return result; //neprisiel EOL
 	    }
-	    else return result;
+	    else return result; //neprisiel COLON
 	    }		//prva cast expression
 		else return result;		//ak nebol prvy znak v expression spravny
     } //WHILE
@@ -398,8 +418,77 @@ static int statement(ParserData *data)
 
     // 7. <statement> -> KEYWORD_RETURN <expression>
      else if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_RETURN)) {
-        /**** TODO EXPRESSION ****/
-        return result;
+        if (data->in_function < 1) return ERROR_SEMANTIC_OTHERS;    ///pokial sa vola mimo funkcie
+        ///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj
+        if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 ||
+            data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT ||
+            data->Token.type == TYPE_STRING || data->Token.attribute.keyword == KEYWORD_NONE ||
+            data->Token.type == TYPE_EOL) {     ///nedostal som nijaky vyraz do 'return'
+            if (data->Token.type != TYPE_EOL) {    ///pripad nijakeho vyrazu do return - vrati NONE
+                if (data->Token.type == TYPE_IDENTIFIER &&
+                    (data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) ==
+                    NULL) { //ak nie je v local
+                    if (data->Token.type == TYPE_IDENTIFIER &&
+                        (data->leftID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==
+                        NULL) //ak nie je v global
+                        return ERROR_PROGRAM_SEMANTIC;
+                }
+                if (data->leftID->isDefined == true) {        //ak je to funkcia
+                    //volanie funkcie overenie parametrov atd - dalsie pytanie si tokenov
+                }
+                //kvazi else
+                //{
+                //ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
+                //}
+
+                //implicitne hodnoty relacneho operatora, kt poslem expression 'relacny operator' = NULL
+                //implicitne hodnoty druheho operandu, kt, poslem expression 'rightID' = NULL
+
+                if ((result = checkTokenType(&data->Token, TYPE_GREATER_THAN)) == 0 ||
+                    data->Token.type == TYPE_INT || data->Token.type == TYPE_LESS_THAN ||
+                    data->Token.type == TYPE_GREATER_EQUAL || data->Token.type == TYPE_LESS_EQUAL ||
+                    data->Token.type == TYPE_EQUALS || data->Token.type == TYPE_NOT_EQUAL ||
+                    data->Token.type == TYPE_PLUS || data->Token.type == TYPE_MINUS ||
+                    data->Token.type == TYPE_MULTIPLY || data->Token.type == TYPE_DIVIDE ||
+                    data->Token.type == TYPE_DIVIDE_INT ||
+                    data->Token.type == TYPE_ASSIGN_VALUE) { //vsetky mozne operatory
+                    //ulozim na stack stackADD(data->Token.attribute.string)
+                    //ulozim si na stack co to bolo za relacny operator
+                    //PREPISEM IMPLICITNE  hodnoty
+                    if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 ||
+                        data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT ||
+                        data->Token.type == TYPE_STRING) {
+                        if (data->Token.type == TYPE_IDENTIFIER &&
+                            (data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) { //ak nie je v local
+                            if (data->Token.type == TYPE_IDENTIFIER &&
+                                (data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL) //ak nie je v global
+                                return ERROR_PROGRAM_SEMANTIC;
+                        }
+                        if (data->rightID->isDefined == true) {        //ak je to funkcia
+                            //volanie funkcie overenie parametrov atd - dalsie pytanie si tokenov
+                        }
+                        //kvazi else
+                        //{
+                        //PREPISEM IMPLICITNE hodnoty
+                        //ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
+                        ///vyhodnoti pocet opakovani, to sa posle generatoru
+                        result = checkTokenType(&data->Token, TYPE_EOL);
+                        return result = (checkTokenType(&data->Token, TYPE_DEDENT)); //vrati sa do progu/statementu if/while
+                        // }
+                    } else return result;       ///neprisiel mi druhy validny operand
+                }    //cele telo  operatorov
+                else if (result == 2 && data->Token.type == TYPE_EOL) return result = (checkTokenType(&data->Token, TYPE_DEDENT));    //do nothing
+                else return result;                                //prisiel nevalidny vyraz
+            }
+            else if (result == 2 && data->Token.type == TYPE_EOL) {
+                if ((result = (checkTokenType(&data->Token, TYPE_EMPTY))) == 0) {
+                    return result = (checkTokenType(&data->Token, TYPE_DEDENT));
+                }
+                else if (data->Token.type == TYPE_DEDENT) return result = SYNTAX_OK; //do nothing; //return vrati NONE lebo bol zadany prazdny vyraz
+                else return result;
+            }
+            else return result;
+        }
     }
 
     //8.  <statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> TYPE_EOL <statement_next>

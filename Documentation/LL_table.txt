@@ -9,8 +9,8 @@
 
 5. 	<statement> -> KEYWORD_IF <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT KEYWORD_ELSE TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT <statement_next>
 6. 	<statement> -> KEYWORD_WHILE <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>
-7. 	<statement> -> KEYWORD_RETURN <expression>
-8. 	<statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> <statement_next>
+7. 	<statement> -> KEYWORD_RETURN <expression>	//aj funkcia
+8. 	<statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> <statement_next>	//mysliet ze tam moze byt aj funkcia
 9.	<statement> -> TYPE_IDENTIFIER(<params>) <statement_next> ///nasa LL nevedela volat nadefinovane funkcie
 10. 	<statement_next> -> TYPE_EOL <statement> 		//aby mohlo byt viac statementov zasebou
 11. 	<statement> -> KEYWORD_PRINT(<expression>) <statement_next>        	//co ked je prazdny print/komentar v printe
@@ -29,6 +29,7 @@
 23. 	<param_next> -> ε
 24. 	<end> -> ε
 25. 	<statement_next> -> ε
+
 
 
 
