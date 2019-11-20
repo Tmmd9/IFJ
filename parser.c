@@ -117,8 +117,10 @@ static int prog(ParserData* data)
             data->in_function = 1;
             data->deepLabel += 1;    //mam indent, zmena urovne
         if ((result = statement(data)) != 0) return result;      //nieco sa posralo v statement
-        if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
-        if ((result = checkTokenType(&data->Token, TYPE_DEDENT)) == 0) {
+        if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0 ||
+        (result == 2 && (data->Token.type == TYPE_EOF))) {
+        if ((result == 2 && (data->Token.type == TYPE_EOF)) ||
+        (result = checkTokenType(&data->Token, TYPE_DEDENT)) == 0) {
             data->in_declaration = 0;
             data->in_function = 0;
             data->deepLabel -= 1;
@@ -142,12 +144,25 @@ static int prog(ParserData* data)
         else return result; //neprisla lava zatvorka
         }
         else return result;	// bolo def, ale nebol spravny identifikator
+        
+        //rekurzia aby som sa vratil spat do <prog>
+        if ((result = getNextToken(&data->Token)) == TOKEN_OK) return prog(data);
+        else return result;
     }
-	else if ((result = isComment(data)) != 0) {    //ak vrati neziadany return code
-        return result;                                //chyba, vraca chybovy kod
+/*  *   *   *   *   *   *   4.  <prog> -> TYPE_EOF <end>    *   *   *   *   *   *   *   */
+/*  *   *   *   *   *   *   *   * 24. <end> -> ε    *   *   *   *   *   *   *   *   *   */
+    else if (data->Token.type == TYPE_EOF) {
+        return result = SYNTAX_OK;
     }
+	else if ((result = isComment(data)) == 0) {    //ak dokumentacny retazec alebo basic EOL
+        return result = prog(data);
+    }
+/*  *   *   *   *   * 3.  <prog> -> <statement> TYPE_EOL <prog> *   *   *   *   *   *   */
+	else {
+	    result = statement(data);
+	}
 
-	return prog(data);
+	return result;
 }
 
 static int params(ParserData *data)
@@ -274,7 +289,6 @@ static int statement(ParserData *data)
 	    	}
 	    	else return result;
 			*/
-
         //COLON a.k.a dvojbodka	, pytal som si token v expression
         if(data->Token.type == TYPE_COLON) {      
         if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {            
@@ -297,8 +311,10 @@ static int statement(ParserData *data)
 		if(data->Token.type == TYPE_DEDENT) {
 			data->deepLabel -=1;
 			data->in_if_while = 0;
-			//pokracovanie statementov
+			
+/*  *   *   *   *   *   *   pokracovanie statementov    *   *   *   *   *   *   *   */
 			if((result = statement_next(data)) != SYNTAX_OK) return result;
+/*  *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   */
 		}       //neprisiel DEDENT
 		else return ERROR_PARSER;
 		}       //neprisiel INDENT
@@ -481,10 +497,9 @@ static int statement(ParserData *data)
                 else return result;                                //prisiel nevalidny vyraz
             }
             else if (result == 2 && data->Token.type == TYPE_EOL) {
-                if ((result = (checkTokenType(&data->Token, TYPE_EMPTY))) == 0) {
-                    return result = (checkTokenType(&data->Token, TYPE_DEDENT));
+                if ((result = checkTokenType(&data->Token, TYPE_DEDENT)) == 0) {        ///vracam sa spat
+                    return result;
                 }
-                else if (data->Token.type == TYPE_DEDENT) return result = SYNTAX_OK; //do nothing; //return vrati NONE lebo bol zadany prazdny vyraz
                 else return result;
             }
             else return result;
@@ -509,23 +524,32 @@ static int statement(ParserData *data)
             }
         }
     }
-	//overujem ci nahodou nenastala situacia s komentom alebo je tam len prosté EOL
+/*	*   overujem ci nahodou nenastala situacia s komentom alebo je tam len prosté EOL   *   */
     else if ((result = isComment(data)) == 0) return statement_next(data);
+/*  *   *  koniec zacyklenia <statement> a <statement_next> -> vrati sa do <prog>   *   *   */
+    else if ( data->Token.type == TYPE_EOF || data->Token.attribute.keyword == KEYWORD_DEF ||
+            data->Token.type == TYPE_DEDENT) {
+        return result = SYNTAX_OK;
+    }
     return result;
 
 }
 
-//10.  <statement_next> -> <statement> || Epsilon (ukoncenie statement rekurzie)->not really
 
-/**** DIS IS BIG TODO IM RITORD NOW ****/  
-
+/*                                                                                          *
+*                       10.  <statement_next> -> TYPE_EOL <statement>                       *
+*                                                                                           */
 static int statement_next(ParserData *data) 
 {
 	int result;
-    if ((result = isComment(data)) == 0 ) return statement(data);
+    if ((result = isComment(data)) == 0 ) {
+        return result = statement(data);
+    }
+/*  *   *   *   *   *   *   *    25.  <statement_next>  ->  ε   *   *   *   *   *   *   *   */
+/*  *   *  koniec zacyklenia <statement> a <statement_next> -> vrati sa do <prog>   *   *   */
     else if ( ((result = checkTokenType(&data->Token, TYPE_DEDENT)) == 0) || 
-    		data->Token.attribute.keyword == KEYWORD_DEF )// <statement_next> -> ε	//pravdepodobne staci len ten dedent
-    	return SYNTAX_OK; 
+    		data->Token.attribute.keyword == KEYWORD_DEF || data->Token.type == TYPE_EOF)
+    	return result = SYNTAX_OK; 
     else return result;
 }
 
