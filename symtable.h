@@ -1,7 +1,7 @@
 /*
  *	Predmet : Formální jazyky a překladače
  *	Projekt : Implementace překladače imperativního jazyka IFJ19
- *	Súbor	: symtable.c
+ *	Súbor	: symtable.h
  *				- hlavickovy subor pre hash tabulku (tabulka symbolov)
  *				- prevzata z predmetu IJC, autor: David Oravec
  *				- modifikovana pre ulahcenie prace v nasom IFJ projekte

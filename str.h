@@ -32,7 +32,7 @@ void stringFree(string *s);
 
 int stringAddChar(string *s, char c);
 
-int stringCat(string *s, const char *str);
+int stringAddConst(string *s, const char *str);
 
 int stringCpy(string *source, string *dest);
 

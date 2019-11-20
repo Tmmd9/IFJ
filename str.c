@@ -56,8 +56,8 @@ int stringAddChar(string *s, char c) {
     return STR_SUCCESS;
 }
 
-int stringCat(string *s, const char *str) {
-    unsigned int newStrLength = strlen(str);
+int stringAddConst(string *s, const char *str) {
+    unsigned int newStrLength = (unsigned) strlen(str);
     /*
         pokial je dlzka 7 znamena to 7znakov + '\0'
         t.j. 8alokovanych Bytov
@@ -66,7 +66,7 @@ int stringCat(string *s, const char *str) {
     */
     if (s->length + newStrLength + 1 >= s->allocSize) {
         //	+1 kvoli '\0'
-        unsigned int newLength = s->length + newStrLength + 1;
+        unsigned int newLength = s->length + newStrLength;
         if ((s->str = (char *) realloc(s->str, newLength)) == NULL) {                        //realloc(pointer, size)
             return STR_ERR;
         }
@@ -75,6 +75,7 @@ int stringCat(string *s, const char *str) {
     s->length = s->length + newStrLength;
     strcat(s->str, str);
     s->str[s->length] = '\0';
+
 
     return STR_SUCCESS;
 }
