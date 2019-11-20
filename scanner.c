@@ -588,11 +588,11 @@ int getNextToken(token *token) {
             case (STATE_EQUALS):
                 if (c == '=') {
                     firstToken = 0;
-                    token->type = TYPE_ASSIGN_VALUE;
+                    token->type = TYPE_EQUALS;
                 } else {
                     firstToken = 0;
                     ungetc(c, source);
-                    token->type = TYPE_EQUALS;
+                    token->type = TYPE_ASSIGN_VALUE;
                 }
                 return returnCode(TOKEN_OK, s);
 
