@@ -49,7 +49,7 @@ int prec_tab[7][7]={
 
 sstack* stack;
 
-//priradenie hodnoty symbolom z tabulky (tie ktore su spolu v casi 
+//priradenie hodnoty symbolom z tabulky (tie ktore su spolu v casi
 //su v tom istom riadku v tabulke)
 static prec_tab_ind assign_prec_tab_ind(prec_table_sym symbol)
 {
@@ -113,10 +113,6 @@ static prec_table_sym tok_to_sym(token* token)
 			return DIV_SYM;
 		case TYPE_DIVIDE_INT: // //
 			return INT_DIV_SYM;
-
-
-		//case TYPE_ASSIGN_VALUE:
-		//	return EQ_SYM;
 
 
 		case TYPE_GREATER_THAN: // >
@@ -271,6 +267,9 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 	bool item1_integer = false;
 	bool item3_double = false;
 	bool item3_integer = false;
+
+
+
 	// E
 	if (rule == OPERAND)
 	{
@@ -278,56 +277,132 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 	}
 
 	// (E)
-	if(rule == LBR_NT_RBR)
+	else if(rule == LBR_NT_RBR)
 	{
 		*final = item2->data_type;
 	}
 
-	// +
+	/*// pravidla pre +
 	if (rule == NT_PLUS_NT)
 	{
 		// david + domino
 		if (item1->data_type == DTYPE_STRING && item3->data_type == DTYPE_STRING)
 		{
 			*final = DTYPE_STRING;
-			break;
 		}
 
 		// 6 + 6 
-		if (item1->data_type == DTYPE_INT && item3->data_type == DTYPE_INT)
+		else if (item1->data_type == DTYPE_INT && item3->data_type == DTYPE_INT)
 		{
 			*final = DTYPE_INT;
-			break;
 		}
 
-		if  (item)
+		else *final = DTYPE_DOUBLE;
+
+		if (item1->data_type == DTYPE_INT)
+	}*/
+
+
+	//pravidla pre -
+	else if (rule == NT_MINUS_NT || rule == NT_MUL_NT || rule == NT_PLUS_NT)
+	{
+
+		//dva stringy sa daju len +sovat...
+		if (item1->data_type == DTYPE_STRING || item3->data_type == DTYPE_STRING || rule == NT_PLUS_NT)
+		{
+			*final = DTYPE_STRING;
+		}
+
+		//.. ostatne davaju err
+		else if (item1->data_type == DTYPE_STRING || item3->data_type == DTYPE_STRING)
+			return 4;
+
+		//integer +(ale aj - a *, dalej uz len +) integer = INTEGER
+		else if(item1->data_type == DTYPE_INT && item3->data_type == DTYPE_INT)
+			*final = DTYPE_INT;
+
+		//double + int = retype int na DOUBLE
+		else if(item1->data_type == DTYPE_DOUBLE && item3->data_type == DTYPE_INT)
+		{
+			item3_double = true;
+			*final = DTYPE_DOUBLE
+		}
+
+		// to iste ako hore obratene
+		else if(item1->data_type == DTYPE_INT || item3->data_type == DTYPE_DOUBLE)
+		{
+			item1_double = true;
+			*final = DTYPE_DOUBLE;
+		}
+
+		//double + double = DOUBLE
+		else if(item1->data_type == DTYPE_DOUBLE || item3->data_type == DTYPE_DOUBLE)
+		{
+			*final = DTYPE_DOUBLE;
+		}
 	}
 
-	if (rule == NT_IDIV_NT)
+
+	//pravidla pre idiv
+	else if (rule == NT_IDIV_NT)
 	{
 		*final = DTYPE_INT;
 
 		if(item1->data_type == DTYPE_STRING)
 		{
-			//return error
+			return 4;
 		}
-		if(item3->data_type == DTYPE_STRING)
+		else if(item3->data_type == DTYPE_STRING)
 		{
-			//return error
+			return 4;
 		}
 
-		if (item1->data_type == DTYPE_DOUBLE)
+		else if (item1->data_type == DTYPE_DOUBLE)
 		{
 			item1_integer = true;
 		}
 
-		if (item3->data_type == DTYPE_DOUBLE)
+		else if (item3->data_type == DTYPE_DOUBLE)
 		{
 			item3_integer = true;
 		}
-
 	}
-}
+
+	//pravidla pre compare
+	else if(rule == NT_EQ_NT ||
+	   		rule == NT_NEQ_NT||
+	   		rule == NT_LTN_NT||
+	   		rule == NT_MEQ_NT||
+	   		rule == NT_MTN_NT||
+	   		rule == NT_LEQ_NT||)
+
+	{	//int > int
+		if(item1->data_type == DTYPE_INT && item3->data_type == DTYPE_INT)
+				*final = DTYPE_BOOL; //chýba BOOL v .h
+
+		//double > double
+		else if (item1->data_type == DTYPE_DOUBLE && item3->data_type == DTYPE_DOUBLE)
+				*final = DTYPE_BOOL;
+
+		//int > double
+		else if(item1->data_type == DTYPE_INT && item3->data_type == DTYPE_DOUBLE)
+				*final = DTYPE_BOOL;
+				item1_double = true;
+
+		//double > int
+		else if(item1->data_type == DTYPE_DOUBLE && item3->data_type == DTYPE_INT)
+				*final = DTYPE_BOOL;
+				item3_double = true;
+
+		//string > string
+		else if(item1->data_type == DTYPE_STRING && item3->data_type == DTYPE_STRING)
+				*final = DTYPE_BOOL;
+
+		else return 4;
+	}
+
+	///GENERATE CODE CAST///
+
 
 int expression(ParserData *data)
 {
@@ -360,4 +435,6 @@ int expression(ParserData *data)
          }
         //dokym nebude vsetko spracovane tak cyklim
     } while( sym_on_top->symbol == DOLLAR_SYM && sym_in_token == DOLLAR_SYM);
+}
+
 }
