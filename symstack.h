@@ -20,35 +20,25 @@ typedef struct
 	s_item *top;
 
 } sstack;
-
+//Init zasobnika
 void symbol_init(sstack* stack);
-/* 
-	inicializacia zasobniku
-*/
 
+//Pushne symbol na vrchol stacku
 bool symbol_push(sstack* stack, prec_table_sym symbol, DataType type);
-/*
-	pushne symbol do stacku
 
-*/
+//Uvolni prvok z vrchola zasobnika
 bool symbol_pop(sstack* stack);
-/*
- 	popne vrchny znak zo zasobniku
-*/
 
+//Uvolni "times" znakov z vvrchola zasobnika
 void symbol_pop_times(sstack* stack, int times);
-/*
-	popne vrchnu znak zo zasobniku x krat
-*/
 
+//Vrati prvy najdeny terminal na vrchole stacku
+s_item* symbol_top_term(sstack * stack);
+
+//Vrati vrchol zasobnika
 s_item* symbol_top(sstack* stack);
-/*
-	vrati vrchny znak zo zasobniku
-*/
-void symbol_free(sstack* stack);
-/*
-	uvolnenie zdrojov
-*/
 
+//Uvolni zasobnik
+void symbol_free(sstack* stack);
 
 #endif //_SYMSTACK_H

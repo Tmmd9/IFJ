@@ -46,6 +46,16 @@ void symbol_pop_times(sstack* stack, int times)
 	}
 }
 
+s_item* symbol_top_term(sstack * stack)
+{
+    for(s_item* temp= stack->top; temp != NULL; stack->top = stack->top->next)
+    {
+        if(temp->symbol < STOP)
+            return temp;
+    }
+    return NULL;
+}
+
 s_item* symbol_top(sstack* stack)
 {
 	return stack->top;
