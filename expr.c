@@ -47,6 +47,8 @@ int prec_tab[7][7]={
 	   {SH, SH,  SH, SH, ER, SH, ER}, // $
 };
 
+sstack* stack;
+
 //priradenie hodnoty symbolom z tabulky (tie ktore su spolu v casi 
 //su v tom istom riadku v tabulke)
 static prec_tab_ind assign_prec_tab_ind(prec_table_sym symbol)
@@ -170,7 +172,10 @@ static /* zmenit*/DataType token_to_data(ParserData* data)
 			return DTYPE_DOUBLE;
 
 		case TYPE_IDENTIFIER:
-			return D_TYPE_IDENTIFIER; //Netusim co si tymto myslel Timko -Petrik
+		    symbol = htabSearch(*data->localT, data->Token.attribute.string);
+			if(symbol == NULL)
+			    return DTYPE_UNDEFINED;
+			return symbol->type;
 
 		default: DTYPE_UNDEFINED;
 	}
@@ -322,4 +327,37 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 		}
 
 	}
+}
+
+int expression(ParserData *data)
+{
+    //Inicializacia symstacku a potrebnych premennych
+    symbol_init(stack);
+    symbol_push(stack, DOLLAR_SYM, DTYPE_UNDEFINED); //pociatocny item pre kontrolu prazdnoty stacku
+    s_item* sym_on_top;
+    prec_table_sym sym_in_token;
+    int result;
+
+    do{
+        //priradenie hodnot
+        sym_on_top = symbol_top(stack);
+        sym_in_token = tok_to_sym(&data->Token);
+
+        switch(prec_tab[assign_prec_tab_ind(sym_on_top->symbol)][assign_prec_tab_ind(sym_in_token)])
+             {   //PRI EQUAL PUSHNEM NA STACK A VYPYTAM TOKEN
+                case EQ:
+                    symbol_push(stack,sym_in_token, token_to_data(data));
+                    if((result = getNextToken(&data->Token)))
+                        return result;
+                    //PRI SHIFTE PRIDAM STOP ZARAZKU PRE REDUKOVANIE, PUSHNEM NA STACK A VYPYTAM TOKEN
+                 case SH:
+                     symbol_push(stack,STOP,DTYPE_UNDEFINED);
+                     symbol_push(stack,sym_in_token, token_to_data(data));
+                     if((result =getNextToken(&data->Token)))
+                         return result;
+                 case RE:
+                //TODO TREBA FUNKCIU NA REDUKCIU CEZ PRAVIDLA
+         }
+        //dokym nebude vsetko spracovane tak cyklim
+    } while( sym_on_top->symbol == DOLLAR_SYM && sym_in_token == DOLLAR_SYM);
 }

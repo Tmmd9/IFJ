@@ -23,22 +23,22 @@ typedef enum
 	INT_SYM,			///2 int
 	FLOAT_SYM,			///3 double
 	STR_SYM,			///4 string
-	DOLLAR_SYM,			///5 $	//eol a ':' (then)
-	STOP,				///6 stop symbol used when reducing
-	NON_TERM,			///7 non-terminal
-	PLUS_SYM,			///8 +
-	MINUS_SYM,			///9 -
-	MUL_SYM,			///10 *
-	DIV_SYM,			///11 /
-	INT_DIV_SYM,		///12 //
-	LEFT_PAR,			///13 (
-	RIGHT_PAR,			///14 )
-	EQ_SYM,				///15 =
-	NOT_EQ_SYM,			///16 <>
-	LESS_EQ_SYM,		///17 <=
-	LESS_SYM,			///18 <
-	MORE_EQ_SYM,		///19 >=
-	MORE_SYM,			///20 >
+	PLUS_SYM,			///5 +
+	MINUS_SYM,			///6 -
+	MUL_SYM,			///7 *
+	DIV_SYM,			///8 /
+	INT_DIV_SYM,		///9 //
+	LEFT_PAR,			///10 (
+	RIGHT_PAR,			///11 )
+	EQ_SYM,				///12 =
+	NOT_EQ_SYM,			///13 <>
+	LESS_EQ_SYM,		///14 <=
+	LESS_SYM,			///15 <
+	MORE_EQ_SYM,		///16 >=
+	MORE_SYM,			///17 >
+    DOLLAR_SYM,			///18 $	//eol a ':' (then)
+    STOP,				///19 stop symbol used when reducing
+    NON_TERM,			///20 non-terminal
 } prec_table_sym;
 
 
@@ -68,7 +68,7 @@ typedef enum
 //	parsuje vyrazy data su pointer na strukturu
 //	definovanu v parser.h uchovavajuca interne data
 
-
-int expr(PData* data);
+//main funkcia co sa bude volat pri vyrazoch
+int expression(ParserData* data);
 
 #endif //_EXPR_H
