@@ -39,7 +39,7 @@ static int statement_next(ParserData *data);
  */
 int checkTokenType(token *Token, token_type type)
 {
-    int returncode;
+    int returncode = 0;
     if((returncode = getNextToken(Token)) == TOKEN_OK)	///neviem ci som dobre napisal to stack
     {																///pri debuggingu dat doraz na toto 
         if (type == Token->type)										///rovnako ako aj pri samotnej ParserData
@@ -60,7 +60,7 @@ int checkTokenType(token *Token, token_type type)
 */
 int isComment(ParserData *data)
 {
-	int result;
+	int result = 0;
 	if(data->Token.type == TYPE_COMMENT)
 	{
 		///ak nasledujuci token nie je eol, vrat chybu
@@ -83,10 +83,10 @@ int isComment(ParserData *data)
 
 static int prog(ParserData* data)
 {
-	int result;
+	static int result;
 
-	/*if((result = getNextToken(f, &data->token, data->stack)) != TOKEN_OK)	///pytam si token 
-		return result;	///pokial sa nerovna Token_Ok*/
+/*  *   *   *   *   *   *   *   vzdy si na zaciatku pytam token     *   *   *   *   *   *   */
+    if ((result = getNextToken(&data->Token)) != 0) return result;
 
 //1.<prog> -> KEYWORD_DEF TYPE_IDENTIFIER(<params>)TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <prog>
     if (data->Token.attribute.keyword == KEYWORD_DEF && data->Token.type == TYPE_KEYWORD) {
@@ -95,14 +95,13 @@ static int prog(ParserData* data)
 
         // "Identifikátor funkcie"
         if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0) {
-         	//data.Token.attribute.string->str
             //pridam identifier do tabulky symbolov// checknem ci nenastava redefinicia
         if (htabSearch(&data->globalT, data->Token.attribute.string->str) != NULL) return ERROR_PROGRAM_SEMANTIC;
-        ///pokial sa najde zhoda, je tu pokus o redefiniciu
+            ///pokial sa najde zhoda, je tu pokus o redefiniciu
         	bool errIntern;
         	data->currentID = htabAddSymbol(&data->globalT, data->Token.attribute.string->str, &errIntern);
-       	if (errIntern == true) return ERROR_INTERN;
-        // "("
+       	    if (errIntern == true) return ERROR_INTERN;
+
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) == 0) {
             data->paramIndex = 0;
         	//preskocim na params (poslem im "data" ktore uchovavaju info
@@ -116,6 +115,9 @@ static int prog(ParserData* data)
             data->in_declaration = 1;
             data->in_function = 1;
             data->deepLabel += 1;    //mam indent, zmena urovne
+
+/*  *   *   *   *   pytam si dalsi token lebo statement si sam nepyta   *   *   *   *   *   *   */
+            if ((result = getNextToken(&data->Token)) != 0) return result;
         if ((result = statement(data)) != 0) return result;      //nieco sa posralo v statement
         if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0 ||
         (result == 2 && (data->Token.type == TYPE_EOF))) {
@@ -125,7 +127,9 @@ static int prog(ParserData* data)
             data->in_function = 0;
             data->deepLabel -= 1;
             data->currentID->isDefined = true;
-            return SYNTAX_OK;
+            if(data->Token.type == TYPE_EOF) return SYNTAX_OK;
+            //rekurzia aby som sa vratil spat do <prog>
+            else return result = prog(data);
         }
         else return result; //neprisiel DEDENT
         }
@@ -144,10 +148,6 @@ static int prog(ParserData* data)
         else return result; //neprisla lava zatvorka
         }
         else return result;	// bolo def, ale nebol spravny identifikator
-        
-        //rekurzia aby som sa vratil spat do <prog>
-        if ((result = getNextToken(&data->Token)) == TOKEN_OK) return prog(data);
-        else return result;
     }
 /*  *   *   *   *   *   *   4.  <prog> -> TYPE_EOF <end>    *   *   *   *   *   *   *   */
 /*  *   *   *   *   *   *   *   * 24. <end> -> ε    *   *   *   *   *   *   *   *   *   */
@@ -161,7 +161,6 @@ static int prog(ParserData* data)
 	else {
 	    result = statement(data);
 	}
-
 	return result;
 }
 
@@ -218,14 +217,13 @@ static int params(ParserData *data)
 
 static int statement(ParserData *data)
 { 
-    int result;
+    static int result;
 	/*
 	*	5. 	<statement> -> KEYWORD_IF <expression> TYPE_COLON 
 	*	TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT KEYWORD_ELSE TYPE_COLON 
 	*	TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT <statement_next>
     */
-    if ( ((result = checkTokenType(&data->Token, TYPE_KEYWORD)) == 0) && 
-    	(data->Token.attribute.keyword == KEYWORD_IF)) {
+    if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_IF)) {
     	data->in_if_while = 1;
     	data->uniqLabel +=1;
     	///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj 
@@ -422,16 +420,6 @@ static int statement(ParserData *data)
 		else return result;		//ak nebol prvy znak v expression spravny
     } //WHILE
 
-
-/****************************************I*ENDED*UP*HERE*****************************************
-*				__________ 					 ________ 	 _______	.		 . 					*
-*					|		|		|		|			|		|	|\      /|					*
-*					|		|		|		|_______ 	|		|	| \    / |					*
-*			 		|		|		|				|	|		|	|  \  /  |					*
-*					|		|_______|		________|	|_______|	|   \/   |					*
-*																								*
-*****************************************TU*SOM*SKONČIL******************************************/
-
     // 7. <statement> -> KEYWORD_RETURN <expression>
      else if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_RETURN)) {
         if (data->in_function < 1) return ERROR_SEMANTIC_OTHERS;    ///pokial sa vola mimo funkcie
@@ -506,23 +494,55 @@ static int statement(ParserData *data)
         }
     }
 
+
+    /*na toto sa kukaj ako Jozo Raz s jednym prizmurenym ockom :D */
+/*  *   *   *   *tu moze nastat jednak definicia a jednak len priradenie hodnoty    *   *   *   *   */
     //8.  <statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> TYPE_EOL <statement_next>
-    else if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_IF)) {
+    else if (data->Token.type == TYPE_IDENTIFIER) {
+        
+        static int result;
+        
+/****************************************I*ENDED*UP*HERE*****************************************
+*               __________                   ________    _______    .        .                  *
+*                   |       |       |       |           |       |   |\      /|                  *
+*                   |       |       |       |_______    |       |   | \    / |                  *
+*                   |       |       |               |   |       |   |  \  /  |                  *
+*                   |       |_______|       ________|   |_______|   |   \/   |                  *
+*                                                                                               *
+*****************************************TU*SOM*SKONČIL******************************************/
 
-        /**** TODO hodenie do global/lokal symtable kedtak len prepis hodnoty ak to tam je****/
-        if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0) {
-            // =
-            if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0) {
-
-                /****TODO 2 EXPRESSION ****/
-
-                //EOL
-                if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
-                    //pokracovanie kodiku, koniec tohto LL pravidla
-                    statement_next(data);
+        //ak nie je globalne pridam ju
+        if ((data->leftID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL) {
+            if (data->in_function == 1) {
+                if ((data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) {
+                    ///pridam premennu lokalne vo funkci
+                    bool errIntern;
+                    data->leftID = htabAddSymbol(&data->localT, data->Token.attribute.string->str, &errIntern);
+                    if (errIntern == true) return ERROR_INTERN;
                 }
             }
+            bool errIntern;
+            data->leftID = htabAddSymbol(&data->globalT, data->Token.attribute.string->str, &errIntern);
+            if (errIntern == true) return ERROR_INTERN;
+            data->leftID->isGlobal = true;
         }
+        else
+        {
+            ; //po matike :D
+        }
+
+        if ((result = checkTokenType(&data->Token, TYPE_ASSIGN_VALUE)) == 0) {      
+            
+            //tuto poslem timkovi vyraz na rozparsovanie//
+
+            ///tu moze byt aj EOF dont forget
+            if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
+
+                return result = statement_next(data);
+            }
+            else return result;
+        }
+        else return result;
     }
 /*	*   overujem ci nahodou nenastala situacia s komentom alebo je tam len prosté EOL   *   */
     else if ((result = isComment(data)) == 0) return statement_next(data);
@@ -541,9 +561,11 @@ static int statement(ParserData *data)
 *                                                                                           */
 static int statement_next(ParserData *data) 
 {
-	int result;
+	static int result;
     if ((result = isComment(data)) == 0 ) {
-        return result = statement(data);
+        if ((result = getNextToken(&data->Token)) == 0)
+            return result = statement(data);
+        else return result;
     }
 /*  *   *   *   *   *   *   *    25.  <statement_next>  ->  ε   *   *   *   *   *   *   *   */
 /*  *   *  koniec zacyklenia <statement> a <statement_next> -> vrati sa do <prog>   *   *   */
@@ -654,7 +676,7 @@ int parse()
 {
 
 	//subor sa otvara v maine
-	int result; 
+	int result = 0;
 
 	string parserStr;
 	if (stringInit(&parserStr))
@@ -668,9 +690,8 @@ int parse()
 		return ERROR_INTERN;
 	}
 
-	if ((result = getNextToken(&data.Token)) == TOKEN_OK)
-	///need to change skener as well aby sa tam initoval stack
-	///aby som pri kazdom volani getnexttoken pouzival len &data.Token
+	//if ((result = getNextToken(&data.Token)) == TOKEN_OK) ->tohle uz nedelaaam
+
 	{
 
 		//nemame nic z generatoru zatial
