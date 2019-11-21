@@ -8,7 +8,7 @@ void symbol_init(sstack* stack)
 	stack->top = NULL;
 }
 
-bool symbol_push(sstack* stack, ptable_symbol symbol, DataType type)
+bool symbol_push(sstack* stack, prec_table_sym symbol, DataType type)
 {
     s_item *a_item =  (s_item *) malloc(sizeof(s_item));
 	if(a_item != NULL)

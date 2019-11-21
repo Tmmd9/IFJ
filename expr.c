@@ -11,7 +11,7 @@
  */
 
 
-#include "expression.h"
+#include "expr.h"
 #include "symstack.h"
 #include "scanner.h"
 #include "error.h"
@@ -25,7 +25,7 @@ typedef enum
 	LEFT_PAR_IND,
 	RIGHT_PAR_IND,
 	I_IND,
-	DOLLAR_IND;
+	DOLLAR_IND,
 }prec_tab_ind;
 
 typedef enum
@@ -36,17 +36,16 @@ typedef enum
 	ER,		// error
 }prec_sign;
 
-int prec_tab[7][7]=
-{
+int prec_tab[7][7]={
 //		+-,*///,cmp, ( , ) , i , $
-	   {RE, SH,  RE, SH, RE, SH, RE}; // +-
-	   {RE, RE,  RE, SH, RE, SH, RE}; // * / //
-	   {SH, SH,  ER, SH, RE, SH, RE}; // cmp
-	   {SH, SH,  SH, SH, EQ, SH, ER}; // (
-	   {RE, RE,  RR, ER, SH, ER, RE}; // )
-	   {RE, RE,  RE, ER, RE, ER, RE}; // i
-	   {SH, SH,  SH, SH, ER, SH, ER}; // $
-}
+	   {RE, SH,  RE, SH, RE, SH, RE}, // +-
+	   {RE, RE,  RE, SH, RE, SH, RE}, // * / //
+	   {SH, SH,  ER, SH, RE, SH, RE}, // cmp
+	   {SH, SH,  SH, SH, EQ, SH, ER}, // (
+	   {RE, RE,  RE, ER, SH, ER, RE}, // )
+	   {RE, RE,  RE, ER, RE, ER, RE}, // i
+	   {SH, SH,  SH, SH, ER, SH, ER}, // $
+};
 
 //priradenie hodnoty symbolom z tabulky (tie ktore su spolu v casi 
 //su v tom istom riadku v tabulke)
@@ -82,7 +81,7 @@ static prec_tab_ind assign_prec_tab_ind(prec_table_sym symbol)
 		return I_IND;
 
 		//lava zatvorka
-		case LEST_PAR:
+		case LEFT_PAR:
 		return LEFT_PAR_IND;
 
 		//prava zatvorka
@@ -122,8 +121,8 @@ static prec_table_sym tok_to_sym(token* token)
 			return MORE_SYM;
 		case TYPE_LESS_THAN: // <
 			return LESS_SYM;
-		case TYPE_GRATER_EQUAL: // =>
-			return MORE_EQUAL_SYM;
+		case TYPE_GREATER_EQUAL: // =>
+			return MORE_EQ_SYM;
 		case TYPE_LESS_EQUAL: // <=
 			return LESS_EQ_SYM;
 		case TYPE_EQUALS: // ==
@@ -132,10 +131,10 @@ static prec_table_sym tok_to_sym(token* token)
 			return NOT_EQ_SYM;
 
 		case TYPE_LEFT_PAR: // (
-			return LEFT_PAR_SYM;
+			return LEFT_PAR;
 
 		case TYPE_RIGHT_PAR: // )
-			return RIGHT_PAR_SYM;
+			return RIGHT_PAR;
 
 		case TYPE_IDENTIFIER: // ID
 			return ID_SYM;
@@ -157,29 +156,29 @@ static prec_table_sym tok_to_sym(token* token)
 
 static /* zmenit*/DataType token_to_data(ParserData* data)
 {
-	TokenData* symbol;
+	Data* symbol;
 
 	switch (data->Token.type) //udaje z parseru
 	{
 		case TYPE_INT:
-			return D_TYPE_INT;
+			return DTYPE_INT;
 
 		case TYPE_STRING:
-			return D_TYPE_STRING;
+			return DTYPE_STRING;
 
 		case TYPE_FLOAT:
-			return D_TYPE_FLOAT;
+			return DTYPE_DOUBLE;
 
 		case TYPE_IDENTIFIER:
-			return D_TYPE_IDENTIFIER;
+			return D_TYPE_IDENTIFIER; //Netusim co si tymto myslel Timko -Petrik
 
-		default: D_TYPE_UNDEFINED;
+		default: DTYPE_UNDEFINED;
 	}
 }
 
 //kontroluje spravnost zapisania pravidiel a urcije ktora z 
 //pravidiel vypisanych hore splna podmienky -> vzdy len jedna alebo NOT_A_RULE
-static prec_rule prec_rules_syntax(int count, symbol_item* item1, symbol_item* item2, symbol_item* item3)
+static Prec_rules prec_rules_syntax(int count, s_item* item1, s_item* item2, s_item* item3)
 {
 	//ked sa nachadza len jeden symbol -> operand
 	if(count == 1)
@@ -260,7 +259,7 @@ static prec_rule prec_rules_syntax(int count, symbol_item* item1, symbol_item* i
 }
 
 
-static int prec_rule_semantics (prec_rule rule, symbol_item* item1, symbol_item* item2, symbol_item* item3, DataType* final) // DataType z funkcie hore
+static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s_item* item3, DataType* final) // DataType z funkcie hore
 {
 	//pomocne bool premenne na pretypovavanie
 	bool item1_double = false;
@@ -270,29 +269,29 @@ static int prec_rule_semantics (prec_rule rule, symbol_item* item1, symbol_item*
 	// E
 	if (rule == OPERAND)
 	{
-		*final = item1->DataType;
+		*final = item1->data_type;
 	}
 
 	// (E)
 	if(rule == LBR_NT_RBR)
 	{
-		*final = item2->DataType;
+		*final = item2->data_type;
 	}
 
 	// +
 	if (rule == NT_PLUS_NT)
 	{
 		// david + domino
-		if (item1->DataType == D_TYPE_STRING && item3->DataType == D_TYPE_STRING)
+		if (item1->data_type == DTYPE_STRING && item3->data_type == DTYPE_STRING)
 		{
-			*final = D_TYPE_STRING;
+			*final = DTYPE_STRING;
 			break;
 		}
 
 		// 6 + 6 
-		if (item1->DataType == D_TYPE_INTEGER && item3->DataType == D_TYPE_INTEGER)
+		if (item1->data_type == DTYPE_INT && item3->data_type == DTYPE_INT)
 		{
-			*final = D_TYPE_INTEGER;
+			*final = DTYPE_INT;
 			break;
 		}
 
@@ -301,23 +300,23 @@ static int prec_rule_semantics (prec_rule rule, symbol_item* item1, symbol_item*
 
 	if (rule == NT_IDIV_NT)
 	{
-		*final = D_TYPE_INT;
+		*final = DTYPE_INT;
 
-		if(item1->DataType == D_TYPE_STRING)
+		if(item1->data_type == DTYPE_STRING)
 		{
 			//return error
 		}
-		if(item3->DataType == D_TYPE_STRING)
+		if(item3->data_type == DTYPE_STRING)
 		{
 			//return error
 		}
 
-		if (item1->DataType == D_TYPE_FLOAT)
+		if (item1->data_type == DTYPE_DOUBLE)
 		{
 			item1_integer = true;
 		}
 
-		if (item3->DataType == D_TYPE_FLOAT)
+		if (item3->data_type == DTYPE_DOUBLE)
 		{
 			item3_integer = true;
 		}

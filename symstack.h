@@ -10,7 +10,7 @@
 
 typedef struct s_item
 {
-	ptable_symbol symbol; //este nieje
+    prec_table_sym symbol; //este nieje
 	DataType data_type;
 	struct s_item *next;
 } s_item;
@@ -26,7 +26,7 @@ void symbol_init(sstack* stack);
 	inicializacia zasobniku
 */
 
-bool symbol_push(sstack* stack);
+bool symbol_push(sstack* stack, prec_table_sym symbol, DataType type);
 /*
 	pushne symbol do stacku
 
