@@ -26,7 +26,7 @@ typedef struct {
 
 	token Token;
 	/*
-	*	veci potrebne k tvorbe stromu 
+	*	veci potrebne k tvorbe stromu
 	*/
 	Data * currentID;		//momentalne spracovavane
 	Data * leftID;			//lava strana premennej

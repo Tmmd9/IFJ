@@ -80,6 +80,60 @@ int isComment(ParserData *data)
 */
 
 
+/*
+*   Pomocna funkcia, aby som usetril riadky a zvysil prehladnost
+*   Funkcia prida identifikator do globalnej (bool false) alebo 
+*   do lokalnej hash tabulky (bool true)
+*   int position - 0-LEFT 1-CURRENT 2-RIGHT
+*/
+int addToHash(ParserData *data, bool isLocal, int position) {
+    bool errIntern;
+
+    if (isLocal == true) {
+
+        switch (position) {
+            case 0:
+                data->leftID = htabAddSymbol(&data->localT, data->Token.attribute.string->str, &errIntern);
+                if (errIntern == true) return ERROR_INTERN;
+                break;
+            case 1:
+                data->currentID = htabAddSymbol(&data->localT, data->Token.attribute.string->str, &errIntern);
+                if (errIntern == true) return ERROR_INTERN;
+                break;
+            case 2:
+                data->rightID = htabAddSymbol(&data->localT, data->Token.attribute.string->str, &errIntern);
+                if (errIntern == true) return ERROR_INTERN;
+                break;
+            default:
+                return ERROR_INTERN;
+        }
+    } 
+    else {
+
+        switch (position) {
+            case 0:
+                data->leftID = htabAddSymbol(&data->globalT, data->Token.attribute.string->str, &errIntern);
+                if (errIntern == true) return ERROR_INTERN;
+                data->leftID->isGlobal = true;
+                break;
+            case 1:
+                data->currentID = htabAddSymbol(&data->globalT, data->Token.attribute.string->str, &errIntern);
+                if (errIntern == true) return ERROR_INTERN;
+                data->currentID->isGlobal = true;
+                break;
+            case 2:
+                data->rightID = htabAddSymbol(&data->globalT, data->Token.attribute.string->str, &errIntern);
+                if (errIntern == true) return ERROR_INTERN;
+                data->rightID->isGlobal = true;
+                break;
+            default:
+                return ERROR_INTERN;
+        }
+    }
+    return SYNTAX_OK;
+}
+
+
 
 static int prog(ParserData* data)
 {
@@ -206,6 +260,7 @@ static int params(ParserData *data)
             //nacitany token je prava zatvorka -> <params> -> ε
         else if ((data->Token.type == TYPE_RIGHT_PAR) && (data->paramIndex == 0)) {
             //ulozim ze dana funcia nepotrebuje parametre
+            data->currentID->paramCount = data->paramIndex;
             return SYNTAX_OK;
         }
         else
@@ -335,7 +390,9 @@ static int statement(ParserData *data)
     	else return result;		//ak nebol prvy znak v expression spravny //prisiel nevalidny porovnavac,chyba
     }//IF
 
-    // 6. <statement> -> KEYWORD_WHILE TYPE_COLON <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>
+
+
+/*6. <statement> -> KEYWORD_WHILE TYPE_COLON <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>*/
     //WHILE
     else if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_WHILE)) {
 		data->in_if_while = 1;
@@ -345,7 +402,8 @@ static int statement(ParserData *data)
     		data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT || 
     		data->Token.type == TYPE_STRING || data->Token.attribute.keyword == KEYWORD_NONE ||
     		data->Token.type == TYPE_COLON) {           //prazdny retazec
-            if (data->Token.type != TYPE_COLON) {   ///pripad ked by nastal prazdny retazec
+
+    	    if (data->Token.type != TYPE_COLON) {   ///pripad ked by nastal prazdny retazec
             if (data->Token.type == TYPE_IDENTIFIER &&
                 (data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) ==
                 NULL) { //ak nie je v local
@@ -420,7 +478,9 @@ static int statement(ParserData *data)
 		else return result;		//ak nebol prvy znak v expression spravny
     } //WHILE
 
-    // 7. <statement> -> KEYWORD_RETURN <expression>
+
+
+/*  *   *   *   *   *   *   *7. <statement> -> KEYWORD_RETURN <expression> *   *   *   *   *   *   *   */
      else if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_RETURN)) {
         if (data->in_function < 1) return ERROR_SEMANTIC_OTHERS;    ///pokial sa vola mimo funkcie
         ///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj
@@ -495,13 +555,15 @@ static int statement(ParserData *data)
     }
 
 
-    /*na toto sa kukaj ako Jozo Raz s jednym prizmurenym ockom :D */
-/*  *   *   *   *tu moze nastat jednak definicia a jednak len priradenie hodnoty    *   *   *   *   */
-    //8.  <statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> TYPE_EOL <statement_next>
+
+/*  *   *   *  tu moze nastat jednak definicia a jednak len priradenie hodnoty dolezite hlavne pri WHILE    *   *   *   */
+/*  *   *   *8.  <statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> TYPE_EOL <statement_next>    *   *   *   */
+/*  *   *   *   *   *   *    9.	<statement> -> TYPE_IDENTIFIER(<params>) <statement_next>   *   *   *   *   *   *   *   */
     else if (data->Token.type == TYPE_IDENTIFIER) {
-        
         static int result;
-        
+
+        if ((data->leftID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL) {
+
 /****************************************I*ENDED*UP*HERE*****************************************
 *               __________                   ________    _______    .        .                  *
 *                   |       |       |       |           |       |   |\      /|                  *
@@ -510,40 +572,81 @@ static int statement(ParserData *data)
 *                   |       |_______|       ________|   |_______|   |   \/   |                  *
 *                                                                                               *
 *****************************************TU*SOM*SKONČIL******************************************/
+            //kvoli pripadu ci nahodou nenastava volanie funkcie ktora neexistuje
+            if ((result = checkTokenType(&data->Token, TYPE_ASSIGN_VALUE)) == 0) {
 
-        //ak nie je globalne pridam ju
-        if ((data->leftID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL) {
-            if (data->in_function == 1) {
-                if ((data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) {
-                    ///pridam premennu lokalne vo funkci
-                    bool errIntern;
-                    data->leftID = htabAddSymbol(&data->localT, data->Token.attribute.string->str, &errIntern);
-                    if (errIntern == true) return ERROR_INTERN;
+                //ak nie je globalne pridam ju
+                if (data->in_function == 1 || data->in_if_while == 1) {
+                    if ((data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) {
+                        ///pridam premennu lokalne vo funkci
+                        if ((result = addToHash(data, true, 0)) != 0) return ERROR_INTERN;
+                    }
+                } else {
+                    //pridavam premennu globalne
+                    if ((result = addToHash(data, false, 0)) != 0) return ERROR_INTERN;
                 }
+
+                if (data->Token.type == TYPE_ASSIGN_VALUE) {
+
+                    //tuto poslem timkovi vyraz na rozparsovanie//
+
+                    ///tu moze byt aj EOF dont forget
+                    if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
+
+                        return result = statement_next(data);
+                    } else if (result == 2 && data->Token.type == TYPE_EOF) return SYNTAX_OK;
+                    else return result;
+                } else return ERROR_PARSER;
+            } else if (data->Token.type == TYPE_LEFT_PAR) {
+                return result = ERROR_PROGRAM_SEMANTIC; //volanie funkcie ktora neexistuje
+            } else return result = ERROR_PARSER;
+        }
+            //ak uz je definovana globalne, lenze ak aj sme vo funkcii, nevieme ci prepisujeme lokalnu alebo glob, lebo python
+            //tak som sa rozhodol ze sa proste bude prepisovat globalna
+        else if (data->leftID->isGlobal == true) {
+
+            if ((result = checkTokenType(&data->Token, TYPE_ASSIGN_VALUE)) == 0) {
+
+                //tuto poslem timkovi vyraz na rozparsovanie//
+
+                ///tu moze byt aj EOF dont forget
+                if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
+
+                    return result = statement_next(data);
+
+                } else if (result == 2 && data->Token.type == TYPE_EOF) return SYNTAX_OK;
+                else return result;
+            } else return result = ERROR_PARSER;
+        }
+            //volanie funkcie
+        else {
+            ///to znamena ze funkcia existuje len som nieco zle nastavil v definicii
+            if (data->leftID->isDefined == false) return result = ERROR_INTERN;
+            else {
+
+                if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) == 0) {
+
+                    data->paramIndex = 0;
+                    while (data->paramIndex <= data->leftID->paramCount) {
+                        //tu neviem ci to na analyzu kvoli typom treba poslat do expression ale asi ani nie
+                        if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) != 0) return result = ERROR_PARSER;
+                    }
+                    if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) == 0) {
+                        if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
+                            return result = statement_next(data);
+                        } else if (result == 2 && data->Token.type == TYPE_EOF) return SYNTAX_OK;
+                        else return result;
+                    } else if (result == 2 && data->Token.type == TYPE_IDENTIFIER)
+                        return result = ERROR_WRONG_NUMBER_OF_PARAMS;
+                    else return result;
+                } else return result; ///neprisla mi zatvorka
             }
-            bool errIntern;
-            data->leftID = htabAddSymbol(&data->globalT, data->Token.attribute.string->str, &errIntern);
-            if (errIntern == true) return ERROR_INTERN;
-            data->leftID->isGlobal = true;
+            return result;
         }
-        else
-        {
-            ; //po matike :D
-        }
-
-        if ((result = checkTokenType(&data->Token, TYPE_ASSIGN_VALUE)) == 0) {      
-            
-            //tuto poslem timkovi vyraz na rozparsovanie//
-
-            ///tu moze byt aj EOF dont forget
-            if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
-
-                return result = statement_next(data);
-            }
-            else return result;
-        }
-        else return result;
     }
+
+
+
 /*	*   overujem ci nahodou nenastala situacia s komentom alebo je tam len prosté EOL   *   */
     else if ((result = isComment(data)) == 0) return statement_next(data);
 /*  *   *  koniec zacyklenia <statement> a <statement_next> -> vrati sa do <prog>   *   *   */
@@ -552,6 +655,9 @@ static int statement(ParserData *data)
         return result = SYNTAX_OK;
     }
     return result;
+
+
+    
 
 }
 
