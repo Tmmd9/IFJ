@@ -8,8 +8,9 @@ void symbol_init(sstack* stack)
 	stack->top = NULL;
 }
 
-bool symbol_push(sstack* stack, ptable_symbol symbol, Data_type type)
+bool symbol_push(sstack* stack, prec_table_sym symbol, DataType type)
 {
+    s_item *a_item =  (s_item *) malloc(sizeof(s_item));
 	if(a_item != NULL)
 	{
 		a_item->symbol = symbol;
@@ -20,19 +21,19 @@ bool symbol_push(sstack* stack, ptable_symbol symbol, Data_type type)
 
 		return true;
 	}
-		return false;
+	return false;
 }
 
 bool symbol_pop(sstack* stack)
 {
 	if(stack->top != NULL)
 	{
-		symbol_item* top_tmp = stack->top;
+		s_item* top_tmp = stack->top;
 		stack->top = top_tmp->next;
-		free(tmp)
+		free(top_tmp);
 		return true; 
 	}
-		return false;	
+	return false;
 }
 
 void symbol_pop_times(sstack* stack, int times)
@@ -45,18 +46,18 @@ void symbol_pop_times(sstack* stack, int times)
 	}
 }
 
-symbol_item* symbol_top(sstack* stack)
+s_item* symbol_top(sstack* stack)
 {
-	return stack->top
+	return stack->top;
 }
 
 
 void symbol_free(sstack* stack)
 {
 	bool pop;
-	pop = stack_pop(stack);
+	pop = symbol_pop(stack);
 	while (pop)
 	{
-		pop = stack_pop(stack);
+		pop = symbol_pop(stack);
 	}
 }

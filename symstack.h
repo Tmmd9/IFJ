@@ -1,6 +1,6 @@
 
-#ifdef _SYMTACK_H
-#define _SYMTACK_H
+#ifndef _SYMSTACK_H
+#define _SYMSTACK_H
 
 
 #include <stdbool.h>
@@ -8,10 +8,10 @@
 #include "expr.h" //TODO
 #include "symtable.h"
 
-typedef struct item
+typedef struct s_item
 {
-	ptable_symbol symbol; //este nieje
-	Data_type data_type; 
+    prec_table_sym symbol; //este nieje
+	DataType data_type;
 	struct s_item *next;
 } s_item;
 
@@ -19,14 +19,14 @@ typedef struct
 {
 	s_item *top;
 
-} symbol_stack;
+} sstack;
 
 void symbol_init(sstack* stack);
 /* 
 	inicializacia zasobniku
 */
 
-bool symbol_push(sstack* stack);
+bool symbol_push(sstack* stack, prec_table_sym symbol, DataType type);
 /*
 	pushne symbol do stacku
 
@@ -41,7 +41,7 @@ void symbol_pop_times(sstack* stack, int times);
 	popne vrchnu znak zo zasobniku x krat
 */
 
-symbol_item* symbol_top(sstack* stack);
+s_item* symbol_top(sstack* stack);
 /*
 	vrati vrchny znak zo zasobniku
 */
@@ -51,4 +51,4 @@ void symbol_free(sstack* stack);
 */
 
 
-#endif
+#endif //_SYMSTACK_H
