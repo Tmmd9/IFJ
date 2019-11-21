@@ -420,6 +420,7 @@ int expression(ParserData *data)
 
         switch(prec_tab[assign_prec_tab_ind(sym_on_top->symbol)][assign_prec_tab_ind(sym_in_token)])
              {   //PRI EQUAL PUSHNEM NA STACK A VYPYTAM TOKEN
+            //
                 case EQ:
                     symbol_push(stack,sym_in_token, token_to_data(data));
                     if((result = getNextToken(&data->Token)))
