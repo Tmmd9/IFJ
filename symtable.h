@@ -78,7 +78,7 @@ Data *htabSearch(htab *table, const char *key);
  *
  * vracia true, ak sa podari pridanie, inak false
  */
-bool htabAddParam(Data *data, unsigned int DataType);
+/*bool htabAddParam(Data *data, unsigned int DataType);*/
 
 /*
  * Funkcia na odstranenie urcitej polozky z tabulky

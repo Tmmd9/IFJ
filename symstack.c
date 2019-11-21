@@ -1,11 +1,44 @@
-#include <stdlib.h>
+/*
+ *	Predmet : Formální jazyky a překladače
+ *	Projekt : Implementace překladače imperativního jazyka IFJ19
+ *	Súbor	: symstack.c
+ *				- modul v ktorom je implementacia stacku symbolov
+ *				- tento stack sluzi primarne na pracu v PSA
+ *	Tím		: číslo 10 / varianta II
+ *	Autori	: Dominik Boboš (xbobos00)
+ *			  Peter Hudeček (xhudec34)
+ *			  Timotej Kováčik (xkovac49)
+ *			  Dávid Oravec (xorave05)
+ *
+ */
 
+#include <stdlib.h>
 #include "symstack.h"
 
 
 void symbol_init(sstack* stack)
 {
 	stack->top = NULL;
+}
+
+void symbol_pop_times(sstack* stack, int times)
+{
+    int i = 0;
+    while(i<times)
+    {
+        symbol_pop(stack);
+        i++;
+    }
+}
+
+void symbol_free(sstack* stack)
+{
+    bool pop;
+    pop = symbol_pop(stack);
+    while (pop)
+    {
+        pop = symbol_pop(stack);
+    }
 }
 
 bool symbol_push(sstack* stack, prec_table_sym symbol, DataType type)
@@ -36,22 +69,12 @@ bool symbol_pop(sstack* stack)
 	return false;
 }
 
-void symbol_pop_times(sstack* stack, int times)
-{
-	int i = 0;
-	while(i<times)
-	{
-		symbol_pop(stack);
-		i++;
-	}
-}
-
 s_item* symbol_top_term(sstack * stack)
 {
-    for(s_item* temp= stack->top; temp != NULL; stack->top = stack->top->next)
-    {
-        if(temp->symbol < STOP)
-            return temp;
+    s_item* temp  = stack->top;
+    while(temp){
+        if (temp->symbol < STOP) return temp;
+        stack->top = stack->top->next;
     }
     return NULL;
 }
@@ -59,15 +82,4 @@ s_item* symbol_top_term(sstack * stack)
 s_item* symbol_top(sstack* stack)
 {
 	return stack->top;
-}
-
-
-void symbol_free(sstack* stack)
-{
-	bool pop;
-	pop = symbol_pop(stack);
-	while (pop)
-	{
-		pop = symbol_pop(stack);
-	}
 }
