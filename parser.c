@@ -88,7 +88,7 @@ int isComment(ParserData *data)
 */
 int addToHash(ParserData *data, bool isLocal, int position) {
     bool errIntern;
-
+    ///pridavam do lokalnej tabulky
     if (isLocal == true) {
 
         switch (position) {
@@ -109,7 +109,7 @@ int addToHash(ParserData *data, bool isLocal, int position) {
         }
     } 
     else {
-
+        ///case kedy pridavam do global
         switch (position) {
             case 0:
                 data->leftID = htabAddSymbol(&data->globalT, data->Token.attribute.string->str, &errIntern);
@@ -142,10 +142,9 @@ static int prog(ParserData* data)
 /*  *   *   *   *   *   *   *   vzdy si na zaciatku pytam token     *   *   *   *   *   *   */
     if ((result = getNextToken(&data->Token)) != 0) return result;
 
-//1.<prog> -> KEYWORD_DEF TYPE_IDENTIFIER(<params>)TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <prog>
+/*1.<prog> -> KEYWORD_DEF TYPE_IDENTIFIER(<params>)TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <prog>*/
     if (data->Token.attribute.keyword == KEYWORD_DEF && data->Token.type == TYPE_KEYWORD) {
         data->in_declaration = 1;           //je true
-
 
         // "Identifikátor funkcie"
         if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0) {
@@ -153,48 +152,50 @@ static int prog(ParserData* data)
         if ((data->currentID = htabSearch(&data->globalT, data->Token.attribute.string->str)) != NULL &&
         data->currentID->isDefined == true) return ERROR_PROGRAM_SEMANTIC;
             ///pokial sa najde zhoda, je tu pokus o redefiniciu
-        	bool errIntern;
-        	data->currentID = htabAddSymbol(&data->globalT, data->Token.attribute.string->str, &errIntern);
-       	    if (errIntern == true) return ERROR_INTERN;
-            data->not_declared_function = 0;    //lebo ju deklarujeme
 
+            if ((data->currentID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL ) {
+                bool errIntern;
+                data->currentID = htabAddSymbol(&data->globalT, data->Token.attribute.string->str, &errIntern);
+                if (errIntern == true) return ERROR_INTERN;
+            }
+            data->leftID = NULL;
+       	    data->not_declared_function = 0;    //lebo ju deklarujeme
+            data->currentID->isDefined = true;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) == 0) {
             data->paramIndex = 0;
         	//preskocim na params (poslem im "data" ktore uchovavaju info
         	//ci sme v deklaracii alebo mimo nej atd..
         if ((result = params(data)) == 0) {
+
         if (data->Token.type == TYPE_RIGHT_PAR) {  //toto je hlavne test, ptom sa toto ifko moze odstranit
-        	//todo-> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <prog>
         if ((result = checkTokenType(&data->Token, TYPE_COLON)) == 0) {
     	if (((result = checkTokenType(&data->Token, TYPE_EOL)) == 0)) {
         if ((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
-            data->in_declaration = 1;
+
             data->in_function = 1;
             data->deepLabel += 1;    //mam indent, zmena urovne
 
 /*  *   *   *   *   pytam si dalsi token lebo statement si sam nepyta   *   *   *   *   *   *   */
             if ((result = getNextToken(&data->Token)) != 0) return result;
         if ((result = statement(data)) != 0) return result;      //nieco sa posralo v statement
+/*  *   *   *   *   pytam si dalsi token lebo statement si sam nepyta   *   *   *   *   *   *   */
+
         if (data->Token.type == TYPE_DEDENT) {
-//        if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0 ||
-//        (result == 2 && (data->Token.type == TYPE_EOF))) {
-//        if ((result == 2 && (data->Token.type == TYPE_EOF)) ||
-//        (result = checkTokenType(&data->Token, TYPE_DEDENT)) == 0) {
+
             data->in_declaration = 0;
             data->in_function = 0;
             data->deepLabel -= 1;
-            data->currentID->isDefined = true;
+
             if(data->Token.type == TYPE_EOF) return SYNTAX_OK;
             //rekurzia aby som sa vratil spat do <prog>
             else {
+                //po kazdej definicii funkcie treba uvolnovat tabulku lokalnych premennych
                 htabFree(&data->localT);
                 return result = prog(data);
             }
 
         }
         else return result; //neprisiel DEDENT
-       // }
-       // else return result; //neprisiel EOL
         }
         else return result;	//neprisiel indent
    		}
@@ -421,6 +422,7 @@ static int statement(ParserData *data)
 		if(data->Token.type == TYPE_DEDENT) {
 			data->deepLabel -=1;
 			data->in_if = 0;
+            htabFree(&data->localT);        ///potrebne premazat lokalnu tabulku
 			
 /*  *   *   *   *   *   *   pokracovanie statementov    *   *   *   *   *   *   *   */
             if ((result = getNextToken(&data->Token)) != 0) return result;
@@ -522,8 +524,11 @@ static int statement(ParserData *data)
 	    if((result = checkTokenType(&data->Token, TYPE_DEDENT)) == 0) {
 			data->deepLabel -=1;	//mam dedent, zmena urovne
 			data->in_while = 0;
-	        //pokracovanie kodiku, koniec tohto LL pravidla
-	        if((result = statement_next(data)) != SYNTAX_OK) return result;
+            htabFree(&data->localT);
+/*  *   *   *   *   *   *   pokracovanie statementov    *   *   *   *   *   *   *   */
+            if ((result = getNextToken(&data->Token)) != 0) return result;
+            if((result = statement_next(data)) != SYNTAX_OK) return result;
+/*  *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   */
 	    }
 	    else return result; //neprisiel dedent
 	    }
@@ -546,13 +551,13 @@ static int statement(ParserData *data)
             data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT ||
             data->Token.type == TYPE_STRING || data->Token.attribute.keyword == KEYWORD_NONE ||
             data->Token.type == TYPE_EOL) {     ///nedostal som nijaky vyraz do 'return'
+
             if (data->Token.type != TYPE_EOL) {    ///pripad nijakeho vyrazu do return - vrati NONE
+
                 if (data->Token.type == TYPE_IDENTIFIER &&
-                    (data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) ==
-                    NULL) { //ak nie je v local
+                    (data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) { //ak nie je v local
                     if (data->Token.type == TYPE_IDENTIFIER &&
-                        (data->leftID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==
-                        NULL) //ak nie je v global
+                        (data->leftID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL) //ak nie je v global
                         return ERROR_PROGRAM_SEMANTIC;
                 }
                 if (data->leftID->isDefined == true) {        //ak je to funkcia
@@ -627,11 +632,14 @@ static int statement(ParserData *data)
 
                 //ak nie je globalne pridam ju
                 if (data->in_function == 1 || data->in_if == 1 || data->in_while == 1 ) {
+
                     if ((data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) {
                         ///pridam premennu lokalne vo funkci
                         if ((result = addToHash(data, true, 0)) != 0) return ERROR_INTERN;
                     }
-                } else {
+                    else ;      ///nerobim nic - nepridavam do tabulky
+                }
+                else {
                     //pridavam premennu globalne
                     if ((result = addToHash(data, false, 0)) != 0) return ERROR_INTERN;
                 }
@@ -647,11 +655,12 @@ static int statement(ParserData *data)
                     } else if (result == 2 && data->Token.type == TYPE_EOF) return SYNTAX_OK;
                     else return result;
                 } else return ERROR_PARSER;
-            } else if (data->Token.type == TYPE_LEFT_PAR) {
+                } else if (data->Token.type == TYPE_LEFT_PAR) {
                 if (data->in_declaration == 1) {
                     if ((result = addToHash(data, false, 0)) != 0) return ERROR_INTERN;
                     else {
                         data->leftID->isDefined = false;
+                        data->leftID->isGlobal = false; ///explicitne to musim prestavit
 
                         if ((result = params(data)) != 0) return result;
                         if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
@@ -682,7 +691,7 @@ static int statement(ParserData *data)
                 else return result;
             } else return result = ERROR_PARSER;
         }
-            //volanie funkcie
+        /*  *   *   *   *   *   *   VOLANIE FUNKCIE    *   *   *   *   *   *   */
         else if (data->leftID->isDefined == true) {
 
                 if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) == 0) {
@@ -692,11 +701,15 @@ static int statement(ParserData *data)
                         while (data->paramIndex <= data->leftID->paramCount) {
                             //tu neviem ci to na analyzu kvoli typom treba poslat do expression ale asi ani nie
                             if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) != 0) return result;
-                            if ((result = checkTokenType(&data->Token, TYPE_COMMA)) != 0) return result;
+                            if ((result = checkTokenType(&data->Token, TYPE_COMMA)) != 0) {
+                                if (data->Token.type == TYPE_RIGHT_PAR)
+                                    result = 0;
+                                else return result;
+                            }
                             ++(data->paramIndex);
                         }
                     }
-                    if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) == 0) {
+                    if (data->Token.type == TYPE_RIGHT_PAR) {
                         if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
 
                             return result = statement_next(data);
@@ -705,7 +718,7 @@ static int statement(ParserData *data)
                         else return result;
                     } else if (result == 2 && data->Token.type == TYPE_IDENTIFIER)
                         return result = ERROR_WRONG_NUMBER_OF_PARAMS;
-                    else return result;
+                    else return result = ERROR_PARSER;
                 }
                 else return result; ///neprisla mi zatvorka
         }
