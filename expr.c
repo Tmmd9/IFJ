@@ -461,6 +461,70 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 }
 
 
+static int RE_rule(ParserData* data)
+{
+	int final;
+
+	Prec_rules actual_rule;
+	DataType final_data_type;
+
+	s_item* item1 = NULL;
+	s_item* item2 = NULL;
+	s_item* item3 = NULL;
+
+	bool until_stop = false; // premenna na funkciu na najdenie STOP
+
+	int counter = stop_count(&until_stop);
+
+	if (until_stop == false)
+	{
+		return 2; //syntax err
+	}
+
+	if(counter != 3 || counter != 1)
+	{
+		return 2; //syntax err
+	}
+
+	// pocet sa musi rovnat 1 alebo 3 inak syntax err ziadne pravidlo nema 2 členy
+	if (counter == 3 && until_stop == true)
+	{
+		item3 = stack.top;
+		item2 = stack.top->next;
+		item1 = stack.top->next->next;
+		final_data_type = prec_rules_syntax(counter, item1, item2, item3);
+	}
+
+	else if (counter == 1 && until_stop == true)
+	{
+		item1 = stack.top;
+		actual_rule = (counter, item1, , );
+	}
+
+	//kontrola spravnosti semantiky
+	if(actual_rule != NOT_A_RULE)
+	{
+		result = prec_rule_semantics(actual_rule, item1 item2, item3, &final_data_type)
+		if (result != 0)
+		{
+			return final;
+		}
+		
+		//konkatenacia
+		if (actual_rule == NT_PLUS_NT && final_data_type == TYPE_STRING)
+		{
+			//GENERATE CODE 
+		}
+		else //GENEREATE CODE
+	}
+
+	else
+	{
+		return 2; //syntax error
+	}
+	return 0; // syntax OK
+}
+
 int expression(ParserData *data)
 {
     //Inicializacia symstacku a potrebnych premennych
