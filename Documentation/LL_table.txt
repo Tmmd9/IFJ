@@ -1,5 +1,5 @@
 
-1.(D)	<prog> -> KEYWORD_DEF 		TYPE_IDENTIFIER(<params>)TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <prog>
+1.(D)	<prog> -> KEYWORD_DEF 		TYPE_IDENTIFIER(<params>)TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT <prog>
 2.(D)	<prog> -> TYPE_EOL <prog>
 3.(D)	<prog> -> <statement> TYPE_EOL <prog>
 4.(D) 	<prog> -> TYPE_EOF <end> 							//po kazdom statemente alebo progu sa znova zacina prog, 
@@ -10,18 +10,18 @@
 5.(D) 	<statement> -> KEYWORD_IF <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT KEYWORD_ELSE TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT <statement_next>
 6.(D)	<statement> -> KEYWORD_WHILE <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>
 7.(D) 	<statement> -> KEYWORD_RETURN <expression>	//aj funkcia
-8. 	<statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> <statement_next>	//mysliet ze tam moze byt aj funkcia
-9.	<statement> -> TYPE_IDENTIFIER(<params>) <statement_next> ///nasa LL nevedela volat nadefinovane funkcie
+8.(D) 	<statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> <statement_next>	//mysliet ze tam moze byt aj funkcia
+9.(D) 	<statement> -> TYPE_IDENTIFIER(<params>) <statement_next> ///nasa LL nevedela volat nadefinovane funkcie
 10.(D)	<statement_next> -> TYPE_EOL <statement> 		//aby mohlo byt viac statementov zasebou
-11. 	<statement> -> KEYWORD_PRINT(<expression>) <statement_next>        	//co ked je prazdny print/komentar v printe
-12. 	<statement> -> KEYWORD_PASS <statement_next>
-13. 	<statement> -> KEYWORD_INPUTS() <statement_next>
-14. 	<statement> -> KEYWORD_INPUTI() <statement_next>
-15. 	<statement> -> KEYWORD_INPUTF() <statement_next>
-16. 	<statement> -> KEYWORD_LEN(TYPE_STRING) <statement_next>
-17. 	<statement> -> KEYWORD_SUBSTR(TYPE_STRING TYPE_COMMA TYPE_INT TYPE_COMMA TYPE_INT) <statement_next>
-18. 	<statement> -> KEYWORD_CHR(TYPE_STRING TYPE_COMMA TYPE_INT) <statement_next>
-19. 	<statement> -> KEYWORD_ORD(TYPE_INT) <statement_next>
+11.(D) 	<statement> -> KEYWORD_PRINT(<expression>) <statement_next>        	//co ked je prazdny print/komentar v printe
+12.(D) 	<statement> -> KEYWORD_PASS <statement_next>
+13.(D) 	<statement> -> KEYWORD_INPUTS() <statement_next>
+14.(D)	<statement> -> KEYWORD_INPUTI() <statement_next>
+15.(D) 	<statement> -> KEYWORD_INPUTF() <statement_next>
+16.(D) 	<statement> -> KEYWORD_LEN(TYPE_STRING) <statement_next>
+17.(D) 	<statement> -> KEYWORD_SUBSTR(TYPE_STRING TYPE_COMMA TYPE_INT TYPE_COMMA TYPE_INT) <statement_next>
+18.(D) 	<statement> -> KEYWORD_CHR(TYPE_STRING TYPE_COMMA TYPE_INT) <statement_next>
+19.(D) 	<statement> -> KEYWORD_ORD(TYPE_INT) <statement_next>
 
 20.(D)	<params> -> TYPE_IDENTIFIER <param_next> 
 21.(D)	<params> -> ε
