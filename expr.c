@@ -96,6 +96,7 @@ static prec_tab_ind assign_prec_tab_ind(prec_table_sym symbol)
 	}
 }
 
+
 // konverzia tokenu zo scanneru na symbol
 static prec_table_sym tok_to_sym(token* token)
 {
@@ -176,6 +177,29 @@ static /* zmenit*/DataType token_to_data(ParserData* data)
 		default: DTYPE_UNDEFINED;
 	}
 }
+
+static int stop_count(bool* stop_found)
+{
+	s_item* top_sym = symbol_top(&stack); // vrchny symbol zo stacku
+ 	int n = 0;
+
+ 	while (top_sym)
+ 	{
+ 		if(tmp->symbol == STOP)
+ 		{
+ 			*stop_found = true; // stop bol najdeny .. break
+ 			break;
+ 		}
+ 		else if(tmp->symbol != STOP)
+ 		{
+ 			*stop_found = false; //stop nebol najdeny.. inkrementacia n
+ 			n++;
+ 		}
+ 		top_sym = top_sym->next; //posunutie na dalsi prvok
+ 	}
+ 	return n; // vracia poziciu STOP symbolu
+}
+
 
 //kontroluje spravnost zapisania pravidiel a urcije ktora z 
 //pravidiel vypisanych hore splna podmienky -> vzdy len jedna alebo NOT_A_RULE
@@ -435,6 +459,7 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 
 	return 0; // SYNTAX_OK
 }
+
 
 int expression(ParserData *data)
 {
