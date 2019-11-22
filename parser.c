@@ -145,16 +145,18 @@ static int prog(ParserData* data)
 //1.<prog> -> KEYWORD_DEF TYPE_IDENTIFIER(<params>)TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <prog>
     if (data->Token.attribute.keyword == KEYWORD_DEF && data->Token.type == TYPE_KEYWORD) {
         data->in_declaration = 1;           //je true
-        data->not_declared_function = 1;    //je true
+
 
         // "Identifikátor funkcie"
         if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0) {
             //pridam identifier do tabulky symbolov// checknem ci nenastava redefinicia
-        if (htabSearch(&data->globalT, data->Token.attribute.string->str) != NULL) return ERROR_PROGRAM_SEMANTIC;
+        if ((data->currentID = htabSearch(&data->globalT, data->Token.attribute.string->str)) != NULL &&
+        data->currentID->isDefined == true) return ERROR_PROGRAM_SEMANTIC;
             ///pokial sa najde zhoda, je tu pokus o redefiniciu
         	bool errIntern;
         	data->currentID = htabAddSymbol(&data->globalT, data->Token.attribute.string->str, &errIntern);
        	    if (errIntern == true) return ERROR_INTERN;
+            data->not_declared_function = 0;    //lebo ju deklarujeme
 
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) == 0) {
             data->paramIndex = 0;
@@ -184,7 +186,11 @@ static int prog(ParserData* data)
             data->currentID->isDefined = true;
             if(data->Token.type == TYPE_EOF) return SYNTAX_OK;
             //rekurzia aby som sa vratil spat do <prog>
-            else return result = prog(data);
+            else {
+                htabFree(&data->localT);
+                return result = prog(data);
+            }
+
         }
         else return result; //neprisiel DEDENT
        // }
@@ -223,41 +229,41 @@ static int params(ParserData *data)
 {
     static int result;
     //som vo deklaracii funkcie
-    if (data->in_declaration == 1) {
+    if (data->leftID == NULL && data->in_declaration == 1) {
         if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0) {
             switch (data->Token.type) {
-            	case TYPE_INT:
+                case TYPE_INT:
                     stringAddChar(data->currentID->param, 'i');
-            		break;
-            	case TYPE_FLOAT:
+                    break;
+                case TYPE_FLOAT:
                     stringAddChar(data->currentID->param, 'f');
-            		break;
-            	case TYPE_STRING:
+                    break;
+                case TYPE_STRING:
                     stringAddChar(data->currentID->param, 's');
-            		break;
-            	default:
+                    break;
+                default:
                     stringAddChar(data->currentID->param, 'u');
-            		break;
+                    break;
             }
             data->paramIndex += 1;
             //data->globalT->param[data->paramIndex] = '\0'; to uz robi addchar samotne
 
             bool errIntern;
             if (!(data->rightID = htabAddSymbol(&data->localT, data->Token.attribute.string->str, &errIntern))){
-				if (errIntern == true) return ERROR_INTERN;
-				else return ERROR_PROGRAM_SEMANTIC; ///redefinicia
-			}
+                if (errIntern == true) return ERROR_INTERN;
+                else return ERROR_PROGRAM_SEMANTIC; ///redefinicia
+            }
             //nacitavam dalsi token ak je ciarka ocakavam dalsi param.
-            //21. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next> 
+            //21. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next>
             if ((result = checkTokenType(&data->Token, TYPE_COMMA)) == 0)
-                params(data);	//<param_next>
+                result = params(data);	//<param_next>
             else if (data->Token.type == TYPE_RIGHT_PAR) {
                 data->currentID->paramCount = data->paramIndex;
                 //ulozim ze dana funkcia ma zatial N paramaterov podla data->paramIndex
                 return SYNTAX_OK;
             }
             else return ERROR_PARSER;   //neprisla ciarka ani prava zatvorka
-        }   
+        }
             //nacitany token je prava zatvorka -> <params> -> ε
         else if ((data->Token.type == TYPE_RIGHT_PAR) && (data->paramIndex == 0)) {
             //ulozim ze dana funcia nepotrebuje parametre
@@ -267,6 +273,53 @@ static int params(ParserData *data)
         else
             return ERROR_PARSER; ///param index bol vacsi ako nula ale dosla mi hned zatvorka
     }                            ///pripadne za ciarkou neprisiel dalsi identif
+
+    //ten divny pripad kedy volam v definicii funkcie nedefinovanu funkciu
+    else if(data->leftID->isDefined == false && data->in_declaration == 1) {
+        if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0) {
+            switch (data->Token.type) {
+                case TYPE_INT:
+                    stringAddChar(data->leftID->param, 'i');
+                    break;
+                case TYPE_FLOAT:
+                    stringAddChar(data->leftID->param, 'f');
+                    break;
+                case TYPE_STRING:
+                    stringAddChar(data->leftID->param, 's');
+                    break;
+                default:
+                    stringAddChar(data->leftID->param, 'u');
+                    break;
+            }
+            data->paramIndex += 1;
+            //data->globalT->param[data->paramIndex] = '\0'; to uz robi addchar samotne
+
+            bool errIntern;
+            if (!(data->rightID = htabAddSymbol(&data->localT, data->Token.attribute.string->str, &errIntern))){
+                if (errIntern == true) return ERROR_INTERN;
+                else return ERROR_PROGRAM_SEMANTIC; ///redefinicia
+            }
+            //nacitavam dalsi token ak je ciarka ocakavam dalsi param.
+            //21. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next>
+            if ((result = checkTokenType(&data->Token, TYPE_COMMA)) == 0)
+                params(data);	//<param_next>
+            else if (data->Token.type == TYPE_RIGHT_PAR) {
+                data->leftID->paramCount = data->paramIndex;
+                //ulozim ze dana funkcia ma zatial N paramaterov podla data->paramIndex
+                return SYNTAX_OK;
+            }
+            else return ERROR_PARSER;   //neprisla ciarka ani prava zatvorka
+        }
+            //nacitany token je prava zatvorka -> <params> -> ε
+        else if ((data->Token.type == TYPE_RIGHT_PAR) && (data->paramIndex == 0)) {
+            //ulozim ze dana funcia nepotrebuje parametre
+            data->leftID->paramCount = data->paramIndex;
+            return SYNTAX_OK;
+        }
+        else
+            return ERROR_PARSER; ///param index bol vacsi ako nula ale dosla mi hned zatvorka
+    }                            ///pripadne za ciarkou neprisiel dalsi identif
+
     return result;
 }
 
@@ -370,6 +423,7 @@ static int statement(ParserData *data)
 			data->in_if = 0;
 			
 /*  *   *   *   *   *   *   pokracovanie statementov    *   *   *   *   *   *   *   */
+            if ((result = getNextToken(&data->Token)) != 0) return result;
 			if((result = statement_next(data)) != SYNTAX_OK) return result;
 /*  *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   */
 		}       //neprisiel DEDENT
@@ -594,6 +648,20 @@ static int statement(ParserData *data)
                     else return result;
                 } else return ERROR_PARSER;
             } else if (data->Token.type == TYPE_LEFT_PAR) {
+                if (data->in_declaration == 1) {
+                    if ((result = addToHash(data, false, 0)) != 0) return ERROR_INTERN;
+                    else {
+                        data->leftID->isDefined = false;
+
+                        if ((result = params(data)) != 0) return result;
+                        if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
+
+                            return result = statement_next(data);
+                        }
+                        else return result;
+                    }
+
+                }
                 return result = ERROR_PROGRAM_SEMANTIC; //volanie funkcie ktora neexistuje
             } else return result = ERROR_PARSER;
         }
@@ -641,7 +709,7 @@ static int statement(ParserData *data)
                 }
                 else return result; ///neprisla mi zatvorka
         }
-        else return ERROR_PARSER; //bol to identifier ale nic z tohto tu
+        else return ERROR_PROGRAM_SEMANTIC; //bol to identifier ale nic z tohto tu
         }
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_PRINT) {
         static int result;
@@ -738,11 +806,11 @@ static int statement_next(ParserData *data)
             return result = statement(data);
         else return result;
     }
-    else if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) return result = statement(data);
 /*  *   *   *   *   *   *   *    25.  <statement_next>  ->  ε   *   *   *   *   *   *   *   */
 /*  *   *  koniec zacyklenia <statement> a <statement_next> -> vrati sa do <prog>   *   *   */
     else if ( data->Token.type == TYPE_DEDENT || data->Token.attribute.keyword == KEYWORD_DEF || data->Token.type == TYPE_EOF)
-    	return result = SYNTAX_OK; 
+    	return result = SYNTAX_OK;
+    else if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) return result = statement(data);
     else return result;
 }
 
