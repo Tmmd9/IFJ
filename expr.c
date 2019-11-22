@@ -433,26 +433,6 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 
 	///GENERATE CODE CAST///
 
-	if(item1_double == true)
-	{
-		GENERATE_CODE(gen_to_double_i2); //parameter z codegenerator.c treba doplnit
-	}
-
-	if(item3_double == true)
-	{
-		GENERATE_CODE(gen_to_double_i1); //parameter z codegenerator.c treba doplnit
-	}
-
-	if(item1_integer == true)
-	{
-		GENERATE_CODE(gen_to_int_i2); //parameter z codegenerator.c treba doplnit
-	}
-
-	if(item3_integer == true)
-	{
-		GENERATE_CODE(gen_to_int_i1); //parameter z codegenerator.c treba doplnit
-	}
-
 	return 0; // SYNTAX_OK
 }
 
