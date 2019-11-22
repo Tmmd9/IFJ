@@ -47,6 +47,7 @@ typedef enum {
     STATE_INDENT,                   //  konecny stav {F23}     24
     STATE_DEDENT,                   //  konecny stav {F24}     25
     STATE_INDENT_OR_DEDENT,         //  medzistav (Q15}        26
+    STATE_BLOCK_STRING_ESC,
 } state;
 
 typedef enum {

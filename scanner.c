@@ -513,18 +513,41 @@ int getNextToken(token *token) {
             case (STATE_BLOCK_STRING):  //sme v dokumentacnom retazci
                 // pokial je dalsi znak uvodzovka, prechadzame dalej a pocitame "
                 if (c == '"') {
+                    if (firstToken) commentary = true;
                     quoteCount += 1;
                     state = STATE_BLOCK_STRING_LEAVE_TRY;
                 } else if (c == EOF) {
                     return returnCode(ERROR_SCANNER, s);
                 } else if (firstToken) {
                     commentary = true;
+                    if (c == '\\'){
+                        state = STATE_BLOCK_STRING_ESC;
+                    }
                     break;
+                } else if (c == '\\'){
+                    state = STATE_BLOCK_STRING_ESC;
                 } else {
                     //ak je znak hocijaky iny nez EOF alebo ", pridavame do retazca
                     if (stringAddChar(s,c)) {
                         return returnCode(ERROR_SCANNER,s);
                     }
+                }
+                break;
+
+            case (STATE_BLOCK_STRING_ESC):
+                if (c == '"'){
+                    if (stringAddChar(s,c)) {
+                        return returnCode(ERROR_SCANNER,s);
+                    }
+                    state = STATE_BLOCK_STRING;
+                } else {
+                    if (stringAddChar(s,'\\')) {
+                        return returnCode(ERROR_SCANNER,s);
+                    }
+                    if (stringAddChar(s,c)) {
+                        return returnCode(ERROR_SCANNER,s);
+                    }
+                    state = STATE_BLOCK_STRING;
                 }
                 break;
 
