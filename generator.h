@@ -11,8 +11,8 @@
  *
  */
 
-#ifndef GENERATOR_H
-#define GENERATOR_H
+#ifndef _GENERATOR_H
+#define _GENERATOR_H
 
 #include <stdbool.h>
 #include "str.h"
@@ -21,4 +21,4 @@
 bool addInstr(const char *_instr,...);
 bool addCode(const char *_code,...);
 
-#endif //GENERATOR_H
+#endif //_GENERATOR_H

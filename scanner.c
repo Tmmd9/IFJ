@@ -536,16 +536,20 @@ int getNextToken(token *token) {
 
             case (STATE_BLOCK_STRING_ESC):
                 if (c == '"'){
-                    if (stringAddChar(s,c)) {
-                        return returnCode(ERROR_SCANNER,s);
+                    if (!commentary){
+                        if (stringAddChar(s,c)) {
+                            return returnCode(ERROR_SCANNER,s);
+                        }
                     }
                     state = STATE_BLOCK_STRING;
                 } else {
-                    if (stringAddChar(s,'\\')) {
-                        return returnCode(ERROR_SCANNER,s);
-                    }
-                    if (stringAddChar(s,c)) {
-                        return returnCode(ERROR_SCANNER,s);
+                    if (!commentary){
+                        if (stringAddChar(s,'\\')) {
+                            return returnCode(ERROR_SCANNER,s);
+                        }
+                        if (stringAddChar(s,c)) {
+                            return returnCode(ERROR_SCANNER,s);
+                        }
                     }
                     state = STATE_BLOCK_STRING;
                 }
@@ -559,6 +563,7 @@ int getNextToken(token *token) {
                 } else if (c == EOF) {
                     return returnCode(ERROR_SCANNER, s);
                 } else if (firstToken) {
+                    quoteCount = 0;
                     state = STATE_BLOCK_STRING;
                 } else {
                     /* pokial to je iny znak, nulujeme count a do retazca
