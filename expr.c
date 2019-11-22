@@ -169,7 +169,7 @@ static /* zmenit*/DataType token_to_data(ParserData* data)
 
 		case TYPE_IDENTIFIER:
 		    symbol = htabSearch(*data->localT, data->Token.attribute.string);
-			if(symbol == NULL)
+			if(symbol == NULL)				
 			    return DTYPE_UNDEFINED;
 			return symbol->type;
 
@@ -268,6 +268,39 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 	bool item3_double = false;
 	bool item3_integer = false;
 
+	//osetrenie spravnosti pre (E)
+	if (rule == LBR_NT_RBR)
+	{
+		if(item2->data_type == DTYPE_UNDEFINED)
+		{
+			return 3;//nedefinovana premenna
+		}
+	}
+
+	//osetrenie spravnosti pre operand
+	if (rule == OPERAND && item1->data_type == DTYPE_UNDEFINED)
+	{
+		return 3; // nedefinovana premenna
+	}
+
+	if (rule == OPERAND && item1->data_type == DTYPE_BOOL)
+	{
+		return 4;
+	}
+
+	if (rule != LBR_NT_RBR)
+		if(rule != OPERAND)
+		{
+			if(item1->data_type == DTYPE_UNDEFINED)
+			return 3;
+			if(item3->data_type == DTYPE_UNDEFINED)
+			return 3;
+			if(item1->data_type == DTYPE_BOOL)
+			return 4;
+			if(item3->data_type == DTYPE_BOOL)
+			return 4;
+		}
+
 
 
 	// E
@@ -290,15 +323,12 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 		{
 			*final = DTYPE_STRING;
 		}
-
 		// 6 + 6 
 		else if (item1->data_type == DTYPE_INT && item3->data_type == DTYPE_INT)
 		{
 			*final = DTYPE_INT;
 		}
-
 		else *final = DTYPE_DOUBLE;
-
 		if (item1->data_type == DTYPE_INT)
 	}*/
 
@@ -403,6 +433,28 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 
 	///GENERATE CODE CAST///
 
+	if(item1_double == true)
+	{
+		GENERATE_CODE(gen_to_double_i2); //parameter z codegenerator.c treba doplnit
+	}
+
+	if(item3_double == true)
+	{
+		GENERATE_CODE(gen_to_double_i1); //parameter z codegenerator.c treba doplnit
+	}
+
+	if(item1_integer == true)
+	{
+		GENERATE_CODE(gen_to_int_i2); //parameter z codegenerator.c treba doplnit
+	}
+
+	if(item3_integer == true)
+	{
+		GENERATE_CODE(gen_to_int_i1); //parameter z codegenerator.c treba doplnit
+	}
+
+	return 0; // SYNTAX_OK
+}
 
 int expression(ParserData *data)
 {
@@ -436,6 +488,4 @@ int expression(ParserData *data)
          }
         //dokym nebude vsetko spracovane tak cyklim
     } while( sym_on_top->symbol == DOLLAR_SYM && sym_in_token == DOLLAR_SYM);
-}
-
 }
