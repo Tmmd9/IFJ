@@ -11,8 +11,8 @@
  *
  */
 
-#ifndef _ERROR_H_
-#define _ERROR_H_
+#ifndef _ERROR_H
+#define _ERROR_H
 
 #define TOKEN_OK 0
 #define SYNTAX_OK 0
@@ -25,4 +25,4 @@
 #define ERROR_DIVIDING_ZERO 9            //delenie nulou
 #define ERROR_INTERN 99                    //interna chyba programu (alokacia)
 
-#endif // !_ERROR_H_
+#endif // _ERROR_H

@@ -11,8 +11,8 @@
  *																			 
  */
 
-#ifndef _SCANNER_H_
-#define _SCANNER_H_
+#ifndef _SCANNER_H
+#define _SCANNER_H
 
 #include <stdio.h>
 #include "str.h"
@@ -136,4 +136,4 @@ int getNextToken(token *token);
 void sourceFile(FILE *f);
 void setString(string *s);
 
-#endif    // !_SCANNER_H_
+#endif    // _SCANNER_H

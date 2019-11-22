@@ -10,18 +10,19 @@
  *			  Dávid Oravec (xorave05)
  *
  */
+#ifndef _PARSER_H
+#define _PARSER_H
+
+#include "scanner.h" //ziskavanie tokenov
+#include "stack.h" //indent/dedent + neviem co vsetko
+#include "error.h"
+#include "symtable.h"	//tabulka symbolov
+#include <stdbool.h>
 
 /* 	pre pomocnu funkciu addToHash	*/
 #define LEFT 0
 #define CURRENT 1
 #define RIGHT 2
-
-#include "scanner.h" //ziskavanie tokenov
-#include "stack.h" //indent/dedent + neviem co vsetko
-#include "error.h" 
-#include "expr.h" //precedencna tabulka pre semantiku
-#include "symtable.h"	//tabulka symbolov
-#include <stdbool.h>
 
 //struktura co bude uchovavat vsetko dolezite pre parser
 typedef struct {
@@ -54,3 +55,5 @@ typedef struct {
 
 //Main parsera
 int parse();
+
+#endif // _PARSER_H

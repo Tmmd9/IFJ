@@ -1,13 +1,14 @@
-// *	Predmet : Formální jazyky a překladače
-// *	Projekt : Implementace překladače imperativního jazyka IFJ19
-// *	Súbor	: expr.h
-// *				-hlavičkový súbor pre modul na parsovanie expressions (syntaktická analýza)
-// *	Tím		: číslo 10 / varianta II
-// *	Autori	: Dominik Boboš (xbobos00)
-// *			  Peter Hudeček (xhudec34)
-// *			  Timotej Kováčik (xkovac49)
-// *			  Dávid Oravec (xorave05)
-// *
+/*	Predmet : Formální jazyky a překladače
+ *	Projekt : Implementace překladače imperativního jazyka IFJ19
+ *	Súbor	: expr.h
+ *				-hlavičkový súbor pre modul na parsovanie expressions (syntaktická analýza)
+ *	Tím		: číslo 10 / varianta II
+ *	Autori	: Dominik Boboš (xbobos00)
+ *			  Peter Hudeček (xhudec34)
+ *			  Timotej Kováčik (xkovac49)
+ *			  Dávid Oravec (xorave05)
+ *
+ */
 
 
 
@@ -47,7 +48,7 @@ typedef enum
 typedef enum
 {
 	OPERAND,		///1 E -> i
-	NOT_A_RULE		///2 rule doesn't exist
+	NOT_A_RULE,		///2 rule doesn't exist
 	NT_EQ_NT,		///3 E -> E = E
 	NT_NEQ_NT,		///4 E -> E <> E
 	NT_LEQ_NT,		///5 E -> E <= E
@@ -55,7 +56,7 @@ typedef enum
 	NT_MEQ_NT,		///7 E -> E => E
 	NT_MTN_NT,		///8 E -> E > E
 	NT_PLUS_NT,		///9 E -> E + E
-  NT_MINUS_NT,	///10 E -> E - E
+    NT_MINUS_NT,	///10 E -> E - E
 	NT_IDIV_NT,		///11 E -> E \ E
 	NT_MUL_NT,		///12 E -> E * E
 	NT_DIV_NT,		///13 E -> E / E
@@ -69,6 +70,6 @@ typedef enum
 //	definovanu v parser.h uchovavajuca interne data
 
 //main funkcia co sa bude volat pri vyrazoch
-int expression(ParserData* data);
+int expression(ParserData *data);
 
-#endif //_EXPR_H
+#endif // _EXPR_H

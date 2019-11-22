@@ -13,8 +13,8 @@
  *
  */
 
-#ifndef SYMTABLE_H
-#define SYMTABLE_H
+#ifndef _SYMTABLE_H
+#define _SYMTABLE_H
 
 #include <string.h>
 #include <stdint.h>
@@ -30,6 +30,7 @@ typedef enum {
     DTYPE_DOUBLE,       //datovy typ DOUBLE
     DTYPE_STRING,       //datovy typ STRING
     DTYPE_UNDEFINED,    //NEDEFINOVANY datovy typ
+    DTYPE_BOOL,         // bool
 } DataType;
 
 typedef struct {
@@ -88,4 +89,4 @@ Data *htabSearch(htab *table, const char *key);
 bool htabDelete(htab *table, const char *key);
 
 
-#endif //SYMTABLE_H
+#endif // _SYMTABLE_H

@@ -10,8 +10,8 @@
  *			  Dávid Oravec (xorave05)
  *
  */
-#ifndef IFJ_STR_H
-#define IFJ_STR_H
+#ifndef _STR_H
+#define _STR_H
 
 #define STR_SUCCESS 0
 #define STR_ERR 1
@@ -39,4 +39,4 @@ int stringCpy(string *source, string *dest);
 int stringCmp(string *s, const char *str);
 
 
-#endif //IFJ_STR_H
+#endif // _STR_H

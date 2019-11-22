@@ -12,8 +12,8 @@
  *
  */
 
-#ifndef _STACK_H_
-#define _STACK_H_
+#ifndef _STACK_H
+#define _STACK_H
 
 #include <stdio.h>
 
@@ -55,5 +55,5 @@ void stackPop(tStack *s);
 
 void stackPush(tStack *s, char c);
 
-#endif // !_STACK_H_
+#endif // _STACK_H
 

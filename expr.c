@@ -1,15 +1,14 @@
 /*
- *	Predmet : Formální jazyky a překladače									 
- *	Projekt : Implementace překladače imperativního jazyka IFJ19			 
- *	Súbor	: expr.c											 
- *	Tím		: číslo 10 / varianta II										 
- *	Autori	: Dominik Boboš (xbobos00)										 
- *			  Peter Hudeček (xhudec34)										 
- *			  Timotej Kováčik (xkovac49)							 
- *			  Dávid Oravec (xorave05)								 
- *																	 
+ *	Predmet : Formální jazyky a překladače
+ *	Projekt : Implementace překladače imperativního jazyka IFJ19
+ *	Súbor	: expr.c
+ *	Tím		: číslo 10 / varianta II
+ *	Autori	: Dominik Boboš (xbobos00)
+ *			  Peter Hudeček (xhudec34)
+ *			  Timotej Kováčik (xkovac49)
+ *			  Dávid Oravec (xorave05)
+ *
  */
-
 
 #include "expr.h"
 #include "symstack.h"
@@ -58,13 +57,13 @@ static prec_tab_ind assign_prec_tab_ind(prec_table_sym symbol)
 		// +-
 		case PLUS_SYM:
 		case MINUS_SYM:
-		return PLUS_MINUS_IND;
+		    return PLUS_MINUS_IND;
 
 		// * / //
 		case MUL_SYM:
 		case DIV_SYM:
-		case INT_DIV_SYM: 
-		return MUL_DIV_IDIV_IND;
+		case INT_DIV_SYM:
+		    return MUL_DIV_IDIV_IND;
 
 		//compare znaky
 		case EQ_SYM:
@@ -73,26 +72,26 @@ static prec_tab_ind assign_prec_tab_ind(prec_table_sym symbol)
 		case LESS_SYM:
 		case MORE_SYM:
 		case MORE_EQ_SYM:
-		return COMPARE_IND;
+		    return COMPARE_IND;
 
 		//i -> datove typy
 		case ID_SYM:
 		case INT_SYM:
 		case FLOAT_SYM:
 		case STR_SYM:
-		return I_IND;
+		    return I_IND;
 
 		//lava zatvorka
 		case LEFT_PAR:
-		return LEFT_PAR_IND;
+		    return LEFT_PAR_IND;
 
 		//prava zatvorka
 		case RIGHT_PAR:
-		return RIGHT_PAR_IND;
+		    return RIGHT_PAR_IND;
 
 		//default
 		default:
-		return DOLLAR_IND;
+		    return DOLLAR_IND;
 	}
 }
 
@@ -153,7 +152,7 @@ static prec_table_sym tok_to_sym(token* token)
 // vrati datovy typ tokenu passnuteho z parseru
 //v pripade vratenia ID_SYM or INT_SYM or FLOAT_SYM or STR_SYM
 
-static /* zmenit*/DataType token_to_data(ParserData* data)
+static DataType token_to_data(ParserData* data)
 {
 	Data* symbol;
 
@@ -169,12 +168,12 @@ static /* zmenit*/DataType token_to_data(ParserData* data)
 			return DTYPE_DOUBLE;
 
 		case TYPE_IDENTIFIER:
-		    symbol = htabSearch(&data->localT, data->Token.attribute.string);
-			if(symbol == NULL)				
+		    symbol = htabSearch(&data->localT, data->Token.attribute.string->str);
+			if(symbol == NULL)
 			    return DTYPE_UNDEFINED;
 			return symbol->type;
 
-		default: DTYPE_UNDEFINED;
+		default: return DTYPE_UNDEFINED;
 	}
 }
 
@@ -185,12 +184,12 @@ static int stop_count(bool* stop_found)
 
  	while (top_sym)
  	{
- 		if(tmp->symbol == STOP)
+ 		if(top_sym->symbol == STOP)
  		{
  			*stop_found = true; // stop bol najdeny .. break
  			break;
  		}
- 		else if(tmp->symbol != STOP)
+ 		else if(top_sym->symbol != STOP)
  		{
  			*stop_found = false; //stop nebol najdeny.. inkrementacia n
  			n++;
@@ -201,7 +200,7 @@ static int stop_count(bool* stop_found)
 }
 
 
-//kontroluje spravnost zapisania pravidiel a urcije ktora z 
+//kontroluje spravnost zapisania pravidiel a urcije ktora z
 //pravidiel vypisanych hore splna podmienky -> vzdy len jedna alebo NOT_A_RULE
 static Prec_rules prec_rules_syntax(int count, s_item* item1, s_item* item2, s_item* item3)
 {
@@ -214,8 +213,8 @@ static Prec_rules prec_rules_syntax(int count, s_item* item1, s_item* item2, s_i
 		   item1->symbol == STR_SYM)
 		{
 			return OPERAND;
-		} 
-		else NOT_A_RULE;
+		}
+		else return NOT_A_RULE;
 	}
 
 	//ked sa najdu 3 symboly mame viac moznosti vyberu
@@ -281,6 +280,7 @@ static Prec_rules prec_rules_syntax(int count, s_item* item1, s_item* item2, s_i
 			return NOT_A_RULE;
 		}
 	}
+    return NOT_A_RULE;
 }
 
 
@@ -288,42 +288,40 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 {
 	//pomocne bool premenne na pretypovavanie
 	bool item1_double = false;
-	bool item1_integer = false;
 	bool item3_double = false;
-	bool item3_integer = false;
 
 	//osetrenie spravnosti pre (E)
 	if (rule == LBR_NT_RBR)
 	{
 		if(item2->data_type == DTYPE_UNDEFINED)
 		{
-			return 3;//nedefinovana premenna
+			return ERROR_PROGRAM_SEMANTIC;//nedefinovana premenna
 		}
 	}
 
 	//osetrenie spravnosti pre operand
 	if (rule == OPERAND && item1->data_type == DTYPE_UNDEFINED)
 	{
-		return 3; // nedefinovana premenna
+		return ERROR_PROGRAM_SEMANTIC; // nedefinovana premenna
 	}
 
 	if (rule == OPERAND && item1->data_type == DTYPE_BOOL)
 	{
-		return 4;
+		return ERROR_ARTIHMETIC;
 	}
 
-	if (rule != LBR_NT_RBR)
-		if(rule != OPERAND)
-		{
-			if(item1->data_type == DTYPE_UNDEFINED)
-			    return 3;
-			if(item3->data_type == DTYPE_UNDEFINED)
-			    return 3;
-			if(item1->data_type == DTYPE_BOOL)
-			    return 4;
-			if(item3->data_type == DTYPE_BOOL)
-			    return 4;
-		}
+	if (rule != LBR_NT_RBR) {
+        if (rule != OPERAND) {
+            if (item1->data_type == DTYPE_UNDEFINED)
+                return ERROR_PROGRAM_SEMANTIC;
+            if (item3->data_type == DTYPE_UNDEFINED)
+                return ERROR_PROGRAM_SEMANTIC;
+            if (item1->data_type == DTYPE_BOOL)
+                return ERROR_ARTIHMETIC;
+            if (item3->data_type == DTYPE_BOOL)
+                return ERROR_ARTIHMETIC;
+        }
+    }
 
 
 
@@ -347,7 +345,7 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 		{
 			*final = DTYPE_STRING;
 		}
-		// 6 + 6 
+		// 6 + 6
 		else if (item1->data_type == DTYPE_INT && item3->data_type == DTYPE_INT)
 		{
 			*final = DTYPE_INT;
@@ -362,14 +360,14 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 	{
 
 		//dva stringy sa daju len +sovat...
-		if (item1->data_type == DTYPE_STRING || item3->data_type == DTYPE_STRING || rule == NT_PLUS_NT)
+		if (item1->data_type == DTYPE_STRING && item3->data_type == DTYPE_STRING && rule == NT_PLUS_NT)
 		{
 			*final = DTYPE_STRING;
 		}
 
 		//.. ostatne davaju err
 		else if (item1->data_type == DTYPE_STRING || item3->data_type == DTYPE_STRING)
-			return 4;
+			return ERROR_ARTIHMETIC;
 
 		//integer +(ale aj - a *, dalej uz len +) integer = INTEGER
 		else if(item1->data_type == DTYPE_INT && item3->data_type == DTYPE_INT)
@@ -396,6 +394,18 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 		}
 	}
 
+	else if (rule == NT_DIV_NT){
+	    *final = DTYPE_DOUBLE;
+
+        if(item1->data_type == DTYPE_STRING || item3->data_type == DTYPE_STRING){
+            return ERROR_ARTIHMETIC;
+        } else if (item1->data_type == DTYPE_INT) {
+            item1_double = true;
+        } else if (item3->data_type == DTYPE_INT) {
+            item3_double = true;
+        }
+	}
+
 
 	//pravidla pre idiv
 	else if (rule == NT_IDIV_NT)
@@ -404,21 +414,16 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 
 		if(item1->data_type == DTYPE_STRING)
 		{
-			return 4;
+			return ERROR_ARTIHMETIC;
 		}
 		else if(item3->data_type == DTYPE_STRING)
 		{
-			return 4;
+			return ERROR_ARTIHMETIC;
 		}
 
-		else if (item1->data_type == DTYPE_DOUBLE)
+		else if (item1->data_type == DTYPE_DOUBLE || item3->data_type == DTYPE_DOUBLE)
 		{
-			item1_integer = true;
-		}
-
-		else if (item3->data_type == DTYPE_DOUBLE)
-		{
-			item3_integer = true;
+            return ERROR_ARTIHMETIC;
 		}
 	}
 
@@ -432,36 +437,43 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 
 	{	//int > int
 		if(item1->data_type == DTYPE_INT && item3->data_type == DTYPE_INT)
-				*final = DTYPE_BOOL; //chýba BOOL v .h
+		    *final = DTYPE_BOOL;
 
 		//double > double
 		else if (item1->data_type == DTYPE_DOUBLE && item3->data_type == DTYPE_DOUBLE)
-				*final = DTYPE_BOOL;
+		    *final = DTYPE_BOOL;
 
 		//int > double
-		else if(item1->data_type == DTYPE_INT && item3->data_type == DTYPE_DOUBLE)
-				*final = DTYPE_BOOL;
-				item1_double = true;
+		else if(item1->data_type == DTYPE_INT && item3->data_type == DTYPE_DOUBLE) {
+            *final = DTYPE_BOOL;
+            item1_double = true;
+        }
 
 		//double > int
-		else if(item1->data_type == DTYPE_DOUBLE && item3->data_type == DTYPE_INT)
-				*final = DTYPE_BOOL;
-				item3_double = true;
+		else if(item1->data_type == DTYPE_DOUBLE && item3->data_type == DTYPE_INT) {
+            *final = DTYPE_BOOL;
+            item3_double = true;
+        }
 
 		//string > string
 		else if(item1->data_type == DTYPE_STRING && item3->data_type == DTYPE_STRING)
-				*final = DTYPE_BOOL;
+		    *final = DTYPE_BOOL;
 
-		else return 4;
+		else return ERROR_ARTIHMETIC;
 	}
 
-	///GENERATE CODE CAST///
+	if (item1_double){
 
-	return 0; // SYNTAX_OK
+	}
+	if (item3_double){
+
+	}
+
+	return SYNTAX_OK; // SYNTAX_OK
 }
 
 
-static int RE_rule(ParserData* data)
+static int RE_rule()
 {
 	int result;
 
@@ -483,7 +495,7 @@ static int RE_rule(ParserData* data)
 
 	if(counter == 3 || counter == 1);
 	else
-	    return 2;
+	    return ERROR_PARSER;
 
 	// pocet sa musi rovnat 1 alebo 3 inak syntax err ziadne pravidlo nema 2 členy
 
@@ -492,7 +504,7 @@ static int RE_rule(ParserData* data)
 		item3 = stack->top;
 		item2 = stack->top->next;
 		item1 = stack->top->next->next;
-		final_data_type = prec_rules_syntax(counter, item1, item2, item3);
+        actual_rule = prec_rules_syntax(counter, item1, item2, item3);
 	}
 
 	else if (counter == 1 && until_stop == true)
@@ -500,6 +512,7 @@ static int RE_rule(ParserData* data)
 		item1 = stack->top;
 		actual_rule = prec_rules_syntax(counter, item1, NULL ,NULL );
 	}
+	else return ERROR_PARSER;
 
 	//kontrola spravnosti semantiky
 	if(actual_rule != NOT_A_RULE)
@@ -509,20 +522,20 @@ static int RE_rule(ParserData* data)
 		{
 			return result;
 		}
-		
+
 		//konkatenacia
-		if (actual_rule == NT_PLUS_NT && final_data_type == TYPE_STRING)
+		if (actual_rule == NT_PLUS_NT && final_data_type == DTYPE_STRING)
 		{
-			//GENERATE CODE 
+			//GENERATE CODE
 		}
-		else //GENEREATE CODE
+		else{;
+            //GENEREATE CODE
+		}
 	}
 
-	else
-	{
-		return 2; //syntax error
-	}
-	return 0; // syntax OK
+	else return ERROR_PARSER;
+
+	return SYNTAX_OK; // syntax OK
 }
 
 int expression(ParserData *data)
@@ -544,17 +557,31 @@ int expression(ParserData *data)
             //
                 case EQ:
                     symbol_push(stack,sym_in_token, token_to_data(data));
-                    if((result = getNextToken(&data->Token)))
+                    if((result = getNextToken(&data->Token))){
+                        symbol_free(stack);
                         return result;
+                    }
+                    break;
                     //PRI SHIFTE PRIDAM STOP ZARAZKU PRE REDUKOVANIE, PUSHNEM NA STACK A VYPYTAM TOKEN
-                 case SH:
+                case SH:
                      symbol_push(stack,STOP,DTYPE_UNDEFINED);
                      symbol_push(stack,sym_in_token, token_to_data(data));
-                     if((result =getNextToken(&data->Token)))
-                         return result;
-                 case RE:
-                //TODO TREBA FUNKCIU NA REDUKCIU CEZ PRAVIDLA
+                     if((result = getNextToken(&data->Token))) {
+                        symbol_free(stack);
+                        return result;
+                     }
+                     break;
+                case RE:
+                    if ((result = RE_rule())) {
+                        symbol_free(stack);
+                        return result;
+                    }
+                    break;
+                default:
+                     symbol_free(stack);
+                     return ERROR_PARSER;
          }
         //dokym nebude vsetko spracovane tak cyklim
-    } while( sym_on_top->symbol == DOLLAR_SYM && sym_in_token == DOLLAR_SYM);
+    } while (sym_on_top->symbol == DOLLAR_SYM && sym_in_token == DOLLAR_SYM);
+    return SYNTAX_OK;
 }
