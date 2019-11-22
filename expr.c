@@ -169,7 +169,7 @@ static /* zmenit*/DataType token_to_data(ParserData* data)
 			return DTYPE_DOUBLE;
 
 		case TYPE_IDENTIFIER:
-		    symbol = htabSearch(*data->localT, data->Token.attribute.string);
+		    symbol = htabSearch(&data->localT, data->Token.attribute.string);
 			if(symbol == NULL)				
 			    return DTYPE_UNDEFINED;
 			return symbol->type;
@@ -180,7 +180,7 @@ static /* zmenit*/DataType token_to_data(ParserData* data)
 
 static int stop_count(bool* stop_found)
 {
-	s_item* top_sym = symbol_top(&stack); // vrchny symbol zo stacku
+	s_item* top_sym = symbol_top(stack); // vrchny symbol zo stacku
  	int n = 0;
 
  	while (top_sym)
@@ -316,13 +316,13 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 		if(rule != OPERAND)
 		{
 			if(item1->data_type == DTYPE_UNDEFINED)
-			return 3;
+			    return 3;
 			if(item3->data_type == DTYPE_UNDEFINED)
-			return 3;
+			    return 3;
 			if(item1->data_type == DTYPE_BOOL)
-			return 4;
+			    return 4;
 			if(item3->data_type == DTYPE_BOOL)
-			return 4;
+			    return 4;
 		}
 
 
@@ -379,7 +379,7 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 		else if(item1->data_type == DTYPE_DOUBLE && item3->data_type == DTYPE_INT)
 		{
 			item3_double = true;
-			*final = DTYPE_DOUBLE
+			*final = DTYPE_DOUBLE;
 		}
 
 		// to iste ako hore obratene
@@ -428,7 +428,7 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 	   		rule == NT_LTN_NT||
 	   		rule == NT_MEQ_NT||
 	   		rule == NT_MTN_NT||
-	   		rule == NT_LEQ_NT||)
+	   		rule == NT_LEQ_NT)
 
 	{	//int > int
 		if(item1->data_type == DTYPE_INT && item3->data_type == DTYPE_INT)
@@ -463,7 +463,7 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 
 static int RE_rule(ParserData* data)
 {
-	int final;
+	int result;
 
 	Prec_rules actual_rule;
 	DataType final_data_type;
@@ -481,33 +481,33 @@ static int RE_rule(ParserData* data)
 		return 2; //syntax err
 	}
 
-	if(counter != 3 || counter != 1)
-	{
-		return 2; //syntax err
-	}
+	if(counter == 3 || counter == 1);
+	else
+	    return 2;
 
 	// pocet sa musi rovnat 1 alebo 3 inak syntax err ziadne pravidlo nema 2 členy
+
 	if (counter == 3 && until_stop == true)
 	{
-		item3 = stack.top;
-		item2 = stack.top->next;
-		item1 = stack.top->next->next;
+		item3 = stack->top;
+		item2 = stack->top->next;
+		item1 = stack->top->next->next;
 		final_data_type = prec_rules_syntax(counter, item1, item2, item3);
 	}
 
 	else if (counter == 1 && until_stop == true)
 	{
-		item1 = stack.top;
-		actual_rule = (counter, item1, , );
+		item1 = stack->top;
+		actual_rule = prec_rules_syntax(counter, item1, NULL ,NULL );
 	}
 
 	//kontrola spravnosti semantiky
 	if(actual_rule != NOT_A_RULE)
 	{
-		result = prec_rule_semantics(actual_rule, item1 item2, item3, &final_data_type)
+		result = prec_rule_semantics(actual_rule, item1, item2, item3, &final_data_type);
 		if (result != 0)
 		{
-			return final;
+			return result;
 		}
 		
 		//konkatenacia
