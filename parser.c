@@ -338,74 +338,11 @@ static int statement(ParserData *data)
     	data->in_if = 1;
     	data->uniqLabel +=1;
 
-
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if ((result = expression(data)) != 0 ) return result;
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
-
-    	/*///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj
-    	if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 || 
-    		data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT || 
-    		data->Token.type == TYPE_STRING || data->Token.attribute.keyword == KEYWORD_NONE ||
-    		data->Token.type == TYPE_COLON) {       ///TYPE_COLON situacia ked je prazdny retazec ''
-    		if (data->Token.type != TYPE_COLON) {   ///pripad ked by nastal prazdny retazec
-            if (data->Token.type == TYPE_IDENTIFIER &&
-                (data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) ==
-                NULL) { //ak nie je v local
-                if (data->Token.type == TYPE_IDENTIFIER &&
-                    (data->leftID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==
-                    NULL) //ak nie je v global
-                    return ERROR_PROGRAM_SEMANTIC;
-            }
-            //kvazi else
-            //{
-            //ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
-            //}
-            //implicitne hodnoty relacneho operatora, kt poslem expression 'relacny operator' = NULL
-            //implicitne hodnoty druheho operandu, kt, poslem expression 'rightID' = NULL
-
-            if ((result = checkTokenType(&data->Token, TYPE_GREATER_THAN)) == 0 ||
-                data->Token.type == TYPE_INT || data->Token.type == TYPE_LESS_THAN ||
-                data->Token.type == TYPE_GREATER_EQUAL || data->Token.type == TYPE_LESS_EQUAL ||
-                data->Token.type == TYPE_EQUALS || data->Token.type == TYPE_NOT_EQUAL) { //porovnavac
-                //ulozim na stack stackADD(data->Token.attribute.string->str)
-                //ulozim si na stack co to bolo za relacny operator
-                //PREPISEM IMPLICITNE  hodnoty
-                if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 ||
-                    data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT ||
-                    data->Token.type == TYPE_STRING) {
-
-                    if (data->Token.type == TYPE_IDENTIFIER &&
-                        (data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) ==
-                        NULL) { //ak nie je v local
-
-                        if (data->Token.type == TYPE_IDENTIFIER &&
-                            (data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==
-                            NULL) //ak nie je v global
-                            return ERROR_PROGRAM_SEMANTIC;
-                    } else {
-                        //PREPISEM IMPLICITNE hodnoty
-                        //ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa /alebo mam davat token? probably question to myself
-                        //lebo colon si sam nepyta token
-                        result = checkTokenType(&data->Token, TYPE_COLON);
-                    }
-                } else return result;
-            }    //cele telo IF relacneho operatora
-            else if (result == 2 && data->Token.type == TYPE_COLON) result = 0;    //do nothing
-    		else return result;								//prisiel nevalidny porovnavac,chyba
-            }
-            else if (result == 2 && data->Token.type == TYPE_COLON) result = 0 ;   ///do EXPRESSION poslem '' prazdny retazec
-            else return result;
-	    	
-	    	*//*
-	    	if ( (result = expression funkcii poslem (laveID, porovnavac, praveID)) == 0){
-	    		if ((result = codegenerator(nejakeMakro, lava hodnota, prava, porovnavac?))!=0 )
-	    			return result;
-	    	}
-	    	else return result;
-			*/
         //COLON a.k.a dvojbodka	, pytal som si token v expression
         if(data->Token.type == TYPE_COLON) {      
         if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {            
@@ -430,7 +367,7 @@ static int statement(ParserData *data)
 		if(data->Token.type == TYPE_DEDENT) {
 			data->deepLabel -=1;
 			data->in_if = 0;
-            htabFree(&data->localT);        ///potrebne premazat lokalnu tabulku
+            //htabFree(&data->localT);        ///potrebne premazat lokalnu tabulku
 			
 /*  *   *   *   *   *   *   pokracovanie statementov    *   *   *   *   *   *   *   */
             if ((result = getNextToken(&data->Token)) != 0) return result;
@@ -454,8 +391,6 @@ static int statement(ParserData *data)
 		else return result;
 		} 		//neprisiel COLON
 		else return result;
-/*		}		//prva cast expression
-    	else return result;		//ak nebol prvy znak v expression spravny //prisiel nevalidny porovnavac,chyba*/
     }//IF
 
 
@@ -475,64 +410,6 @@ static int statement(ParserData *data)
         if ((result = expression(data)) != 0 ) return result;
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
-        /*    ///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj 
-    	if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 || 
-    		data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT || 
-    		data->Token.type == TYPE_STRING || data->Token.attribute.keyword == KEYWORD_NONE ||
-    		data->Token.type == TYPE_COLON) {           //prazdny retazec
-
-    	    if (data->Token.type != TYPE_COLON) {   ///pripad ked by nastal prazdny retazec
-            if (data->Token.type == TYPE_IDENTIFIER &&
-                (data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) ==
-                NULL) { //ak nie je v local
-                if (data->Token.type == TYPE_IDENTIFIER &&
-                    (data->leftID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==
-                    NULL) //ak nie je v global
-                    return ERROR_PROGRAM_SEMANTIC;
-            } else {
-                //ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
-            }
-            //implicitne hodnoty relacneho operatora, kt poslem expression 'relacny operator' = NULL
-            //implicitne hodnoty druheho operandu, kt, poslem expression 'rightID' = NULL
-
-            if ((result = checkTokenType(&data->Token, TYPE_GREATER_THAN)) == 0 ||
-                data->Token.type == TYPE_INT || data->Token.type == TYPE_LESS_THAN ||
-                data->Token.type == TYPE_GREATER_EQUAL || data->Token.type == TYPE_LESS_EQUAL ||
-                data->Token.type == TYPE_EQUALS || data->Token.type == TYPE_NOT_EQUAL) { //porovnavac
-                //ulozim na stack stackADD(data->Token.attribute.string)
-                //ulozim si na stack co to bolo za relacny operator
-                //PREPISEM IMPLICITNE  hodnoty
-                if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 ||
-                    data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT ||
-                    data->Token.type == TYPE_STRING) {
-                    if (data->Token.type == TYPE_IDENTIFIER &&
-                        (data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) ==
-                        NULL) { //ak nie je v local
-                        if (data->Token.type == TYPE_IDENTIFIER &&
-                            (data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==
-                            NULL) //ak nie je v global
-                            return ERROR_PROGRAM_SEMANTIC;
-                    } else {
-                        //PREPISEM IMPLICITNE hodnoty
-                        //ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
-                        ///vyhodnoti pocet opakovani, to sa posle generatoru
-                        //lebo colon si sam nepyta token
-                        result = checkTokenType(&data->Token, TYPE_COLON);
-                    }
-                } else return result;
-            }    //cele telo IF relacneho operatora
-            else if (result == 2 && data->Token.type == TYPE_COLON) result = 0;    //do nothing
-            else return result;                                //prisiel nevalidny porovnavac,chyba
-            }
-            else result = 0;      ///do EXPRESSION poslem '' prazdny retazec  cize false
-	    	*/
-	    	/*
-	    	if ( (result = expression funkcii poslem (laveID, porovnavac, praveID)) == 0){
-	    		if ((result = codegenerator(nejakeMakro, lava hodnota, prava, porovnavac?))!=0 )
-	    			return result;
-	    	}
-	    	else return result;
-			*/
 		if(data->Token.type == TYPE_COLON) {
 	    if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
 	    if((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
@@ -542,7 +419,7 @@ static int statement(ParserData *data)
 	    if((result = checkTokenType(&data->Token, TYPE_DEDENT)) == 0) {
 			data->deepLabel -=1;	//mam dedent, zmena urovne
 			data->in_while = 0;
-            htabFree(&data->localT);
+        //    htabFree(&data->localT);
 /*  *   *   *   *   *   *   pokracovanie statementov    *   *   *   *   *   *   *   */
             if ((result = getNextToken(&data->Token)) != 0) return result;
             if((result = statement_next(data)) != SYNTAX_OK) return result;
@@ -555,8 +432,6 @@ static int statement(ParserData *data)
 	    else return result; //neprisiel EOL
 	    }
 	    else return result; //neprisiel COLON
-	    /*}		//prva cast expression
-		else return result;		//ak nebol prvy znak v expression spravny*/
     } //WHILE
 
 
@@ -574,68 +449,6 @@ static int statement(ParserData *data)
         if (data->Token.type == TYPE_EOL) return SYNTAX_OK;
         else return ERROR_PARSER;
 
-
-       /* ///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj
-        if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 ||
-            data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT ||
-            data->Token.type == TYPE_STRING || data->Token.attribute.keyword == KEYWORD_NONE ||
-            data->Token.type == TYPE_EOL) {     ///nedostal som nijaky vyraz do 'return'
-
-            if (data->Token.type != TYPE_EOL) {    ///pripad nijakeho vyrazu do return - vrati NONE
-
-                if (data->Token.type == TYPE_IDENTIFIER &&
-                    (data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) { //ak nie je v local
-                    if (data->Token.type == TYPE_IDENTIFIER &&
-                        (data->leftID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL) //ak nie je v global
-                        return ERROR_PROGRAM_SEMANTIC;
-                }
-                if (data->leftID->isDefined == true) {        //ak je to funkcia
-                    //volanie funkcie overenie parametrov atd - dalsie pytanie si tokenov
-                }
-
-
-                if ((result = checkTokenType(&data->Token, TYPE_GREATER_THAN)) == 0 ||
-                    data->Token.type == TYPE_INT || data->Token.type == TYPE_LESS_THAN ||
-                    data->Token.type == TYPE_GREATER_EQUAL || data->Token.type == TYPE_LESS_EQUAL ||
-                    data->Token.type == TYPE_EQUALS || data->Token.type == TYPE_NOT_EQUAL ||
-                    data->Token.type == TYPE_PLUS || data->Token.type == TYPE_MINUS ||
-                    data->Token.type == TYPE_MULTIPLY || data->Token.type == TYPE_DIVIDE ||
-                    data->Token.type == TYPE_DIVIDE_INT ||
-                    data->Token.type == TYPE_ASSIGN_VALUE) { //vsetky mozne operatory
-                    //ulozim na stack stackADD(data->Token.attribute.string)
-                    //ulozim si na stack co to bolo za relacny operator
-                    //PREPISEM IMPLICITNE  hodnoty
-                    if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 ||
-                        data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT ||
-                        data->Token.type == TYPE_STRING) {
-                        if (data->Token.type == TYPE_IDENTIFIER &&
-                            (data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) { //ak nie je v local
-                            if (data->Token.type == TYPE_IDENTIFIER &&
-                                (data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL) //ak nie je v global
-                                return ERROR_PROGRAM_SEMANTIC;
-                        }
-                        if (data->rightID->isDefined == true) {        //ak je to funkcia
-                            //volanie funkcie overenie parametrov atd - dalsie pytanie si tokenov
-                        }
-
-                        result = checkTokenType(&data->Token, TYPE_EOL);
-                        return result = (checkTokenType(&data->Token, TYPE_DEDENT)); //vrati sa do progu/statementu if/while
-                        // }
-                    } else return result;       ///neprisiel mi druhy validny operand
-                }    //cele telo  operatorov
-                else if (result == 2 && data->Token.type == TYPE_EOL) return result = (checkTokenType(&data->Token, TYPE_DEDENT));    //do nothing
-                else return result;                                //prisiel nevalidny vyraz
-            }
-            else if (result == 2 && data->Token.type == TYPE_EOL) {
-                while (data->Token.type != TYPE_DEDENT) {
-                    if ((result = checkTokenType(&data->Token, TYPE_DEDENT)) == 0) {        ///vracam sa spat
-                        return result;
-                    }
-                }
-            }
-            else return result; //nerpisiel eol
-        }
-        else return result; //neprislo na zaciatku nic validne*/
     } //end of return
 
 
@@ -672,7 +485,9 @@ static int statement(ParserData *data)
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if (data->Token.type == TYPE_KEYWORD && (data->Token.attribute.keyword == KEYWORD_INPUTI ||
-        data->Token.attribute.keyword == KEYWORD_INPUTS || data->Token.attribute.keyword == KEYWORD_INPUTF)) {
+            data->Token.attribute.keyword == KEYWORD_INPUTS || data->Token.attribute.keyword == KEYWORD_INPUTF ||
+            data->Token.attribute.keyword == KEYWORD_SUBSTR || data->Token.attribute.keyword == KEYWORD_LEN ||
+            data->Token.attribute.keyword == KEYWORD_CHR || data->Token.attribute.keyword == KEYWORD_ORD)) {
             return result = statement(data);
         }
         else if ((result = expression(data)) != 0 ) return result;
@@ -718,7 +533,13 @@ static int statement(ParserData *data)
 
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         if ((result = getNextToken(&data->Token)) != 0) return result;
-        if ((result = expression(data)) != 0 ) return result;
+        if (data->Token.type == TYPE_KEYWORD && (data->Token.attribute.keyword == KEYWORD_INPUTI ||
+            data->Token.attribute.keyword == KEYWORD_INPUTS || data->Token.attribute.keyword == KEYWORD_INPUTF ||
+            data->Token.attribute.keyword == KEYWORD_SUBSTR || data->Token.attribute.keyword == KEYWORD_LEN ||
+            data->Token.attribute.keyword == KEYWORD_CHR || data->Token.attribute.keyword == KEYWORD_ORD )) {
+            return result = statement(data);
+        }
+        else if ((result = expression(data)) != 0 ) return result;
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
                ///tu moze byt aj EOF dont forget
@@ -754,7 +575,6 @@ static int statement(ParserData *data)
                         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
                     }
 
-
                     if (data->Token.type == TYPE_RIGHT_PAR) {
                         if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
 
@@ -770,12 +590,24 @@ static int statement(ParserData *data)
         }
         else return ERROR_PROGRAM_SEMANTIC; //bol to identifier ale nic z tohto tu
         }
+
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_PRINT) {
         static int result;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
         //poslem do expr
+
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         if ((result = getNextToken(&data->Token)) != 0) return result;
+        /*if (data->Token.type == TYPE_KEYWORD && ( data->Token.attribute.keyword == KEYWORD_SUBSTR ||
+            data->Token.attribute.keyword == KEYWORD_LEN || data->Token.attribute.keyword == KEYWORD_CHR ||
+            data->Token.attribute.keyword == KEYWORD_ORD )) {
+            result = statement(data);                               ///je mozne ze tu je kdesi chyba!!!
+            if (result != 0) return result;
+            else {
+                result = getNextToken(&data->Token)
+                if ( result != 0) return result;
+            }
+        }*/
         if ((result = expression(data)) != 0 ) return result;
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
@@ -808,15 +640,83 @@ static int statement(ParserData *data)
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_LEN) {
         static int result;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
-        //zavolam expr
-        if (data->Token.type == TYPE_RIGHT_PAR)
-            return result = statement_next(data);
+            if ((result = getNextToken(&data->Token)) != 0) return result;
+
+            if (data->Token.type == TYPE_IDENTIFIER || data->Token.type == TYPE_INT ||
+            data->Token.type == TYPE_STRING || data->Token.type == TYPE_FLOAT) {
+                if (((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL))
+                    if (((data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL))
+                        return ERROR_PROGRAM_SEMANTIC;
+
+                if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) == 0)
+                    return result = statement_next(data);
+            }
         else return ERROR_PARSER;
     }
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_SUBSTR) {
         static int result;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
         //zavolam expr
+            int i = 0;
+            while (i < 3) {
+                switch (i) {
+                    case 0:
+                        {
+                            if ((result = getNextToken(&data->Token)) != 0)
+                                return result;
+                            if (data->Token.type == TYPE_STRING) {
+                                i++;
+                                break;
+                            } else if (data->Token.type == TYPE_IDENTIFIER) {
+                                if (((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==
+                                     NULL))
+                                    if (((data->rightID = htabSearch(&data->localT,
+                                                                     data->Token.attribute.string->str)) == NULL))
+                                        return ERROR_PROGRAM_SEMANTIC;
+                                i++;
+                                break;
+                            } else return ERROR_PARSER;
+                        }
+                    case 1:
+                        {
+                            if ((result = getNextToken(&data->Token)) != 0)
+                                return result;
+                            if (data->Token.type == TYPE_INT) {
+                                i++;
+                                break;
+                            } else if (data->Token.type == TYPE_IDENTIFIER) {
+                                if (((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==
+                                     NULL))
+                                    if (((data->rightID = htabSearch(&data->localT,
+                                                                     data->Token.attribute.string->str)) == NULL))
+                                        return ERROR_PROGRAM_SEMANTIC;
+                                i++;
+                                break;
+                            } else return ERROR_PARSER;
+                        }
+                    case 2:
+
+                        {
+                            if ((result = getNextToken(&data->Token)) != 0)
+                                return result;
+                            if (data->Token.type == TYPE_INT) {
+                                i++;
+                                break;
+                            } else if (data->Token.type == TYPE_IDENTIFIER) {
+                                if (((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==
+                                     NULL))
+                                    if (((data->rightID = htabSearch(&data->localT,
+                                                                     data->Token.attribute.string->str)) == NULL))
+                                        return ERROR_PROGRAM_SEMANTIC;
+                                i++;
+                                break;
+                            } else return ERROR_PARSER;
+                        }
+                    default:
+                        return ERROR_PARSER;
+                }
+            }
+        if ((result = getNextToken(&data->Token)) != 0) return result;
         if (data->Token.type == TYPE_RIGHT_PAR)
             return result = statement_next(data);
         else return ERROR_PARSER;
@@ -825,17 +725,17 @@ static int statement(ParserData *data)
         static int result;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
         //zavolam expr
-        if (data->Token.type == TYPE_RIGHT_PAR)
-            return result = statement_next(data);
-        else return ERROR_PARSER;
+        if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
+        if (( result = statement_next(data)) != 0) return result;
+
     }
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_ORD) {
         static int result;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
         //zavolam expr
-        if (data->Token.type == TYPE_RIGHT_PAR)
-            return result = statement_next(data);
-        else return ERROR_PARSER;
+        if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
+        if (( result = statement_next(data)) != 0) return result;
+
     }
 
 /*	*   overujem ci nahodou nenastala situacia s komentom alebo je tam len prosté EOL   *   */
