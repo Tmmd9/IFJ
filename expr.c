@@ -491,7 +491,7 @@ static int RE_rule()
 
 	if (until_stop == false)
 	{
-		return 2; //syntax err
+		return ERROR_PARSER; //syntax err
 	}
 
 	if(counter == 3 || counter == 1);
@@ -532,6 +532,8 @@ static int RE_rule()
 		else{;
             //GENEREATE CODE
 		}
+		symbol_pop_times(symStack, (++counter));
+		symbol_push(symStack,NON_TERM,final_data_type);
 	}
 
 	else return ERROR_PARSER;
@@ -541,38 +543,51 @@ static int RE_rule()
 
 int expression(ParserData *data)
 {
-    symStack = (sstack *) malloc(100 * sizeof(sstack));
+    //alokacia pamate pre stack, pri nepodarenej alokacii vracia error
+    symStack = (sstack *) malloc(MAX_STACK_SIZE * sizeof(sstack));
     if (!symStack) {
         return ERROR_INTERN;
     }
+    //inicializacia
     symbol_init(symStack);
-    symbol_push(symStack, DOLLAR_SYM, DTYPE_UNDEFINED); //pociatocny item pre kontrolu prazdnoty stacku
-
-    //Inicializacia symstacku a potrebnych premennych
+    //na zaciatok pushneme DOLAR na stack, aby sme vedeli kde zacina
+    symbol_push(symStack, DOLLAR_SYM, DTYPE_UNDEFINED);
 
     s_item* sym_on_top;
     prec_table_sym sym_in_token;
     int result;
+    bool end = false;
 
+    // zacina cyklus, chceme aby zbehol aspon raz, konci pri nastaveni priznaku end na true
     do{
         //priradenie hodnot
-        sym_on_top = symbol_top(symStack);
-        sym_in_token = tok_to_sym(&data->Token);
+        sym_on_top = symbol_top_term(symStack);     //vracia prvy terminal zo stacku
+        sym_in_token = tok_to_sym(&data->Token);    //vracia symbol z tokenu pomocou fce
 
         switch(prec_tab[assign_prec_tab_ind(sym_on_top->symbol)][assign_prec_tab_ind(sym_in_token)])
-             {   //PRI EQUAL PUSHNEM NA STACK A VYPYTAM TOKEN
-            //
+             {
                 case EQ:
-                    symbol_push(symStack,sym_in_token, token_to_data(data));
+                    //pri operacii equal pushneme novy symbol na stack
+                    if (!symbol_push(symStack,sym_in_token, token_to_data(data))){
+                        symbol_free(symStack);
+                        return ERROR_INTERN;
+                    }
                     if((result = getNextToken(&data->Token))){
                         symbol_free(symStack);
                         return result;
                     }
                     break;
-                    //PRI SHIFTE PRIDAM STOP ZARAZKU PRE REDUKOVANIE, PUSHNEM NA STACK A VYPYTAM TOKEN
                 case SH:
-                     symbol_push(symStack,STOP,DTYPE_UNDEFINED);
-                     symbol_push(symStack,sym_in_token, token_to_data(data));
+                     //kedze nastava shift, vkladame hosnotu STOP za prvy terminal na stacku
+                     if (!sym_insert_stop_NT(symStack,STOP,DTYPE_UNDEFINED)){
+                         symbol_free(symStack);
+                         return ERROR_INTERN;
+                     }
+                     //pushneme na stack dalsi symbol
+                     if (!symbol_push(symStack,sym_in_token, token_to_data(data))){
+                         symbol_free(symStack);
+                         return ERROR_INTERN;
+                     }
                      if((result = getNextToken(&data->Token))) {
                         symbol_free(symStack);
                         return result;
@@ -585,10 +600,13 @@ int expression(ParserData *data)
                     }
                     break;
                 default:
-                     symbol_free(symStack);
-                     return ERROR_PARSER;
+                    if (sym_on_top->symbol == DOLLAR_SYM && sym_in_token == DOLLAR_SYM){
+                        end = true;
+                    } else {
+                        symbol_free(symStack);
+                        return ERROR_PARSER;
+                    }
          }
-        //dokym nebude vsetko spracovane tak cyklim
-    } while (!(sym_on_top->symbol == DOLLAR_SYM && sym_in_token == DOLLAR_SYM));
+    } while (!end);
     return result;
 }

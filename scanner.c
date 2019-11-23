@@ -253,6 +253,9 @@ int getNextToken(token *token) {
                         ungetc(c, source);
                         state = STATE_START;
                     }
+                } else if (c == '"') {
+                    ungetc(c, source);
+                    state = STATE_START;
                 } else {
                     return returnCode(ERROR_SCANNER, s);
                 }
@@ -387,6 +390,7 @@ int getNextToken(token *token) {
                 if (c == '\n' || c == EOF) {
                     state = STATE_START;
                     ungetc(c, source);
+                    firstToken = 1;
                 }
                 break;
 
@@ -499,7 +503,7 @@ int getNextToken(token *token) {
                     state = STATE_BLOCK_STRING_CONTINUE;
                 } else if (c == EOF) {
                     return returnCode(ERROR_SCANNER, s);
-                }
+                } else return returnCode(ERROR_SCANNER, s);
                 break;
 
             case (STATE_BLOCK_STRING_CONTINUE):
@@ -507,7 +511,7 @@ int getNextToken(token *token) {
                     state = STATE_BLOCK_STRING;
                 } else if (c == EOF) {
                     return returnCode(ERROR_SCANNER, s);
-                }
+                } else return returnCode(ERROR_SCANNER, s);
                 break;
 
             case (STATE_BLOCK_STRING):  //sme v dokumentacnom retazci

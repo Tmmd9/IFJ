@@ -20,6 +20,8 @@
 #include "expr.h" //TODO
 #include "symtable.h"
 
+#define MAX_STACK_SIZE 42
+
 typedef struct s_item
 {
     prec_table_sym symbol; //este nieje
@@ -40,6 +42,9 @@ bool symbol_push(sstack* symStack, prec_table_sym symbol, DataType type);
 
 //Uvolni prvok z vrchola zasobnika
 bool symbol_pop(sstack* symStack);
+
+//vlozi klucovy znak STOP na stack za prvy terminal ktory je na stacku
+bool sym_insert_stop_NT(sstack* symStack, prec_table_sym symbol, DataType type);
 
 //Uvolni "times" znakov z vvrchola zasobnika
 void symbol_pop_times(sstack* symStack, int times);
