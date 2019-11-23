@@ -15,10 +15,11 @@
 #include <stdio.h>
 #include "parser.h"
 #include "scanner.h"
-//#include "instlist.h"
-#include <stdlib.h>
-#include <ctype.h>
 #include "expr.h"
+//#include "instlist.h"
+#include <ctype.h>
+
+
 
 //FILE *source;
 
@@ -337,7 +338,14 @@ static int statement(ParserData *data)
     	data->in_if = 1;
     	data->uniqLabel +=1;
 
-    	///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj 
+
+/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   *   *   *   */
+        if ((result = getNextToken(&data->Token)) != 0) return result;
+        if ((result = expression(data)) != 0 ) return result;
+/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   *   *   *   */
+
+
+    	/*///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj
     	if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 || 
     		data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT || 
     		data->Token.type == TYPE_STRING || data->Token.attribute.keyword == KEYWORD_NONE ||
@@ -391,7 +399,7 @@ static int statement(ParserData *data)
             else if (result == 2 && data->Token.type == TYPE_COLON) result = 0 ;   ///do EXPRESSION poslem '' prazdny retazec
             else return result;
 	    	
-	    	/*
+	    	*//*
 	    	if ( (result = expression funkcii poslem (laveID, porovnavac, praveID)) == 0){
 	    		if ((result = codegenerator(nejakeMakro, lava hodnota, prava, porovnavac?))!=0 )
 	    			return result;
@@ -446,8 +454,8 @@ static int statement(ParserData *data)
 		else return result;
 		} 		//neprisiel COLON
 		else return result;
-		}		//prva cast expression
-    	else return result;		//ak nebol prvy znak v expression spravny //prisiel nevalidny porovnavac,chyba
+/*		}		//prva cast expression
+    	else return result;		//ak nebol prvy znak v expression spravny //prisiel nevalidny porovnavac,chyba*/
     }//IF
 
 
@@ -637,7 +645,7 @@ static int statement(ParserData *data)
                         ///pridam premennu lokalne vo funkci
                         if ((result = addToHash(data, true, 0)) != 0) return ERROR_INTERN;
                     }
-                    else ;      ///nerobim nic - nepridavam do tabulky
+                    //else -> nerobim nic - nepridavam do tabulky
                 }
                 else {
                     //pridavam premennu globalne
@@ -699,16 +707,22 @@ static int statement(ParserData *data)
                     if (data->leftID->paramCount !=0) {
                         data->paramIndex = 1;
                         while (data->paramIndex <= data->leftID->paramCount) {
+                            ++(data->paramIndex);
                             //tu neviem ci to na analyzu kvoli typom treba poslat do expression ale asi ani nie
                             if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) != 0) return result;
+
                             if ((result = checkTokenType(&data->Token, TYPE_COMMA)) != 0) {
                                 if (data->Token.type == TYPE_RIGHT_PAR)
                                     result = 0;
                                 else return result;
                             }
-                            ++(data->paramIndex);
                         }
                     }
+                    else {
+                        if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
+                    }
+
+
                     if (data->Token.type == TYPE_RIGHT_PAR) {
                         if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
 

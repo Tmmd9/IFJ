@@ -19,6 +19,7 @@
 #include "symtable.h"	//tabulka symbolov
 #include <stdbool.h>
 
+
 /* 	pre pomocnu funkciu addToHash	*/
 #define LEFT 0
 #define CURRENT 1
