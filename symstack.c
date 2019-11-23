@@ -16,70 +16,70 @@
 #include "symstack.h"
 
 
-void symbol_init(sstack* stack)
+void symbol_init(sstack* symStack)
 {
-	stack->top = NULL;
+	symStack->top = NULL;
 }
 
-void symbol_pop_times(sstack* stack, int times)
+void symbol_pop_times(sstack* symStack, int times)
 {
     int i = 0;
     while(i<times)
     {
-        symbol_pop(stack);
+        symbol_pop(symStack);
         i++;
     }
 }
 
-void symbol_free(sstack* stack)
+void symbol_free(sstack* symStack)
 {
     bool pop;
-    pop = symbol_pop(stack);
+    pop = symbol_pop(symStack);
     while (pop)
     {
-        pop = symbol_pop(stack);
+        pop = symbol_pop(symStack);
     }
 }
 
-bool symbol_push(sstack* stack, prec_table_sym symbol, DataType type)
+bool symbol_push(sstack* symStack, prec_table_sym symbol, DataType type)
 {
     s_item *a_item =  (s_item *) malloc(sizeof(s_item));
 	if(a_item != NULL)
 	{
 		a_item->symbol = symbol;
 		a_item->data_type = type;
-		a_item->next = stack->top;
+		a_item->next = symStack->top;
 
-		stack->top = a_item;
+		symStack->top = a_item;
 
 		return true;
 	}
 	return false;
 }
 
-bool symbol_pop(sstack* stack)
+bool symbol_pop(sstack* symStack)
 {
-	if(stack->top != NULL)
+	if(symStack->top != NULL)
 	{
-		s_item* top_tmp = stack->top;
-		stack->top = top_tmp->next;
+		s_item* top_tmp = symStack->top;
+		symStack->top = top_tmp->next;
 		free(top_tmp);
 		return true; 
 	}
 	return false;
 }
 
-s_item* symbol_top_term(sstack * stack)
+s_item* symbol_top_term(sstack * symStack)
 {
-    s_item* temp  = stack->top;
+    s_item* temp  = symStack->top;
     while(temp){
         if (temp->symbol < STOP) return temp;
-        stack->top = stack->top->next;
+        symStack->top = symStack->top->next;
     }
     return NULL;
 }
 
-s_item* symbol_top(sstack* stack)
+s_item* symbol_top(sstack* symStack)
 {
-	return stack->top;
+	return symStack->top;
 }
