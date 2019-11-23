@@ -14,6 +14,7 @@
 #include "symstack.h"
 #include "scanner.h"
 #include "error.h"
+#include <stdlib.h>
 //#include "code_gen.h" este neni
 
 typedef enum
@@ -46,7 +47,7 @@ int prec_tab[7][7]={
 	   {SH, SH,  SH, SH, ER, SH, ER}, // $
 };
 
-sstack* stack;
+sstack* symStack;
 
 //priradenie hodnoty symbolom z tabulky (tie ktore su spolu v casi
 //su v tom istom riadku v tabulke)
@@ -179,7 +180,7 @@ static DataType token_to_data(ParserData* data)
 
 static int stop_count(bool* stop_found)
 {
-	s_item* top_sym = symbol_top(stack); // vrchny symbol zo stacku
+	s_item* top_sym = symbol_top(symStack); // vrchny symbol zo stacku
  	int n = 0;
 
  	while (top_sym)
@@ -501,15 +502,15 @@ static int RE_rule()
 
 	if (counter == 3 && until_stop == true)
 	{
-		item3 = stack->top;
-		item2 = stack->top->next;
-		item1 = stack->top->next->next;
+		item3 = symStack->top;
+		item2 = symStack->top->next;
+		item1 = symStack->top->next->next;
         actual_rule = prec_rules_syntax(counter, item1, item2, item3);
 	}
 
 	else if (counter == 1 && until_stop == true)
 	{
-		item1 = stack->top;
+		item1 = symStack->top;
 		actual_rule = prec_rules_syntax(counter, item1, NULL ,NULL );
 	}
 	else return ERROR_PARSER;
@@ -540,48 +541,54 @@ static int RE_rule()
 
 int expression(ParserData *data)
 {
+    symStack = (sstack *) malloc(100 * sizeof(sstack));
+    if (!symStack) {
+        return ERROR_INTERN;
+    }
+    symbol_init(symStack);
+    symbol_push(symStack, DOLLAR_SYM, DTYPE_UNDEFINED); //pociatocny item pre kontrolu prazdnoty stacku
+
     //Inicializacia symstacku a potrebnych premennych
-    symbol_init(stack);
-    symbol_push(stack, DOLLAR_SYM, DTYPE_UNDEFINED); //pociatocny item pre kontrolu prazdnoty stacku
+
     s_item* sym_on_top;
     prec_table_sym sym_in_token;
     int result;
 
     do{
         //priradenie hodnot
-        sym_on_top = symbol_top(stack);
+        sym_on_top = symbol_top(symStack);
         sym_in_token = tok_to_sym(&data->Token);
 
         switch(prec_tab[assign_prec_tab_ind(sym_on_top->symbol)][assign_prec_tab_ind(sym_in_token)])
              {   //PRI EQUAL PUSHNEM NA STACK A VYPYTAM TOKEN
             //
                 case EQ:
-                    symbol_push(stack,sym_in_token, token_to_data(data));
+                    symbol_push(symStack,sym_in_token, token_to_data(data));
                     if((result = getNextToken(&data->Token))){
-                        symbol_free(stack);
+                        symbol_free(symStack);
                         return result;
                     }
                     break;
                     //PRI SHIFTE PRIDAM STOP ZARAZKU PRE REDUKOVANIE, PUSHNEM NA STACK A VYPYTAM TOKEN
                 case SH:
-                     symbol_push(stack,STOP,DTYPE_UNDEFINED);
-                     symbol_push(stack,sym_in_token, token_to_data(data));
+                     symbol_push(symStack,STOP,DTYPE_UNDEFINED);
+                     symbol_push(symStack,sym_in_token, token_to_data(data));
                      if((result = getNextToken(&data->Token))) {
-                        symbol_free(stack);
+                        symbol_free(symStack);
                         return result;
                      }
                      break;
                 case RE:
                     if ((result = RE_rule())) {
-                        symbol_free(stack);
+                        symbol_free(symStack);
                         return result;
                     }
                     break;
                 default:
-                     symbol_free(stack);
+                     symbol_free(symStack);
                      return ERROR_PARSER;
          }
         //dokym nebude vsetko spracovane tak cyklim
-    } while (sym_on_top->symbol == DOLLAR_SYM && sym_in_token == DOLLAR_SYM);
-    return SYNTAX_OK;
+    } while (!(sym_on_top->symbol == DOLLAR_SYM && sym_in_token == DOLLAR_SYM));
+    return result;
 }

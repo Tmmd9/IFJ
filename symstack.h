@@ -15,6 +15,7 @@
 #define _SYMSTACK_H
 
 
+
 #include <stdbool.h>
 #include "expr.h" //TODO
 #include "symtable.h"
@@ -32,24 +33,24 @@ typedef struct
 
 } sstack;
 //Init zasobnika
-void symbol_init(sstack* stack);
+void symbol_init(sstack* symStack);
 
 //Pushne symbol na vrchol stacku
-bool symbol_push(sstack* stack, prec_table_sym symbol, DataType type);
+bool symbol_push(sstack* symStack, prec_table_sym symbol, DataType type);
 
 //Uvolni prvok z vrchola zasobnika
-bool symbol_pop(sstack* stack);
+bool symbol_pop(sstack* symStack);
 
 //Uvolni "times" znakov z vvrchola zasobnika
-void symbol_pop_times(sstack* stack, int times);
+void symbol_pop_times(sstack* symStack, int times);
 
 //Vrati prvy najdeny terminal na vrchole stacku
-s_item* symbol_top_term(sstack * stack);
+s_item* symbol_top_term(sstack * symStack);
 
 //Vrati hodnotu vrcholu zasobnika
-s_item* symbol_top(sstack* stack);
+s_item* symbol_top(sstack* symStack);
 
 //Uvolni zasobnik
-void symbol_free(sstack* stack);
+void symbol_free(sstack* symStack);
 
 #endif //_SYMSTACK_H
