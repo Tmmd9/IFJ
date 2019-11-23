@@ -329,20 +329,20 @@ static int params(ParserData *data)
 static int statement(ParserData *data)
 { 
     static int result;
-	/*
-	*	5. 	<statement> -> KEYWORD_IF <expression> TYPE_COLON 
-	*	TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT KEYWORD_ELSE TYPE_COLON 
-	*	TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT <statement_next>
-    */
+/******************************************** I F *************************************************      
+*            	5. 	<statement> -> KEYWORD_IF <expression> TYPE_COLON                             *
+*            	TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT KEYWORD_ELSE TYPE_COLON              *
+*            	TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT <statement_next>                     *
+***************************************************************************************************/
     if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_IF)) {
     	data->in_if = 1;
     	data->uniqLabel +=1;
 
 
-/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   *   *   *   */
+/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if ((result = expression(data)) != 0 ) return result;
-/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   *   *   *   */
+/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
 
     	/*///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj
@@ -459,13 +459,23 @@ static int statement(ParserData *data)
     }//IF
 
 
-
-/*6. <statement> -> KEYWORD_WHILE TYPE_COLON <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>*/
+/******************************************** W H I L E********************************************      
+*               6. <statement> -> KEYWORD_WHILE <expression> TYPE_COLON                           *
+*                   TYPE_EOL TYPE_INDENT <statement> TYPE_EOL                                     *
+*                   TYPE_DEDENT <statement_next>                                                  *
+***************************************************************************************************/
+/*6. <statement> -> KEYWORD_WHILE <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>*/
     //WHILE
     else if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_WHILE)) {
 		data->in_while = 1;
     	data->uniqLabel +=1;
-            ///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj 
+        
+/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
+        if ((result = getNextToken(&data->Token)) != 0) return result;
+        if ((result = expression(data)) != 0 ) return result;
+/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
+
+        /*    ///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj 
     	if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 || 
     		data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT || 
     		data->Token.type == TYPE_STRING || data->Token.attribute.keyword == KEYWORD_NONE ||
@@ -515,7 +525,7 @@ static int statement(ParserData *data)
             else return result;                                //prisiel nevalidny porovnavac,chyba
             }
             else result = 0;      ///do EXPRESSION poslem '' prazdny retazec  cize false
-	    	
+	    	*/
 	    	/*
 	    	if ( (result = expression funkcii poslem (laveID, porovnavac, praveID)) == 0){
 	    		if ((result = codegenerator(nejakeMakro, lava hodnota, prava, porovnavac?))!=0 )
@@ -545,16 +555,27 @@ static int statement(ParserData *data)
 	    else return result; //neprisiel EOL
 	    }
 	    else return result; //neprisiel COLON
-	    }		//prva cast expression
-		else return result;		//ak nebol prvy znak v expression spravny
+	    /*}		//prva cast expression
+		else return result;		//ak nebol prvy znak v expression spravny*/
     } //WHILE
 
 
-
-/*  *   *   *   *   *   *   *7. <statement> -> KEYWORD_RETURN <expression> *   *   *   *   *   *   *   */
+/******************************************** R E T U R N *******************************************   
+*   *   *   *   *   *   *   *7. <statement> -> KEYWORD_RETURN <expression> *   *   *   *   *   *   *
+****************************************************************************************************/
      else if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_RETURN)) {
         if (data->in_function < 1) return ERROR_SEMANTIC_OTHERS;    ///pokial sa vola mimo funkcie
-        ///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj
+        
+/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
+        if ((result = getNextToken(&data->Token)) != 0) return result;
+        if ((result = expression(data)) != 0 ) return result;
+/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
+
+        if (data->Token.type == TYPE_EOL) return SYNTAX_OK;
+        else return ERROR_PARSER;
+
+
+       /* ///prvy expression (lavy) moze tam byt len tento jeden alebo vyzaduje potom aj
         if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 ||
             data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT ||
             data->Token.type == TYPE_STRING || data->Token.attribute.keyword == KEYWORD_NONE ||
@@ -571,13 +592,7 @@ static int statement(ParserData *data)
                 if (data->leftID->isDefined == true) {        //ak je to funkcia
                     //volanie funkcie overenie parametrov atd - dalsie pytanie si tokenov
                 }
-                //kvazi else
-                //{
-                //ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
-                //}
 
-                //implicitne hodnoty relacneho operatora, kt poslem expression 'relacny operator' = NULL
-                //implicitne hodnoty druheho operandu, kt, poslem expression 'rightID' = NULL
 
                 if ((result = checkTokenType(&data->Token, TYPE_GREATER_THAN)) == 0 ||
                     data->Token.type == TYPE_INT || data->Token.type == TYPE_LESS_THAN ||
@@ -602,11 +617,7 @@ static int statement(ParserData *data)
                         if (data->rightID->isDefined == true) {        //ak je to funkcia
                             //volanie funkcie overenie parametrov atd - dalsie pytanie si tokenov
                         }
-                        //kvazi else
-                        //{
-                        //PREPISEM IMPLICITNE hodnoty
-                        //ulozim na stack stackADD(data->leftID)	///expresion funkci da dostatok infa / alebo token?
-                        ///vyhodnoti pocet opakovani, to sa posle generatoru
+
                         result = checkTokenType(&data->Token, TYPE_EOL);
                         return result = (checkTokenType(&data->Token, TYPE_DEDENT)); //vrati sa do progu/statementu if/while
                         // }
@@ -616,21 +627,23 @@ static int statement(ParserData *data)
                 else return result;                                //prisiel nevalidny vyraz
             }
             else if (result == 2 && data->Token.type == TYPE_EOL) {
-                if ((result = checkTokenType(&data->Token, TYPE_DEDENT)) == 0) {        ///vracam sa spat
-                    return result;
+                while (data->Token.type != TYPE_DEDENT) {
+                    if ((result = checkTokenType(&data->Token, TYPE_DEDENT)) == 0) {        ///vracam sa spat
+                        return result;
+                    }
                 }
-                else return result; //neprisiel dedent
             }
             else return result; //nerpisiel eol
         }
-        else return result; //neprislo na zaciatku nic validne
+        else return result; //neprislo na zaciatku nic validne*/
     } //end of return
 
 
-
-/*  *   *   *  tu moze nastat jednak definicia a jednak len priradenie hodnoty dolezite hlavne pri WHILE    *   *   *   */
-/*  *   *   *8.  <statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> TYPE_EOL <statement_next>    *   *   *   */
-/*  *   *   *   *   *   *    9.	<statement> -> TYPE_IDENTIFIER(<params>) <statement_next>   *   *   *   *   *   *   *   */
+/*******   DEKLARACIA PREMENNYCH || VOLANIE FUNKCOE || PRIRADOVANIE HODNOTY DO PREMENNEJ   ********** 
+*  *    tu moze nastat jednak definicia a jednak len priradenie hodnoty dolezite hlavne pri WHILE   *
+*  *  * 8.  <statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> TYPE_EOL <statement_next  *
+*  *   *   *    9.	<statement> -> TYPE_IDENTIFIER(<params>) <statement_next>   *   *   *   *   *   *
+****************************************************************************************************/
     else if (data->Token.type == TYPE_IDENTIFIER) {
         static int result;
 
@@ -656,13 +669,23 @@ static int statement(ParserData *data)
 
                     //tuto poslem timkovi vyraz na rozparsovanie//
 
+/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
+        if ((result = getNextToken(&data->Token)) != 0) return result;
+        if ((result = expression(data)) != 0 ) return result;
+/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
+
                     ///tu moze byt aj EOF dont forget
-                    if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
+                    if (data->Token.type == TYPE_EOL) {
 
                         return result = statement_next(data);
-                    } else if (result == 2 && data->Token.type == TYPE_EOF) return SYNTAX_OK;
-                    else return result;
-                } else return ERROR_PARSER;
+
+                    } 
+                    else if (data->Token.type == TYPE_EOF) return SYNTAX_OK;
+                    else return ERROR_PARSER;
+                
+                } 
+                else return ERROR_PARSER;
+                
                 } else if (data->Token.type == TYPE_LEFT_PAR) {
                 if (data->in_declaration == 1) {
                     if ((result = addToHash(data, false, 0)) != 0) return ERROR_INTERN;
@@ -671,32 +694,39 @@ static int statement(ParserData *data)
                         data->leftID->isGlobal = false; ///explicitne to musim prestavit
 
                         if ((result = params(data)) != 0) return result;
+
                         if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
 
                             return result = statement_next(data);
                         }
                         else return result;
                     }
-
                 }
                 return result = ERROR_PROGRAM_SEMANTIC; //volanie funkcie ktora neexistuje
             } else return result = ERROR_PARSER;
         }
-            //ak uz je definovana globalne, lenze ak aj sme vo funkcii, nevieme ci prepisujeme lokalnu alebo glob, lebo python
-            //tak som sa rozhodol ze sa proste bude prepisovat globalna
+//ak uz je definovana globalne, lenze ak aj sme vo funkcii, nevieme ci prepisujeme 
+// lokalnu alebo glob, lebo python
+//tak som sa rozhodol ze sa proste bude prepisovat globalna
         else if (data->leftID->isGlobal == true) {
 
             if ((result = checkTokenType(&data->Token, TYPE_ASSIGN_VALUE)) == 0) {
 
                 //tuto poslem timkovi vyraz na rozparsovanie//
 
-                ///tu moze byt aj EOF dont forget
-                if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
+/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
+        if ((result = getNextToken(&data->Token)) != 0) return result;
+        if ((result = expression(data)) != 0 ) return result;
+/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
-                    return result = statement_next(data);
+               ///tu moze byt aj EOF dont forget
+                    if (data->Token.type == TYPE_EOL) {
 
-                } else if (result == 2 && data->Token.type == TYPE_EOF) return SYNTAX_OK;
-                else return result;
+                        return result = statement_next(data);
+
+                    } else if (data->Token.type == TYPE_EOF) return SYNTAX_OK;
+                    else return ERROR_PARSER;
+
             } else return result = ERROR_PARSER;
         }
         /*  *   *   *   *   *   *   VOLANIE FUNKCIE    *   *   *   *   *   *   */
@@ -800,15 +830,6 @@ static int statement(ParserData *data)
             return result = statement_next(data);
         else return ERROR_PARSER;
     }
-
-/***************UŽ LEN LADÍM*************I*ENDED*UP*HERE*****************************************
-*               __________                   ________    _______    .        .                  *
-*                   |       |       |       |           |       |   |\      /|                  *
-*                   |       |       |       |_______    |       |   | \    / |                  *
-*                   |       |       |               |   |       |   |  \  /  |                  *
-*                   |       |_______|       ________|   |_______|   |   \/   |                  *
-*                                                                                               *
-*****************************************TU*SOM*SKONČIL****UŽ LEN LADÍM**************************/
 
 /*	*   overujem ci nahodou nenastala situacia s komentom alebo je tam len prosté EOL   *   */
     else if ((result = isComment(data)) == 0) return statement_next(data);
@@ -977,3 +998,12 @@ int parse()
 
 	return result;
 }
+
+/***************UŽ LEN LADÍM*************I*ENDED*UP*HERE*****************************************
+*               __________                   ________    _______    .        .                  *
+*                   |       |       |       |           |       |   |\      /|                  *
+*                   |       |       |       |_______    |       |   | \    / |                  *
+*                   |       |       |               |   |       |   |  \  /  |                  *
+*                   |       |_______|       ________|   |_______|   |   \/   |                  *
+*                                                                                               *
+*****************************************TU*SOM*SKONČIL****UŽ LEN LADÍM**************************/
