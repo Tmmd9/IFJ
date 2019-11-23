@@ -639,7 +639,7 @@ static int statement(ParserData *data)
     } //end of return
 
 
-/*******   DEKLARACIA PREMENNYCH || VOLANIE FUNKCOE || PRIRADOVANIE HODNOTY DO PREMENNEJ   ********** 
+/*******   DEKLARACIA PREMENNYCH || VOLANIE FUNKCIE || PRIRADOVANIE HODNOTY DO PREMENNEJ   **********
 *  *    tu moze nastat jednak definicia a jednak len priradenie hodnoty dolezite hlavne pri WHILE   *
 *  *  * 8.  <statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> TYPE_EOL <statement_next  *
 *  *   *   *    9.	<statement> -> TYPE_IDENTIFIER(<params>) <statement_next>   *   *   *   *   *   *
@@ -671,7 +671,11 @@ static int statement(ParserData *data)
 
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         if ((result = getNextToken(&data->Token)) != 0) return result;
-        if ((result = expression(data)) != 0 ) return result;
+        if (data->Token.type == TYPE_KEYWORD && (data->Token.attribute.keyword == KEYWORD_INPUTI ||
+        data->Token.attribute.keyword == KEYWORD_INPUTS || data->Token.attribute.keyword == KEYWORD_INPUTF)) {
+            return result = statement(data);
+        }
+        else if ((result = expression(data)) != 0 ) return result;
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
                     ///tu moze byt aj EOF dont forget
