@@ -712,8 +712,6 @@ static int statement(ParserData *data)
 
             if ((result = checkTokenType(&data->Token, TYPE_ASSIGN_VALUE)) == 0) {
 
-                //tuto poslem timkovi vyraz na rozparsovanie//
-
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if ((result = expression(data)) != 0 ) return result;
@@ -772,6 +770,11 @@ static int statement(ParserData *data)
         static int result;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
         //poslem do expr
+/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
+        if ((result = getNextToken(&data->Token)) != 0) return result;
+        if ((result = expression(data)) != 0 ) return result;
+/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
+
         if (data->Token.type == TYPE_RIGHT_PAR)
             return result = statement_next(data);
         else return ERROR_PARSER;
