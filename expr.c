@@ -170,8 +170,13 @@ static DataType token_to_data(ParserData* data)
 
 		case TYPE_IDENTIFIER:
 		    symbol = htabSearch(&data->localT, data->Token.attribute.string->str);
-			if(symbol == NULL)
-			    return DTYPE_UNDEFINED;
+		    //Ak sa nenajde v lokalnej tabulke pozrem ci neni definovana v globalnej
+			if(symbol == NULL){
+                symbol = htabSearch(&data->globalT, data->Token.attribute.string->str);
+                if(symbol == NULL)
+			        return DTYPE_UNDEFINED;
+                return  symbol->type;
+			}
 			return symbol->type;
 
 		default: return DTYPE_UNDEFINED;
@@ -474,7 +479,7 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 }
 
 
-static int RE_rule()
+static int RE_rule(ParserData *data)
 {
 	int result;
 
@@ -532,6 +537,7 @@ static int RE_rule()
 		else{;
             //GENEREATE CODE
 		}
+		data->leftID->type = final_data_type;
 		symbol_pop_times(symStack, (++counter));
 		symbol_push(symStack,NON_TERM,final_data_type);
 	}
@@ -594,7 +600,7 @@ int expression(ParserData *data)
                      }
                      break;
                 case RE:
-                    if ((result = RE_rule())) {
+                    if ((result = RE_rule(data))) {
                         symbol_free(symStack);
                         return result;
                     }
@@ -608,5 +614,6 @@ int expression(ParserData *data)
                     }
          }
     } while (!end);
+    data->leftID = NULL;
     return result;
 }
