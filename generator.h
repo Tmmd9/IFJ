@@ -20,6 +20,10 @@
 
 bool addInstr(const char *_instr,...);
 bool addCode(const char *_code,...);
+bool generateHead();
+bool generateBuiltIn();
+bool generateCode();
+bool writeCodeToStdout();
 
 #define PRINT                           \
         "LABEL $print \n"               \

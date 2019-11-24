@@ -97,25 +97,25 @@ Data *htabAddSymbol(htab *table, const char *key, bool *allocErr){
     }
     return &newItem->data;
 }
-/*
+
 bool htabAddParam(Data *data, unsigned int DataType){
     if (!data) return NULL;
 
     if (DataType == DTYPE_INT){
-        if (!stringAddChar(data->param,'i')) {
+        if (stringAddChar(data->param,'i')) {
             return false;
         }
     } else if (DataType == DTYPE_DOUBLE){
-        if (!stringAddChar(data->param,'d')) {
+        if (stringAddChar(data->param,'d')) {
             return false;
         }
     } else if (DataType == DTYPE_STRING) {
-        if (!stringAddChar(data->param,'s')) {
+        if (stringAddChar(data->param,'s')) {
             return false;
         }
     }
     return true;
-}*/
+}
 
 Data *htabSearch(htab *table, const char *key){
     if (!table || !key) return NULL;
