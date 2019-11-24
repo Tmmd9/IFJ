@@ -18,6 +18,7 @@
 #include "expr.h"
 //#include "instlist.h"
 #include <ctype.h>
+#include "generator.h"
 
 
 
@@ -465,7 +466,7 @@ static int statement(ParserData *data)
             if ((result = checkTokenType(&data->Token, TYPE_ASSIGN_VALUE)) == 0) {
 
                 //ak nie je globalne pridam ju
-                if (data->in_function == 1 || data->in_if == 1 || data->in_while == 1 ) {
+                if (data->in_function == 1 ) {
 
                     if ((data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) {
                         ///pridam premennu lokalne vo funkci
@@ -526,20 +527,29 @@ static int statement(ParserData *data)
         }
 //ak uz je definovana globalne, lenze ak aj sme vo funkcii, nevieme ci prepisujeme 
 // lokalnu alebo glob, lebo python
-//tak som sa rozhodol ze sa proste bude prepisovat globalna
+//tak som sa rozhodol ze sa proste bude prepisovat globalna --fixed no more-uz sa bude upravovat lokalna
         else if (data->leftID->isGlobal == true) {
 
             if ((result = checkTokenType(&data->Token, TYPE_ASSIGN_VALUE)) == 0) {
 
+                if (data->in_function == 1 ) {
+
+                    if ((data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) {
+                        ///pridam premennu lokalne vo funkci
+                        if ((result = addToHash(data, true, 0)) != 0) return ERROR_INTERN;
+                    }
+                    //else -> nerobim nic - nepridavam do tabulky
+                }
+
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
-        if ((result = getNextToken(&data->Token)) != 0) return result;
-        if (data->Token.type == TYPE_KEYWORD && (data->Token.attribute.keyword == KEYWORD_INPUTI ||
-            data->Token.attribute.keyword == KEYWORD_INPUTS || data->Token.attribute.keyword == KEYWORD_INPUTF ||
-            data->Token.attribute.keyword == KEYWORD_SUBSTR || data->Token.attribute.keyword == KEYWORD_LEN ||
-            data->Token.attribute.keyword == KEYWORD_CHR || data->Token.attribute.keyword == KEYWORD_ORD )) {
-            return result = statement(data);
-        }
-        else if ((result = expression(data)) != 0 ) return result;
+                if ((result = getNextToken(&data->Token)) != 0) return result;
+                if (data->Token.type == TYPE_KEYWORD && (data->Token.attribute.keyword == KEYWORD_INPUTI ||
+                    data->Token.attribute.keyword == KEYWORD_INPUTS || data->Token.attribute.keyword == KEYWORD_INPUTF ||
+                    data->Token.attribute.keyword == KEYWORD_SUBSTR || data->Token.attribute.keyword == KEYWORD_LEN ||
+                    data->Token.attribute.keyword == KEYWORD_CHR || data->Token.attribute.keyword == KEYWORD_ORD )) {
+                    return result = statement(data);
+                }
+                else if ((result = expression(data)) != 0 ) return result;
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
                ///tu moze byt aj EOF dont forget
@@ -797,7 +807,7 @@ int variablesInit(ParserData *data)
 	*	vstavanych 
 	*	funkcii
 	*/
-/*	bool errIntern;
+	bool errIntern;
 	Data* id;
 
 	// Len(s) returns int
@@ -810,7 +820,7 @@ int variablesInit(ParserData *data)
 	if (!htabAddParam(id, DTYPE_STRING)) 
 		return ERROR_INTERN;
 
-	// SubStr(s =string, i =Integer, n =Integer) returns String
+/*	// SubStr(s =string, i =Integer, n =Integer) returns String
 	id = htabAddSymbol(&data->globalT, "substr", &errIntern);
 	if (errIntern) 
 		return ERROR_INTERN;
@@ -823,8 +833,8 @@ int variablesInit(ParserData *data)
 		return ERROR_INTERN;
 	if (!htabAddParam(id, DTYPE_INT)) 
 		return ERROR_INTERN;
-
-	// Ord(s =String, i =Integer) returns Integer
+*/
+/*	// Ord(s =String, i =Integer) returns Integer
 	id = htabAddSymbol(&data->globalT, "ord", &errIntern);
 	if (errIntern) 
 		return ERROR_INTERN;
@@ -844,8 +854,8 @@ int variablesInit(ParserData *data)
 	id->isDefined = true;
 	id->type = DTYPE_STRING;
 	if (!htabAddParam(id, DTYPE_INT)) 
-		return ERROR_INTERN;
-*/
+		return ERROR_INTERN;*/
+
 /*
 	// Global variable %exp_result for storing result of expression.
 	id = htabAddSymbol(&data->globalT, "%exp_result", &errIntern);
@@ -890,12 +900,12 @@ int parse()
 	{
 
 		//nemame nic z generatoru zatial
-		/*if (!code_generator_start())
+		if (!generateCode())
 		{
 			stringStrFree(&parserStr);
 			variablesFree(&data);
 			return ERROR_INTERN;
-		}*/
+		}
 
 		result = prog(&data);
 	}
