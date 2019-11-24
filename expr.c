@@ -161,7 +161,7 @@ static prec_table_sym tok_to_sym(token* token)
 
 static DataType token_to_data(ParserData* data)
 {
-	Data* symbol;
+	Data* symbol = NULL;
 
 	switch (data->Token.type) //udaje z parseru
 	{
@@ -175,15 +175,19 @@ static DataType token_to_data(ParserData* data)
 			return DTYPE_DOUBLE;
 
 	    case TYPE_IDENTIFIER:
-		    symbol = htabSearch(&data->localT, data->Token.attribute.string->str);
-		    //Ak sa nenajde v lokalnej tabulke pozrem ci neni definovana v globalnej
-			if(symbol == NULL){
+	        if(data->in_function == 1) {
+                symbol = htabSearch(&data->localT, data->Token.attribute.string->str);
+                //ak som nasiel uz v lokale nepozeram na global
+                if (symbol != NULL)
+                    return symbol->type;
+            }
+		    //Ak nejsom vo funkcii pozeram len global, ak sa v lokale nenaslo pozeram global
+
                 symbol = htabSearch(&data->globalT, data->Token.attribute.string->str);
                 if(symbol == NULL)
 			        return DTYPE_UNDEFINED;
                 return  symbol->type;
-			}
-			return symbol->type;
+
 
 		default: return DTYPE_UNDEFINED;
 	}
