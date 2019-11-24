@@ -48,7 +48,7 @@ int prec_tab[7][7]={
 };
 
 sstack* symStack;
-
+int* compareCount;
 //priradenie hodnoty symbolom z tabulky (tie ktore su spolu v casi
 //su v tom istom riadku v tabulke)
 static prec_tab_ind assign_prec_tab_ind(prec_table_sym symbol)
@@ -117,16 +117,22 @@ static prec_table_sym tok_to_sym(token* token)
 
 
 		case TYPE_GREATER_THAN: // >
-			return MORE_SYM;
+		    *compareCount = *compareCount + 1;
+		    return MORE_SYM;
 		case TYPE_LESS_THAN: // <
+            *compareCount = *compareCount + 1;
 			return LESS_SYM;
 		case TYPE_GREATER_EQUAL: // =>
+            *compareCount = *compareCount + 1;
 			return MORE_EQ_SYM;
 		case TYPE_LESS_EQUAL: // <=
+            *compareCount = *compareCount + 1;
 			return LESS_EQ_SYM;
 		case TYPE_EQUALS: // ==
+            *compareCount = *compareCount + 1;
 			return EQ_SYM;
 		case TYPE_NOT_EQUAL: // <>
+            *compareCount = *compareCount + 1;
 			return NOT_EQ_SYM;
 
 		case TYPE_LEFT_PAR: // (
@@ -168,7 +174,7 @@ static DataType token_to_data(ParserData* data)
 		case TYPE_FLOAT:
 			return DTYPE_DOUBLE;
 
-		case TYPE_IDENTIFIER:
+	    case TYPE_IDENTIFIER:
 		    symbol = htabSearch(&data->localT, data->Token.attribute.string->str);
 		    //Ak sa nenajde v lokalnej tabulke pozrem ci neni definovana v globalnej
 			if(symbol == NULL){
@@ -537,7 +543,8 @@ static int RE_rule(ParserData *data)
 		else{;
             //GENEREATE CODE
 		}
-		data->leftID->type = final_data_type;
+		if(data->leftID != NULL)
+		    data->leftID->type = final_data_type;
 		symbol_pop_times(symStack, (++counter));
 		symbol_push(symStack,NON_TERM,final_data_type);
 	}
@@ -549,6 +556,13 @@ static int RE_rule(ParserData *data)
 
 int expression(ParserData *data)
 {
+    //Pocitadlo compare operatorov
+    compareCount = (int*) malloc(sizeof(int));
+    if (!compareCount) {
+        return ERROR_INTERN;
+    }
+    *compareCount = 0;
+
     //alokacia pamate pre stack, pri nepodarenej alokacii vracia error
     symStack = (sstack *) malloc(MAX_STACK_SIZE * sizeof(sstack));
     if (!symStack) {
@@ -569,7 +583,10 @@ int expression(ParserData *data)
         //priradenie hodnot
         sym_on_top = symbol_top_term(symStack);     //vracia prvy terminal zo stacku
         sym_in_token = tok_to_sym(&data->Token);    //vracia symbol z tokenu pomocou fce
-
+        //ak bolo viac ako 1 compare operator
+        if(*compareCount > 1){
+            return ERROR_PROGRAM_SEMANTIC;
+        }
         switch(prec_tab[assign_prec_tab_ind(sym_on_top->symbol)][assign_prec_tab_ind(sym_in_token)])
              {
                 case EQ:
