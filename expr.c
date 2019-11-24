@@ -458,10 +458,10 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 	}
 
 	if (item1_double){
-
+        GENERATE(op3ToDouble);
 	}
 	if (item3_double){
-
+        GENERATE(op1ToDouble);
 	}
 
 	return SYNTAX_OK; // SYNTAX_OK
@@ -529,6 +529,10 @@ static int RE_rule(ParserData *data)
 	//kontrola spravnosti semantiky
 	if(actual_rule != NOT_A_RULE)
 	{
+	    if ((actual_rule == NT_DIV_NT || actual_rule == NT_IDIV_NT) &&
+	        (data->Token.attribute.int_value == 0 || data->Token.attribute.decimal_value == 0.0)){
+	        return ERROR_DIVIDING_ZERO;
+	    }
 		result = prec_rule_semantics(actual_rule, item1, item2, item3, &final_data_type);
 		if (result != 0)
 		{
@@ -538,7 +542,7 @@ static int RE_rule(ParserData *data)
 		//konkatenacia
 		if (actual_rule == NT_PLUS_NT && final_data_type == DTYPE_STRING)
 		{
-			//GENERATE CODE
+			GENERATE(generateConcatenation);
 		}
 		else{;
             //GENEREATE CODE
@@ -558,7 +562,7 @@ int expression(ParserData *data)
 {
     //Pocitadlo compare operatorov
 
-
+    compareCount = 0;
     //alokacia pamate pre stack, pri nepodarenej alokacii vracia error
     symStack = (sstack *) malloc(MAX_STACK_SIZE * sizeof(sstack));
     if (!symStack) {

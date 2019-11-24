@@ -127,5 +127,27 @@ bool pushValue(token *token){
     return true;
 }
 
+bool op1ToDouble(){
+    addInstr("INT2FLOATS");
+    return true;
+}
+
+bool op3ToDouble(){
+    addInstr("POPS GF@$temp1");
+    addInstr("FLOAT2INTS");
+    addInstr("PUSHS GF@$temp2");
+
+    return true;
+}
+
+bool generateConcatenation(){
+    addInstr("POPS GF@$temp2");
+    addInstr("POPS GF@$temp1");
+    addInstr("CONCAT GF@$result GF@$temp1 GF@$temp2");
+    addInstr("PUSHS GF@$result");
+
+    return true;
+}
+
 
 

@@ -28,6 +28,9 @@ bool generateMain();
 bool generateMainEnd();
 bool pushVar(token *token);
 bool pushValue(token *token);
+bool op1ToDouble();
+bool op3ToDouble();
+bool generateConcatenation();
 
 #define PRINT                                                                 \
         "LABEL $print \n"                                                     \
