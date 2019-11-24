@@ -31,6 +31,48 @@ bool addCode(const char *_code,...){
 
 //bool generateStart_of_Function(char *)
 
+bool generateHead(){
+    addInstr(".IFJcode19");
+
+    addInstr("DEFVAR GF@$temp1");
+    addInstr("DEFVAR GF@$temp2");
+    addInstr("DEFVAR GF@$temp3");
+    addInstr("DEFVAR GF@$result");
+
+    addInstr("JUMP $$main");
+
+    return true;
+}
+
+
+
+bool generateBuiltIn(){
+    addInstr(PRINT);
+    addInstr(INPUTI);
+    addInstr(INPUTS);
+    addInstr(INPUTF);
+    addInstr(LEN);
+
+    return true;
+}
+
+bool generateCode(){
+
+    stringInit(&genCode);
+    generateHead();
+    generateBuiltIn();
+
+    return true;
+}
+
+bool writeCodeToStdout(){
+    fprintf(stdout,"%s",genCode.str);
+    stringFree(&genCode);
+
+    return true;
+}
+
+
 
 
 
