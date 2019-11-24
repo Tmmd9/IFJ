@@ -29,8 +29,6 @@ bool addCode(const char *_code,...){
     return (stringAddConst(&genCode, (_code))) ? false : true;
 }
 
-//bool generateStart_of_Function(char *)
-
 bool generateHead(){
     addInstr(".IFJcode19");
 
@@ -38,6 +36,8 @@ bool generateHead(){
     addInstr("DEFVAR GF@$temp2");
     addInstr("DEFVAR GF@$temp3");
     addInstr("DEFVAR GF@$result");
+    addInstr("MOVE GF@$result nil@None");
+    addInstr("DEFVAR GF@$return");
 
     addInstr("JUMP $$main");
 
@@ -52,6 +52,9 @@ bool generateBuiltIn(){
     addInstr(INPUTS);
     addInstr(INPUTF);
     addInstr(LEN);
+    addInstr(SUBSTR);
+    addInstr(ORD);
+    addInstr(CHR);
 
     return true;
 }
@@ -72,7 +75,57 @@ bool writeCodeToStdout(){
     return true;
 }
 
+bool generateMain(){
+    addInstr("LABEL $$main");
+    addInstr("CREATEFRAME");
+    addInstr("PUSHFRAME");
 
+    return true;
+}
+
+bool generateMainEnd(){
+    addInstr("POPFRAME");
+    addInstr("CLEARS");
+
+    return true;
+}
+
+bool generateValue(token *token){
+    char tempStr[30];
+    if (token->type == TYPE_INT){
+        sprintf(tempStr,"%d",token->attribute.int_value);
+        addCode("int@");
+        addCode(tempStr);
+        addCode("\n");
+        return true;
+    } else if (token->type == TYPE_FLOAT){
+        sprintf(tempStr,"%a",token->attribute.decimal_value);
+        addCode("float@");
+        addCode(tempStr);
+        addCode("\n");
+        return true;
+    } else if (token->type == TYPE_STRING){
+        addCode("string@");
+        addCode(token->attribute.string->str);
+        addCode("\n");
+        return true;
+    }
+    return false;
+}
+
+bool pushVar(token *token){
+    addCode("PUSHS LF@%1");
+    addCode(token->attribute.string->str);
+    addCode("\n");
+    return true;
+}
+
+bool pushValue(token *token){
+    addCode("PUSHS");
+    generateValue(token);
+    addCode("\n");
+    return true;
+}
 
 
 

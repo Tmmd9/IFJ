@@ -15,7 +15,7 @@
 #include "scanner.h"
 #include "error.h"
 #include <stdlib.h>
-//#include "code_gen.h" este neni
+#include "generator.h"
 
 typedef enum
 {
@@ -48,7 +48,7 @@ int prec_tab[7][7]={
 };
 
 sstack* symStack;
-int* compareCount;
+int compareCount = 0;
 //priradenie hodnoty symbolom z tabulky (tie ktore su spolu v casi
 //su v tom istom riadku v tabulke)
 static prec_tab_ind assign_prec_tab_ind(prec_table_sym symbol)
@@ -117,22 +117,22 @@ static prec_table_sym tok_to_sym(token* token)
 
 
 		case TYPE_GREATER_THAN: // >
-		    *compareCount = *compareCount + 1;
+		    compareCount = compareCount + 1;
 		    return MORE_SYM;
 		case TYPE_LESS_THAN: // <
-            *compareCount = *compareCount + 1;
+            compareCount = compareCount + 1;
 			return LESS_SYM;
 		case TYPE_GREATER_EQUAL: // =>
-            *compareCount = *compareCount + 1;
+            compareCount = compareCount + 1;
 			return MORE_EQ_SYM;
 		case TYPE_LESS_EQUAL: // <=
-            *compareCount = *compareCount + 1;
+            compareCount = compareCount + 1;
 			return LESS_EQ_SYM;
 		case TYPE_EQUALS: // ==
-            *compareCount = *compareCount + 1;
+            compareCount = compareCount + 1;
 			return EQ_SYM;
 		case TYPE_NOT_EQUAL: // <>
-            *compareCount = *compareCount + 1;
+            compareCount = compareCount + 1;
 			return NOT_EQ_SYM;
 
 		case TYPE_LEFT_PAR: // (
@@ -299,7 +299,6 @@ static Prec_rules prec_rules_syntax(int count, s_item* item1, s_item* item2, s_i
     return NOT_A_RULE;
 }
 
-
 static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s_item* item3, DataType* final) // DataType z funkcie hore
 {
 	//pomocne bool premenne na pretypovavanie
@@ -339,8 +338,6 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
         }
     }
 
-
-
 	// E
 	if (rule == OPERAND)
 	{
@@ -352,24 +349,6 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 	{
 		*final = item2->data_type;
 	}
-
-	/*// pravidla pre +
-	if (rule == NT_PLUS_NT)
-	{
-		// david + domino
-		if (item1->data_type == DTYPE_STRING && item3->data_type == DTYPE_STRING)
-		{
-			*final = DTYPE_STRING;
-		}
-		// 6 + 6
-		else if (item1->data_type == DTYPE_INT && item3->data_type == DTYPE_INT)
-		{
-			*final = DTYPE_INT;
-		}
-		else *final = DTYPE_DOUBLE;
-		if (item1->data_type == DTYPE_INT)
-	}*/
-
 
 	//pravidla pre -
 	else if (rule == NT_MINUS_NT || rule == NT_MUL_NT || rule == NT_PLUS_NT)
@@ -561,11 +540,7 @@ static int RE_rule(ParserData *data)
 int expression(ParserData *data)
 {
     //Pocitadlo compare operatorov
-    compareCount = (int*) malloc(sizeof(int));
-    if (!compareCount) {
-        return ERROR_INTERN;
-    }
-    *compareCount = 0;
+
 
     //alokacia pamate pre stack, pri nepodarenej alokacii vracia error
     symStack = (sstack *) malloc(MAX_STACK_SIZE * sizeof(sstack));
@@ -588,9 +563,10 @@ int expression(ParserData *data)
         sym_on_top = symbol_top_term(symStack);     //vracia prvy terminal zo stacku
         sym_in_token = tok_to_sym(&data->Token);    //vracia symbol z tokenu pomocou fce
         //ak bolo viac ako 1 compare operator
-        if(*compareCount > 1){
+        if(compareCount > 2){
             return ERROR_PROGRAM_SEMANTIC;
         }
+
         switch(prec_tab[assign_prec_tab_ind(sym_on_top->symbol)][assign_prec_tab_ind(sym_in_token)])
              {
                 case EQ:
@@ -614,6 +590,11 @@ int expression(ParserData *data)
                      if (!symbol_push(symStack,sym_in_token, token_to_data(data))){
                          symbol_free(symStack);
                          return ERROR_INTERN;
+                     }
+
+                     if (sym_in_token == ID_SYM) GENERATE(pushVar, &data->Token);
+                     if (sym_in_token == INT_SYM || sym_in_token == FLOAT_SYM || sym_in_token == STR_SYM){
+                         GENERATE(pushValue, &data->Token);
                      }
                      if((result = getNextToken(&data->Token))) {
                         symbol_free(symStack);

@@ -66,7 +66,7 @@ int stringAddConst(string *s, const char *str) {
     */
     if (s->length + newStrLength + 1 >= s->allocSize) {
         //	+1 kvoli '\0'
-        unsigned int newLength = s->length + newStrLength;
+        unsigned int newLength = s->length + newStrLength + 1;
         if ((s->str = (char *) realloc(s->str, newLength)) == NULL) {                        //realloc(pointer, size)
             return STR_ERR;
         }

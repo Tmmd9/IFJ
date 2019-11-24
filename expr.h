@@ -16,6 +16,8 @@
 #define _EXPR_H
 
 #include "parser.h"
+#define GENERATE(_callback, ...)                                \
+    (_callback(__VA_ARGS__))
 
 //symboly pre precedencnu analyzu
 typedef enum
