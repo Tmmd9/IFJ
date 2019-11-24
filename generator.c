@@ -121,7 +121,7 @@ bool pushVar(token *token){
 }
 
 bool pushValue(token *token){
-    addCode("PUSHS");
+    addCode("PUSHS ");
     generateValue(token);
     addCode("\n");
     return true;

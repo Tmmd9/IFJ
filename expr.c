@@ -505,6 +505,23 @@ static int RE_rule(ParserData *data)
 	else if (counter == 1 && until_stop == true)
 	{
 		item1 = symStack->top;
+        if (item1->symbol == RIGHT_PAR){
+            int RparCount = 0, LparCount = 0;
+            s_item *tmp = symStack->top;
+            while (tmp){
+                if (tmp->symbol == RIGHT_PAR){
+                    RparCount += 1;
+                } else if (tmp->symbol == LEFT_PAR){
+                    LparCount += 1;
+                }
+                tmp = tmp->next;
+            }
+            if (RparCount == LparCount){
+                getNextToken(&data->Token);
+                symbol_push(symStack,DOLLAR_SYM,DTYPE_UNDEFINED);
+                return SYNTAX_OK;
+            }
+        }
 		actual_rule = prec_rules_syntax(counter, item1, NULL ,NULL );
 	}
 	else return ERROR_PARSER;
