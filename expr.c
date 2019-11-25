@@ -536,15 +536,16 @@ static int RE_rule(ParserData *data)
 	//kontrola spravnosti semantiky
 	if(actual_rule != NOT_A_RULE)
 	{
-	    if ((actual_rule == NT_DIV_NT || actual_rule == NT_IDIV_NT) &&
-	        (data->Token.attribute.int_value == 0 || data->Token.attribute.decimal_value == 0.0)){
-	        return ERROR_DIVIDING_ZERO;
-	    }
 		result = prec_rule_semantics(actual_rule, item1, item2, item3, &final_data_type);
 		if (result != 0)
 		{
 			return result;
 		}
+        if ((actual_rule == NT_DIV_NT || actual_rule == NT_IDIV_NT)){
+            if ((data->Token.attribute.int_value == 0 && item3->data_type == DTYPE_INT) ||
+                (data->Token.attribute.decimal_value == 0.0 && item3->data_type == DTYPE_DOUBLE))
+            return ERROR_DIVIDING_ZERO;
+        }
 
 		//konkatenacia
 		if (actual_rule == NT_PLUS_NT && final_data_type == DTYPE_STRING)
