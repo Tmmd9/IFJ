@@ -352,7 +352,7 @@ int getNextToken(token *token) {
                     if (stringAddChar(s, c)) {
                         return returnCode(ERROR_INTERN, s);
                     }
-                } else if (toupper(c) == 'e') {
+                } else if (tolower(c) == 'e') {
                     state = STATE_FLOAT_EXP;
                     if (stringAddChar(s, c)) {
                         return returnCode(ERROR_INTERN, s);
