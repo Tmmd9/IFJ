@@ -220,10 +220,11 @@ static int prog(ParserData* data)
         return result = prog(data);
     }
 /*  *   *   *   *   * 3.  <prog> -> <statement> TYPE_EOL <prog> *   *   *   *   *   *   */
-	else {
-	    result = statement(data);
+	else if (result != 0)
+	    return result;
+    else {
+	    return result = statement(data);
 	}
-	return result;
 }
 
 static int params(ParserData *data)
