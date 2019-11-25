@@ -711,7 +711,7 @@ static int statement(ParserData *data)
             data->leftID->type = DTYPE_INT;
             data->leftID = NULL;
         }
-        if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) == 0)
+        if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
             if ((result = getNextToken(&data->Token)) != 0) return result;
             if (( result = statement_next(data)) != 0) return result;
     }
@@ -828,7 +828,7 @@ static int statement(ParserData *data)
             data->leftID->type = DTYPE_STRING;
             data->leftID = NULL;
         }
-        if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) == 0)
+        if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if (( result = statement_next(data)) != 0) return result;
     }
