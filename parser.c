@@ -395,6 +395,7 @@ static int statement(ParserData *data)
     }//IF
 
 
+
 /******************************************** W H I L E********************************************      
 *               6. <statement> -> KEYWORD_WHILE <expression> TYPE_COLON                           *
 *                   TYPE_EOL TYPE_INDENT <statement> TYPE_EOL                                     *
@@ -415,9 +416,11 @@ static int statement(ParserData *data)
 	    if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
 	    if((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
 			data->deepLabel +=1;	//mam indent, zmena urovne
-	    //vnutro while-u rekurzia statementu
-	    if((result = statement(data)) != SYNTAX_OK) return result;
-	    if((result = checkTokenType(&data->Token, TYPE_DEDENT)) == 0) {
+
+			    //vnutro while-u rekurzia statementu
+        if ((result = getNextToken(&data->Token)) != 0) return result;
+	    if ((result = statement(data)) != SYNTAX_OK) return result;
+	    if (data->Token.type == TYPE_DEDENT) {
 			data->deepLabel -=1;	//mam dedent, zmena urovne
 			data->in_while = 0;
         //    htabFree(&data->localT);
@@ -436,6 +439,7 @@ static int statement(ParserData *data)
     } //WHILE
 
 
+
 /******************************************** R E T U R N *******************************************   
 *   *   *   *   *   *   *   *7. <statement> -> KEYWORD_RETURN <expression> *   *   *   *   *   *   *
 ****************************************************************************************************/
@@ -451,6 +455,7 @@ static int statement(ParserData *data)
         else return ERROR_PARSER;
 
     } //end of return
+
 
 
 /*******   DEKLARACIA PREMENNYCH || VOLANIE FUNKCIE || PRIRADOVANIE HODNOTY DO PREMENNEJ   **********
@@ -535,16 +540,13 @@ static int statement(ParserData *data)
         else if (data->leftID->isGlobal == true) {
 
             if ((result = checkTokenType(&data->Token, TYPE_ASSIGN_VALUE)) == 0) {
-
                 if (data->in_function == 1 ) {
-
                     if ((data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) {
                         ///pridam premennu lokalne vo funkci
                         if ((result = addToHash(data, true, 0)) != 0) return ERROR_INTERN;
                     }
                     //else -> nerobim nic - nepridavam do tabulky
                 }
-
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
                 if ((result = getNextToken(&data->Token)) != 0) return result;
                 if (data->Token.type == TYPE_KEYWORD && (data->Token.attribute.keyword == KEYWORD_INPUTI ||
@@ -555,7 +557,6 @@ static int statement(ParserData *data)
                 }
                 else if ((result = expression(data)) != 0 ) return result;
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
-
                ///tu moze byt aj EOF dont forget
                     if (data->Token.type == TYPE_EOL) {
 
@@ -607,11 +608,13 @@ static int statement(ParserData *data)
         else return ERROR_PROGRAM_SEMANTIC; //bol to identifier ale nic z tohto tu
         }
 
+
+
+
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_PRINT) {
         static int result;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
         //poslem do expr
-
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         while (data->Token.type != TYPE_RIGHT_PAR) {
             if ((result = getNextToken(&data->Token)) != 0) return result;
@@ -623,42 +626,70 @@ static int statement(ParserData *data)
         }
        // if ((result = expression(data)) != 0 ) return result;
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
-
-        if (data->Token.type == TYPE_RIGHT_PAR)
+        if (data->Token.type == TYPE_RIGHT_PAR) {
+            if ((result = getNextToken(&data->Token)) != 0) return result;
             return result = statement_next(data);
+        }
         else return ERROR_PARSER;
     }
+
+
+
+
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_PASS) {
         static int result;
+        if ((result = getNextToken(&data->Token)) != 0) return result;
         return result = statement_next(data);
     }
+
+
+
+
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_INPUTS) {
         static int result;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
         if (data->leftID != NULL) {
-            htabAddParam(data->leftID, DTYPE_STRING);
+            data->leftID->type = DTYPE_STRING;
+            data->leftID = NULL;
         }
+        if ((result = getNextToken(&data->Token)) != 0) return result;
         return result = statement_next(data);
     }
+
+
+
+
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_INPUTI) {
         static int result;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
         if (data->leftID != NULL) {
-            htabAddParam(data->leftID, DTYPE_INT);
+            data->leftID->type = DTYPE_INT;
+            data->leftID = NULL;
         }
+        if ((result = getNextToken(&data->Token)) != 0) return result;
         return result = statement_next(data);
     }
+
+
+
+
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_INPUTF) {
         static int result;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
         if (data->leftID != NULL) {
-            htabAddParam(data->leftID, DTYPE_DOUBLE);
+            data->leftID->type = DTYPE_DOUBLE;
+            data->leftID = NULL;
         }
+        if ((result = getNextToken(&data->Token)) != 0) return result;
         return result = statement_next(data);
     }
+
+
+
+
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_LEN) {
         static int result;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
@@ -677,11 +708,17 @@ static int statement(ParserData *data)
         else return ERROR_PARSER;
 
         if (data->leftID != NULL) {
-            htabAddParam(data->leftID, DTYPE_INT);
+            data->leftID->type = DTYPE_INT;
+            data->leftID = NULL;
         }
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) == 0)
+            if ((result = getNextToken(&data->Token)) != 0) return result;
             if (( result = statement_next(data)) != 0) return result;
     }
+
+
+
+
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_SUBSTR) {
         static int result;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
@@ -755,14 +792,20 @@ static int statement(ParserData *data)
                 }
             }
         if (data->leftID != NULL) {
-            htabAddParam(data->leftID, DTYPE_STRING);
+            data->leftID->type = DTYPE_STRING;
+            data->leftID = NULL;
         }
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if (data->Token.type == TYPE_RIGHT_PAR) {
+            if ((result = getNextToken(&data->Token)) != 0) return result;
             if ((result = statement_next(data)) != 0) return result;
         }
         else {return ERROR_PARSER;}
     }
+
+
+
+
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_CHR) {
         static int result;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
@@ -782,11 +825,17 @@ static int statement(ParserData *data)
         else return ERROR_PARSER;
 
         if (data->leftID != NULL) {
-            htabAddParam(data->leftID, DTYPE_INT);
+            data->leftID->type = DTYPE_STRING;
+            data->leftID = NULL;
         }
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) == 0)
-            if (( result = statement_next(data)) != 0) return result;
+        if ((result = getNextToken(&data->Token)) != 0) return result;
+        if (( result = statement_next(data)) != 0) return result;
     }
+
+
+
+
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_ORD) {
         static int result;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
@@ -839,12 +888,17 @@ static int statement(ParserData *data)
             }
         }
         if (data->leftID != NULL) {
-            htabAddParam(data->leftID, DTYPE_STRING);
+            data->leftID->type = DTYPE_STRING;
+            data->leftID = NULL;
         }
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
+        if ((result = getNextToken(&data->Token)) != 0) return result;
         if (( result = statement_next(data)) != 0) return result;
 
     }
+
+
+
 
 /*	*   overujem ci nahodou nenastala situacia s komentom alebo je tam len prosté EOL   *   */
     else if ((result = isComment(data)) == 0) return statement_next(data);
@@ -873,6 +927,8 @@ static int statement_next(ParserData *data)
 /*  *   *  koniec zacyklenia <statement> a <statement_next> -> vrati sa do <prog>   *   *   */
     else if ( data->Token.type == TYPE_DEDENT || data->Token.attribute.keyword == KEYWORD_DEF || data->Token.type == TYPE_EOF)
     	return result = SYNTAX_OK;
+    //BE AWARE OF THIS, COULD BE SHIT
+    else if (data->Token.type == TYPE_KEYWORD || data->Token.type == TYPE_IDENTIFIER) return result = statement(data);
     else if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) return result = statement(data);
     else return result;
 }
