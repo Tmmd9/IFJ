@@ -149,5 +149,81 @@ bool generateConcatenation(){
     return true;
 }
 
+bool generateAdds(){
+    addInstr("ADDS");
+    return true;
+}
+
+bool generateSubs(){
+    addInstr("SUBS");
+    return true;
+}
+
+bool generateMuls(){
+    addInstr("MULS");
+    return true;
+}
+
+bool generateDivs(){
+    addInstr("DIVS");
+    return true;
+}
+
+bool generateIDivs(){
+    addInstr("POPS GF@$temp1");
+    addInstr("INT2FLOATS");
+    addInstr("PUSHS GF@$temp1");
+
+    return true;
+}
+
+bool generateLess(){
+    addInstr("LTS");
+    return true;
+}
+
+bool generateMore(){
+    addInstr("GTS");
+
+    return true;
+}
+
+bool generateEquals(){
+    addInstr("EQS");
+
+    return true;
+}
+
+bool generateNotEqual(){
+    addInstr("EQS");
+    addInstr("NOTS");
+
+    return true;
+}
+
+bool generateMoreEqual(){
+    addInstr("POPS GF@$temp1");
+    addInstr("POPS GF@$temp2");
+    addInstr("PUSHS GF@$temp2");
+    addInstr("PUSHS GF@$temp1");
+    addInstr("GTS");
+    addInstr("PUSHS GF@$temp2");
+    addInstr("PUSHS GF@$temp1");
+    addInstr("EQS");
+    addInstr("ORS");
+
+    return true;
+}
+
+bool generateSaveExprResult(char *id, char *frame){
+
+
+    addCode("POPS ");
+    addCode(frame);
+    addCode("@");
+    addCode(id);
+    addCode("\n");
+    return true;
+}
 
 

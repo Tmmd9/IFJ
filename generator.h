@@ -31,6 +31,18 @@ bool pushValue(token *token);
 bool op1ToDouble();
 bool op3ToDouble();
 bool generateConcatenation();
+bool generateAdds();
+bool generateSubs();
+bool generateMuls();
+bool generateDivs();
+bool generateIDivs();
+bool generateLess();
+bool generateMore();
+bool generateEquals();
+bool generateNotEqual();
+bool generateMoreEqual();
+bool generateSaveExprResult(char *id, char *frame);
+
 
 #define PRINT                                                                 \
         "LABEL $print \n"                                                     \

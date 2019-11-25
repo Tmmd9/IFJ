@@ -551,8 +551,42 @@ static int RE_rule(ParserData *data)
 		{
 			GENERATE(generateConcatenation);
 		}
-		else{;
-            //GENEREATE CODE
+		else{
+		    switch (actual_rule){
+		        case NT_PLUS_NT:
+		            GENERATE(generateAdds);
+                    break;
+		        case NT_MINUS_NT:
+		            GENERATE(generateSubs);
+                    break;
+		        case NT_MUL_NT:
+		            GENERATE(generateMuls);
+                    break;
+		        case NT_DIV_NT:
+                    GENERATE(generateDivs);
+                    break;
+                case NT_IDIV_NT:
+                    GENERATE(generateIDivs);
+                    break;
+		        case NT_LTN_NT:
+		            GENERATE(generateLess);
+		            break;
+		        case NT_MTN_NT:
+		            GENERATE(generateMore);
+		            break;
+		        case NT_EQ_NT:
+		            GENERATE(generateEquals);
+		            break;
+                case NT_NEQ_NT:
+                    GENERATE(generateNotEqual);
+                    break;
+                case NT_MEQ_NT:
+                    GENERATE(generateMoreEqual);
+                    break;
+                default:
+                    break;
+		    }
+
 		}
 		if(data->leftID != NULL)
 		    data->leftID->type = final_data_type;
@@ -657,6 +691,29 @@ int expression(ParserData *data)
                     }
          }
     } while (!end);
-    data->leftID = NULL;
+
+    s_item *finite = symbol_top(symStack);
+    if (!finite) {
+        symbol_free(symStack);
+        return ERROR_INTERN;
+    }
+    if (finite->symbol != NON_TERM){
+        symbol_free(symStack);
+        return ERROR_PARSER;
+    }
+
+    if (data->leftID) {
+        char *frame = "LF";
+        if (data->leftID->isGlobal) frame = "GF";
+
+        if (data->leftID->type == DTYPE_INT) {
+            if (finite->data_type == DTYPE_STRING) {
+                symbol_free(symStack);
+                return ERROR_ARTIHMETIC;
+            }
+            GENERATE(generateSaveExprResult, data->leftID->identifier, frame);
+        }
+    }
+
     return result;
 }
