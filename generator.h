@@ -41,6 +41,7 @@ bool generateMore();
 bool generateEquals();
 bool generateNotEqual();
 bool generateMoreEqual();
+bool generateLessEqual();
 bool generateSaveExprResult(char *id, char *frame);
 
 

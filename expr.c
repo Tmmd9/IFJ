@@ -583,6 +583,9 @@ static int RE_rule(ParserData *data)
                 case NT_MEQ_NT:
                     GENERATE(generateMoreEqual);
                     break;
+		        case NT_LEQ_NT:
+		            GENERATE(generateLessEqual);
+		            break;
                 default:
                     break;
 		    }
@@ -712,8 +715,28 @@ int expression(ParserData *data)
                 return ERROR_ARTIHMETIC;
             }
             GENERATE(generateSaveExprResult, data->leftID->identifier, frame);
+        } else if (data->leftID->type == DTYPE_DOUBLE){
+            if (finite->data_type == DTYPE_STRING){
+                symbol_free(symStack);
+                return ERROR_ARTIHMETIC;
+            }
+            GENERATE(generateSaveExprResult, data->leftID->identifier, frame);
+        } else if (data->leftID->type == DTYPE_STRING) {
+            if (finite->data_type != DTYPE_STRING) {
+                symbol_free(symStack);
+                return ERROR_ARTIHMETIC;
+            }
+            GENERATE(generateSaveExprResult, data->leftID->identifier, frame);
+        }  else if (data->leftID->type == DTYPE_BOOL) {
+            if (finite->data_type != DTYPE_BOOL) {
+                symbol_free(symStack);
+                return ERROR_ARTIHMETIC;
+            }
+            GENERATE(generateSaveExprResult, data->leftID->identifier, frame);
+        }  else if (data->leftID->type == DTYPE_UNDEFINED) {
+            GENERATE(generateSaveExprResult, data->leftID->identifier, frame);
         }
     }
-
-    return result;
+    symbol_free(symStack);
+    return SYNTAX_OK;
 }

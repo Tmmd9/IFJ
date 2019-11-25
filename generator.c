@@ -215,6 +215,20 @@ bool generateMoreEqual(){
     return true;
 }
 
+bool generateLessEqual(){
+    addInstr("POPS GF@$temp1");
+    addInstr("POPS GF@$temp2");
+    addInstr("PUSHS GF@$temp2");
+    addInstr("PUSHS GF@$temp1");
+    addInstr("LTS");
+    addInstr("PUSHS GF@$temp2");
+    addInstr("PUSHS GF@$temp1");
+    addInstr("EQS");
+    addInstr("ORS");
+
+    return true;
+}
+
 bool generateSaveExprResult(char *id, char *frame){
 
 

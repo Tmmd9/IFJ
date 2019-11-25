@@ -12,11 +12,9 @@
  *
  */
 
-#include <stdio.h>
 #include "parser.h"
 #include "scanner.h"
 #include "expr.h"
-//#include "instlist.h"
 #include <ctype.h>
 #include "generator.h"
 
@@ -1060,10 +1058,8 @@ int parse()
 			variablesFree(&data);
 			return ERROR_INTERN;
 		}
-
 		result = prog(&data);
 	}
-
 	stringStrFree(&parserStr);
 	variablesFree(&data);
 
