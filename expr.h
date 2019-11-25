@@ -26,6 +26,7 @@ typedef enum
 	INT_SYM,			///2 int
 	FLOAT_SYM,			///3 double
 	STR_SYM,			///4 string
+	NONE_SYM,
 	PLUS_SYM,			///5 +
 	MINUS_SYM,			///6 -
 	MUL_SYM,			///7 *
@@ -33,7 +34,7 @@ typedef enum
 	INT_DIV_SYM,		///9 //
 	LEFT_PAR,			///10 (
 	RIGHT_PAR,			///11 )
-	EQ_SYM,				///12 =
+	EQ_SYM,				///12 ==
 	NOT_EQ_SYM,			///13 <>
 	LESS_EQ_SYM,		///14 <=
 	LESS_SYM,			///15 <

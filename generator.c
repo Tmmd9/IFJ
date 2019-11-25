@@ -116,7 +116,7 @@ bool generateValue(token *token){
 bool pushVar(token *token){
     addCode("PUSHS LF@%1");
     addCode(token->attribute.string->str);
-   // addCode("\n");
+    addCode("\n");
     return true;
 }
 

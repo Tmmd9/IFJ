@@ -26,6 +26,7 @@ typedef struct s_item
 {
     prec_table_sym symbol; //este nieje
 	DataType data_type;
+	bool isNone;
 	struct s_item *next;
 } s_item;
 

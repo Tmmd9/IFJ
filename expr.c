@@ -80,6 +80,7 @@ static prec_tab_ind assign_prec_tab_ind(prec_table_sym symbol)
 		case INT_SYM:
 		case FLOAT_SYM:
 		case STR_SYM:
+		case NONE_SYM:
 		    return I_IND;
 
 		//lava zatvorka
@@ -143,6 +144,10 @@ static prec_table_sym tok_to_sym(token* token)
 
 		case TYPE_IDENTIFIER: // ID
 			return ID_SYM;
+	    case TYPE_KEYWORD:
+	        if (token->attribute.keyword == KEYWORD_NONE)
+	            return ID_SYM;
+	        break;
 
 		case TYPE_INT: // integer
 			return INT_SYM;
@@ -152,8 +157,9 @@ static prec_table_sym tok_to_sym(token* token)
 			return STR_SYM;
 
 		default:
-		return DOLLAR_SYM;
+		    return DOLLAR_SYM;
 	}
+    return DOLLAR_SYM;
 }
 
 // vrati datovy typ tokenu passnuteho z parseru
@@ -317,6 +323,7 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 	//osetrenie spravnosti pre operand
 	if (rule == OPERAND && item1->data_type == DTYPE_UNDEFINED)
 	{
+	    if (!item1->isNone)
 		return ERROR_PROGRAM_SEMANTIC; // nedefinovana premenna
 	}
 
@@ -580,6 +587,9 @@ int expression(ParserData *data)
 
     // zacina cyklus, chceme aby zbehol aspon raz, konci pri nastaveni priznaku end na true
     do{
+        if (data->Token.attribute.keyword == KEYWORD_NONE)
+            symStack->top->isNone = true;
+        else symStack->top->isNone = false;
         //priradenie hodnot
         sym_on_top = symbol_top_term(symStack);     //vracia prvy terminal zo stacku
         sym_in_token = tok_to_sym(&data->Token);    //vracia symbol z tokenu pomocou fce
@@ -612,8 +622,14 @@ int expression(ParserData *data)
                          symbol_free(symStack);
                          return ERROR_INTERN;
                      }
+                     if (data->Token.attribute.keyword == KEYWORD_NONE)
+                         symStack->top->isNone = true;
+                     else symStack->top->isNone = false;
 
-                     if (sym_in_token == ID_SYM) GENERATE(pushVar, &data->Token);
+                     if (sym_in_token == ID_SYM) {
+                         if (!symStack->top->isNone)
+                         GENERATE(pushVar, &data->Token);
+                     }
                      if (sym_in_token == INT_SYM || sym_in_token == FLOAT_SYM || sym_in_token == STR_SYM){
                          GENERATE(pushValue, &data->Token);
                      }
@@ -630,6 +646,10 @@ int expression(ParserData *data)
                     break;
                 default:
                     if (sym_on_top->symbol == DOLLAR_SYM && sym_in_token == DOLLAR_SYM){
+                        if (data->Token.attribute.keyword == KEYWORD_NONE){
+                            getNextToken(&data->Token);
+                            break;
+                        }
                         end = true;
                     } else {
                         symbol_free(symStack);
