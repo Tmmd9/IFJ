@@ -28,6 +28,7 @@ static int statement(ParserData *data);
 
 static int statement_next(ParserData *data);
 
+
 //        void sourceFile(FILE *f) {
 //    source = f;
 //}
@@ -140,9 +141,10 @@ static int prog(ParserData* data)
 	static int result;
 
 /*  *   *   *   *   *   *   *   vzdy si na zaciatku pytam token     *   *   *   *   *   *   */
-    if (data->Token.attribute.keyword != KEYWORD_DEF) {
+    if (data->Token.attribute.keyword != KEYWORD_DEF ) {
         if ((result = getNextToken(&data->Token)) != 0) return result;
     }
+
 /*  *   *   *   *   *   *   *   vzdy si na zaciatku pytam token     *   *   *   *   *   *   */
 
 /*1.<prog> -> KEYWORD_DEF TYPE_IDENTIFIER(<params>)TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <prog>*/
@@ -183,7 +185,14 @@ static int prog(ParserData* data)
 
 /*  *   *   *   *   pytam si dalsi token lebo statement si sam nepyta   *   *   *   *   *   *   */
             if ((result = getNextToken(&data->Token)) != 0) return result;
-        if ((result = statement(data)) != 0) return result;      //nieco sa posralo v statement
+        if ((result = statement(data)) != 0) {
+            if (data->was_return == true && (result == 0 || result == 2)) {          ///bol return
+                data->was_return = false;
+                result = 0;
+                if ((result = getNextToken(&data->Token)) != 0) return result;      ///pytam si dalsi token lebo return nepyta
+                }
+            else return result;      //nieco sa posralo v statement
+        }
 /*  *   *   *   *   pytam si dalsi token lebo statement si sam nepyta   *   *   *   *   *   *   */
 
         if (data->Token.type == TYPE_DEDENT) {
@@ -235,7 +244,7 @@ static int params(ParserData *data)
 {
     static int result;
     //som vo deklaracii funkcie
-    if (data->leftID == NULL && data->in_declaration == 1) {
+    if ((data->leftID == NULL && data->in_declaration == 1) || (data->leftID !=NULL && data->in_declaration == 0 && data->leftID->isDefined == true)) {
         if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0) {
             switch (data->Token.type) {
                 case TYPE_INT:
@@ -451,13 +460,14 @@ static int statement(ParserData *data)
 ****************************************************************************************************/
      else if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_RETURN)) {
         if (data->in_function < 1) return ERROR_SEMANTIC_OTHERS;    ///pokial sa vola mimo funkcie
-        
+        data->was_return=true;
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if ((result = expression(data)) != 0 ) return result;
+
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
-        if (data->Token.type == TYPE_EOL) return SYNTAX_OK;
+        else if (data->Token.type == TYPE_EOL) return result = SYNTAX_OK;
         else return ERROR_PARSER;
 
     } //end of return
@@ -589,7 +599,8 @@ static int statement(ParserData *data)
                         while (data->paramIndex <= data->leftID->paramCount) {
                             ++(data->paramIndex);
                             //tu neviem ci to na analyzu kvoli typom treba poslat do expression ale asi ani nie
-                            if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) != 0) return result;
+                            if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) != 0 &&
+                            (data->Token.type != TYPE_INT && data->Token.type != TYPE_STRING && data->Token.type != TYPE_FLOAT)) return result;
 
                             if ((result = checkTokenType(&data->Token, TYPE_COMMA)) != 0) {
                                 if (data->Token.type == TYPE_RIGHT_PAR)
