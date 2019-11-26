@@ -116,6 +116,10 @@ bool generateValue(token *token){
         addCode(token->attribute.string->str);
         addCode("\n");
         return true;
+    } else if (token->type == TYPE_IDENTIFIER){
+        addCode("LF@");
+        addCode(token->attribute.string->str);
+        return true;
     }
     return false;
 }

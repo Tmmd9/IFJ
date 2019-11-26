@@ -49,6 +49,8 @@ int prec_tab[7][7]={
 
 sstack* symStack;
 int compareCount = 0;
+bool iDidIt = false;
+bool please = false;
 //priradenie hodnoty symbolom z tabulky (tie ktore su spolu v casi
 //su v tom istom riadku v tabulke)
 static prec_tab_ind assign_prec_tab_ind(prec_table_sym symbol)
@@ -323,8 +325,9 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 	//osetrenie spravnosti pre operand
 	if (rule == OPERAND && item1->data_type == DTYPE_UNDEFINED)
 	{
-	    if (!item1->isNone)
-		return ERROR_PROGRAM_SEMANTIC; // nedefinovana premenna
+	    if (!item1->isNone && !please){
+            return ERROR_PROGRAM_SEMANTIC; // nedefinovana premenna
+	    }
 	}
 
 	if (rule == OPERAND && item1->data_type == DTYPE_BOOL)
@@ -334,10 +337,18 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 
 	if (rule != LBR_NT_RBR) {
         if (rule != OPERAND) {
-            if (item1->data_type == DTYPE_UNDEFINED)
-                return ERROR_PROGRAM_SEMANTIC;
-            if (item3->data_type == DTYPE_UNDEFINED)
-                return ERROR_PROGRAM_SEMANTIC;
+            if (item1->data_type == DTYPE_UNDEFINED) {
+                if (!please) {
+                    if (item1->isNone) return ERROR_ARTIHMETIC;
+                    else return ERROR_PROGRAM_SEMANTIC;
+                }
+            }
+            if (item3->data_type == DTYPE_UNDEFINED) {
+                if (!please) {
+                    if (item3->isNone) return ERROR_ARTIHMETIC;
+                    else return ERROR_PROGRAM_SEMANTIC;
+                }
+            }
             if (item1->data_type == DTYPE_BOOL)
                 return ERROR_ARTIHMETIC;
             if (item3->data_type == DTYPE_BOOL)
@@ -603,10 +614,55 @@ static int RE_rule(ParserData *data)
 	return SYNTAX_OK; // syntax OK
 }
 
+static int justTrying(ParserData *data){
+    static unsigned int counter = 0;
+    static int x = 0;
+    if (data->currentID->isDefined){
+        if (htabSearch(&data->localT, data->Token.attribute.string->str) ||
+            (htabSearch(&data->globalT, data->Token.attribute.string->str))) {
+            if (data->Token.type == TYPE_IDENTIFIER) {
+                getNextToken(&data->Token);
+                 return justTrying(data);
+            } else if (data->Token.type == TYPE_LEFT_PAR){
+                getNextToken(&data->Token);
+                return justTrying(data);
+            } else if (data->Token.type == TYPE_IDENTIFIER || data->Token.type == TYPE_INT ||
+                       data->Token.type == TYPE_STRING || data->Token.type == TYPE_FLOAT){
+                counter++;
+                getNextToken(&data->Token);
+                return justTrying(data);
+            } else if (data->Token.type == TYPE_RIGHT_PAR){
+                if (counter == data->paramIndex){
+                    //TU TREBA GENEROVAT CALL FUNKCIE JE TO TU DOCASNE
+                    /*
+                    addCode("JUMP $");
+                    addCode(data->currentID->identifier);
+                    addCode("\n");
+                     */
+                    char *frame;
+                    if (data->leftID) {
+                        frame = "LF";
+                        if (data->leftID->isGlobal)
+                            frame = "GF";
+                        GENERATE(generateSaveExprResult, data->leftID->identifier, frame);
+                    }
+                    iDidIt = true;
+                    return SYNTAX_OK;
+                }
+                else x = ERROR_WRONG_NUMBER_OF_PARAMS;
+            } else if (data->Token.type == TYPE_COMMA){
+                getNextToken(&data->Token);
+                return justTrying(data);
+            }
+        }
+    }
+    if (x == 5) return ERROR_WRONG_NUMBER_OF_PARAMS;
+    else return SYNTAX_OK;
+}
+
 int expression(ParserData *data)
 {
     //Pocitadlo compare operatorov
-
     compareCount = 0;
     //alokacia pamate pre stack, pri nepodarenej alokacii vracia error
     symStack = (sstack *) malloc(MAX_STACK_SIZE * sizeof(sstack));
@@ -622,7 +678,16 @@ int expression(ParserData *data)
     prec_table_sym sym_in_token;
     int result;
     bool end = false;
-
+    if (data->currentID != NULL) {
+        if (!data->in_declaration) {
+            if ((result = justTrying(data)) == 0 && iDidIt) {
+                getNextToken(&data->Token);
+                return result;
+            } else if (result == 5) return result;
+        }
+    }
+    if (data->in_function) please = true;
+    else please = false;
     // zacina cyklus, chceme aby zbehol aspon raz, konci pri nastaveni priznaku end na true
     do{
         if (data->Token.attribute.keyword == KEYWORD_NONE)
@@ -703,6 +768,8 @@ int expression(ParserData *data)
     }
     if (finite->symbol != NON_TERM){
         if(data->Token.attribute.keyword == KEYWORD_RETURN) {
+            return SYNTAX_OK;
+        } else if (data->Token.type == TYPE_COLON) {
             return SYNTAX_OK;
         } else {
             symbol_free(symStack);

@@ -195,8 +195,12 @@ static int prog(ParserData* data)
         }
 /*  *   *   *   *   pytam si dalsi token lebo statement si sam nepyta   *   *   *   *   *   *   */
 
-        if (data->Token.type == TYPE_DEDENT) {
-
+        //if (data->Token.type == TYPE_DEDENT) {
+        while (data->Token.type != TYPE_DEDENT) {
+            if (data->Token.type == TYPE_EOL) {
+                getNextToken(&data->Token);
+            } else return ERROR_PARSER;
+        }
             data->in_declaration = 0;
             data->in_function = 0;
             data->deepLabel -= 1;
@@ -210,8 +214,8 @@ static int prog(ParserData* data)
                 return result = prog(data);
             }
 
-        }
-        else return result; //neprisiel DEDENT
+       // }
+       // else return result; //neprisiel DEDENT
         }
         else return result;	//neprisiel indent
    		}
