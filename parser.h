@@ -44,7 +44,7 @@ typedef struct {
 	int deepLabel;			//zanorenie
 
     unsigned in_declaration;        //bool ci sa momentalne nachadzam v deklaracii funkcie
-    unsigned not_declared_function; //bool ci sa nachadzam este v nedeklarovanej funkci
+    //unsigned not_declared_function; //bool ci sa nachadzam este v nedeklarovanej funkci bullshit
     unsigned in_function;
     unsigned in_if;
     unsigned in_while;

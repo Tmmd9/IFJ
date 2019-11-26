@@ -140,7 +140,10 @@ static int prog(ParserData* data)
 	static int result;
 
 /*  *   *   *   *   *   *   *   vzdy si na zaciatku pytam token     *   *   *   *   *   *   */
-    if ((result = getNextToken(&data->Token)) != 0) return result;
+    if (data->Token.attribute.keyword != KEYWORD_DEF) {
+        if ((result = getNextToken(&data->Token)) != 0) return result;
+    }
+/*  *   *   *   *   *   *   *   vzdy si na zaciatku pytam token     *   *   *   *   *   *   */
 
 /*1.<prog> -> KEYWORD_DEF TYPE_IDENTIFIER(<params>)TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <prog>*/
     if (data->Token.attribute.keyword == KEYWORD_DEF && data->Token.type == TYPE_KEYWORD) {
@@ -150,16 +153,19 @@ static int prog(ParserData* data)
         if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0) {
             //pridam identifier do tabulky symbolov// checknem ci nenastava redefinicia
         if ((data->currentID = htabSearch(&data->globalT, data->Token.attribute.string->str)) != NULL &&
-        data->currentID->isDefined == true) return ERROR_PROGRAM_SEMANTIC;
+            data->currentID->isDefined == true) return ERROR_PROGRAM_SEMANTIC;
             ///pokial sa najde zhoda, je tu pokus o redefiniciu
 
-            if ((data->currentID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL ) {
-                bool errIntern;
-                data->currentID = htabAddSymbol(&data->globalT, data->Token.attribute.string->str, &errIntern);
-                if (errIntern == true) return ERROR_INTERN;
-            }
+        if ((data->currentID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL ) {
+
+            bool errIntern;
+            data->currentID = htabAddSymbol(&data->globalT, data->Token.attribute.string->str, &errIntern);
+            if (errIntern == true) return ERROR_INTERN;
+
+        }
+            GENERATE(genFunctionHead,data->Token.attribute.string->str);
             data->leftID = NULL;
-       	    data->not_declared_function = 0;    //lebo ju deklarujeme
+       	    //data->not_declared_function = 0;    //lebo ju deklarujeme
             data->currentID->isDefined = true;
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) == 0) {
             data->paramIndex = 0;
@@ -220,8 +226,6 @@ static int prog(ParserData* data)
         return result = prog(data);
     }
 /*  *   *   *   *   * 3.  <prog> -> <statement> TYPE_EOL <prog> *   *   *   *   *   *   */
-	else if (result != 0)
-	    return result;
     else {
 	    return result = statement(data);
 	}
@@ -255,6 +259,9 @@ static int params(ParserData *data)
                 if (errIntern == true) return ERROR_INTERN;
                 else return ERROR_PROGRAM_SEMANTIC; ///redefinicia
             }
+
+            GENERATE(genFunctionParam, data->Token.attribute.string->str, data->paramIndex);
+
             //nacitavam dalsi token ak je ciarka ocakavam dalsi param.
             //21. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next>
             if ((result = checkTokenType(&data->Token, TYPE_COMMA)) == 0)
@@ -434,7 +441,7 @@ static int statement(ParserData *data)
 	    }
 	    else return result; //neprisiel EOL
 	    }
-	    else return result; //neprisiel COLON
+	    else return ERROR_PARSER; //neprisiel COLON
     } //WHILE
 
 
@@ -475,12 +482,16 @@ static int statement(ParserData *data)
                     if ((data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) {
                         ///pridam premennu lokalne vo funkci
                         if ((result = addToHash(data, true, 0)) != 0) return ERROR_INTERN;
+                        char *frame= "LF";
+                        GENERATE(declareVar,frame,data->Token.attribute.string->str);
                     }
                     //else -> nerobim nic - nepridavam do tabulky
                 }
                 else {
                     //pridavam premennu globalne
                     if ((result = addToHash(data, false, 0)) != 0) return ERROR_INTERN;
+                    char *frame= "GF";
+                    GENERATE(declareVar,frame,data->Token.attribute.string->str);
                 }
 
                 if (data->Token.type == TYPE_ASSIGN_VALUE) {
@@ -488,6 +499,7 @@ static int statement(ParserData *data)
                     //tuto poslem timkovi vyraz na rozparsovanie//
 
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
+                    //GENERATE(pushDeclareVar, data->Token.attribute.string->str);
                     if ((result = getNextToken(&data->Token)) != 0) return result;
                     if (data->Token.type == TYPE_KEYWORD && (   data->Token.attribute.keyword == KEYWORD_INPUTI ||
                                                                 data->Token.attribute.keyword == KEYWORD_INPUTS ||
@@ -500,6 +512,7 @@ static int statement(ParserData *data)
                         return result = statement(data);
                     }
                     else if ((result = expression(data)) != 0 ) return result;
+
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
                     ///tu moze byt aj EOF dont forget
@@ -618,10 +631,11 @@ static int statement(ParserData *data)
         while (data->Token.type != TYPE_RIGHT_PAR) {
             if ((result = getNextToken(&data->Token)) != 0) return result;
             if ((result = expression(data)) != 0 ){
-                if (result == 2 && data->Token.type == TYPE_RIGHT_PAR) continue;
+                if (result == 2 && (data->Token.type == TYPE_RIGHT_PAR || data->Token.type == TYPE_COMMA)) continue;            ////vy ste toto nejako menili v expression?
                 else return result;
             }
-            if (data->Token.type != TYPE_COMMA) return ERROR_PARSER;
+            //if (data->Token.type != TYPE_COMMA) return ERROR_PARSER;
+
         }
        // if ((result = expression(data)) != 0 ) return result;
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
@@ -902,10 +916,10 @@ static int statement(ParserData *data)
 /*	*   overujem ci nahodou nenastala situacia s komentom alebo je tam len prosté EOL   *   */
     else if ((result = isComment(data)) == 0) return statement_next(data);
 /*  *   *  koniec zacyklenia <statement> a <statement_next> -> vrati sa do <prog>   *   *   */
-    else if ( data->Token.type == TYPE_EOF || data->Token.attribute.keyword == KEYWORD_DEF ||
-            data->Token.type == TYPE_DEDENT) {
-        return result = SYNTAX_OK;
-    }
+    else if(data->Token.type == TYPE_EOF || data->Token.type == TYPE_DEDENT)    ///latest change BE AWARE                                   ///latest change BE AWARE
+        return result = SYNTAX_OK;                                             ///latest change BE AWARE
+    else if (data->Token.attribute.keyword == KEYWORD_DEF)                  ///latest change BE AWARE
+        return result = prog(data);                                        ///latest change BE AWARE                                       ///latest change BE AWARE
     return result;
 }
 
@@ -924,8 +938,10 @@ static int statement_next(ParserData *data)
     }
 /*  *   *   *   *   *   *   *    25.  <statement_next>  ->  ε   *   *   *   *   *   *   *   */
 /*  *   *  koniec zacyklenia <statement> a <statement_next> -> vrati sa do <prog>   *   *   */
-    else if ( data->Token.type == TYPE_DEDENT || data->Token.attribute.keyword == KEYWORD_DEF || data->Token.type == TYPE_EOF)
-    	return result = SYNTAX_OK;
+    else if(data->Token.type == TYPE_EOF || data->Token.type == TYPE_DEDENT)  ///latest change BE AWARE                        ///latest change BE AWARE
+        return result = SYNTAX_OK;                                           ///latest change BE AWARE
+    else if (data->Token.attribute.keyword == KEYWORD_DEF)                  ///latest change BE AWARE
+    	return result = prog(data);                                        ///latest change BE AWARE
     //BE AWARE OF THIS, COULD BE SHIT
     else if (data->Token.type == TYPE_KEYWORD || data->Token.type == TYPE_IDENTIFIER) return result = statement(data);
     else if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) return result = statement(data);
@@ -953,7 +969,7 @@ int variablesInit(ParserData *data)
 	data->in_declaration = 0;
 	data->in_if = 0;
 	data->in_while = 0;
-	data->not_declared_function = 0;
+	//data->not_declared_function = 0;
 
 	/*
 	*	inicializacia 

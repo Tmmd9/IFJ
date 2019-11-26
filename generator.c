@@ -14,6 +14,13 @@
 #include "generator.h"
 #include "scanner.h"
 
+#define ADDCODEINT(_code)													\
+	do {																	\
+		char str[50];												        \
+		sprintf(str, "%d", _code);											\
+		addCode(str);														\
+	} while (0)
+
 string genCode;
 bool addInstr(const char *_instr,...) {
     if (stringAddConst(&genCode, (_instr))){
@@ -124,6 +131,59 @@ bool pushValue(token *token){
     addCode("PUSHS ");
     generateValue(token);
     //addCode("\n");
+    return true;
+}
+
+bool declareVar(char *frame, char *ID)
+{
+    addCode("DEFVAR ");
+    addCode(frame);
+    addCode("@");
+    addCode(ID);
+    addCode("\n");
+
+    return true;
+}
+
+bool genFunctionHead(char *ID)
+{
+    addCode(ID);
+    addCode("\n");
+    addCode("LABEL $");
+    addCode(ID);
+    addCode("\n");
+    addCode("PUSHFRAME");
+    addCode("\n");
+
+    return true;
+}
+
+bool genFunctionParam(char *ID, int index)
+{
+    addCode("DEFVAR LF@");
+    addCode(ID);
+    addCode("\n");
+    addCode("MOVE LF@");
+    addCode(ID);
+    addCode(" LF@%");
+    ADDCODEINT(index);
+    addCode("\n");
+
+    return true;
+}
+
+bool generate_function_end(char *ID)
+{
+    addCode("# End of function "); 
+    addCode(ID); 
+    addCode("\n");
+    
+    addCode("LABEL $"); 
+    addCode(ID); 
+    addCode("%return\n");
+    addInstr("POPFRAME");
+    addInstr("RETURN");
+
     return true;
 }
 
