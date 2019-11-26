@@ -702,8 +702,12 @@ int expression(ParserData *data)
         return ERROR_INTERN;
     }
     if (finite->symbol != NON_TERM){
-        symbol_free(symStack);
-        return ERROR_PARSER;
+        if(data->Token.attribute.keyword == KEYWORD_RETURN) {
+            return SYNTAX_OK;
+        } else {
+            symbol_free(symStack);
+            return ERROR_PARSER;
+        }
     }
 
     if (data->leftID) {

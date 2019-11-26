@@ -467,7 +467,12 @@ static int statement(ParserData *data)
 
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
-        else if (data->Token.type == TYPE_EOL) return result = SYNTAX_OK;
+        else if (data->Token.type == TYPE_EOL) {
+            GENERATE(generateReturn, data->currentID->identifier);
+            if ((result = getNextToken(&data->Token)) != 0) return result;
+            else return result = SYNTAX_OK;
+
+        }
         else return ERROR_PARSER;
 
     } //end of return

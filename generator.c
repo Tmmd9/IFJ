@@ -43,7 +43,7 @@ bool generateHead(){
     addInstr("DEFVAR GF@$temp2");
     addInstr("DEFVAR GF@$temp3");
     addInstr("DEFVAR GF@$result");
-    addInstr("MOVE GF@$result nil@None");
+    addInstr("MOVE GF@$result nil@nil");
     addInstr("DEFVAR GF@$return");
 
     addInstr("JUMP $$main");
@@ -147,8 +147,8 @@ bool declareVar(char *frame, char *ID)
 
 bool genFunctionHead(char *ID)
 {
-    addCode(ID);
-    addCode("\n");
+    //addCode(ID);
+    //addCode("\n");
     addCode("LABEL $");
     addCode(ID);
     addCode("\n");
@@ -300,4 +300,29 @@ bool generateSaveExprResult(char *id, char *frame){
     return true;
 }
 
+bool generateReturn(char *id)
+{
+    addInstr("MOVE LF@retval GF@%return");
+    addCode("JUMP $");
+    addCode(id);
+    addCode("%return\n");
+    return true;
+}
+
+/*bool generateIf(char *ID, int *index)
+{
+    addCode("JUMPIFEQ $");
+    addCode(ID);
+    addCode("%");
+    addCode("%");
+    ADDCODEINT(index+1);
+    addCode("\n");
+
+    addInstr("# Else");
+
+    return true;
+
+
+    return true;
+}*/
 

@@ -46,12 +46,13 @@ bool generateSaveExprResult(char *id, char *frame);
 bool declareVar(char *frame, char *ID);
 bool genFunctionHead(char *ID);
 bool genFunctionParam(char *ID, int index);
+bool generateReturn(char *ID);
 
 #define PRINT                                                                 \
         "LABEL $print \n"                                                     \
         "PUSHFRAME \n"                                                        \
         "WRITE LF@%1 \n"                                                      \
-        "MOVE GF@$result nil@None \n"                                         \
+        "MOVE GF@$result nil@nil \n"                                          \
         "POPFRAME \n"                                                         \
         "RETURN \n"                                                           \
 
@@ -85,7 +86,7 @@ bool genFunctionParam(char *ID, int index);
         "DEFVAR LF@%return \n"                                                \
         "DEFVAR LF@%type \n"                                                  \
         "TYPE LF@%type LF@%1 \n"                                              \
-        "JUMPIFEQ $len_cont \n"                                               \
+        "JUMPIFEQ $len_cont LF@%type int@0 \n"                                \
         "EXIT int@4 \n"                                                       \
         "LABEL $len_cont \n"                                                  \
         "STRLEN LF@%return LF@%1 \n"                                          \
@@ -96,7 +97,7 @@ bool genFunctionParam(char *ID, int index);
         "LABEL $substr \n"                                                    \
         "PUSHFRAME \n"                                                        \
         "DEFVAR LF@%return \n"                                                \
-        "MOVE LF@%return string@None \n"                                      \
+        "MOVE LF@%return string@nil \n"                                      \
         "DEFVAR LF@%length \n"                                                \
         "CREATEFRAME \n"                                                      \
         "DEFVAR TF@%1 \n"                                                     \
@@ -158,7 +159,7 @@ bool genFunctionParam(char *ID, int index);
         "LT LF@%help LF@%length LF@%1 \n"                                     \
         "JUMPIFEQ $ord$ret LF@%help bool@true \n"                             \
         "SUB LF@%2 LF@%2 int@1 \n"                                            \
-        "STR2INT LF@%return LF@%1 LF@%2 \n"                                   \
+        "STRI2INT LF@%return LF@%1 LF@%2 \n"                                   \
         "LABEL $ord$ret \n"                                                   \
         "POPFRAME \n"                                                         \
         "RETURN \n"                                                           \
