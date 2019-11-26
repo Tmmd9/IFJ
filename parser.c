@@ -201,6 +201,7 @@ static int prog(ParserData* data)
             data->in_function = 0;
             data->deepLabel -= 1;
 
+            GENERATE(genFunctionEnd, data->currentID->identifier);
             if(data->Token.type == TYPE_EOF) return SYNTAX_OK;
             //rekurzia aby som sa vratil spat do <prog>
             else {
@@ -243,25 +244,50 @@ static int prog(ParserData* data)
 static int params(ParserData *data)
 {
     static int result;
+
     //som vo deklaracii funkcie
     if ((data->leftID == NULL && data->in_declaration == 1) || (data->leftID !=NULL && data->in_declaration == 0 && data->leftID->isDefined == true)) {
         if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0) {
-            switch (data->Token.type) {
-                case TYPE_INT:
-                    stringAddChar(data->currentID->param, 'i');
-                    break;
-                case TYPE_FLOAT:
-                    stringAddChar(data->currentID->param, 'f');
-                    break;
-                case TYPE_STRING:
-                    stringAddChar(data->currentID->param, 's');
-                    break;
-                default:
-                    stringAddChar(data->currentID->param, 'u');
-                    break;
+        
+            if ((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL) {
+                
+        
+                switch (data->Token.type) {
+                    case TYPE_INT:
+                        stringAddChar(data->currentID->param, 'i');
+                        break;
+                    case TYPE_FLOAT:
+                        stringAddChar(data->currentID->param, 'f');
+                        break;
+                    case TYPE_STRING:
+                        stringAddChar(data->currentID->param, 's');
+                        break;
+                    default:
+                        stringAddChar(data->currentID->param, 'u');
+                        break;
+                }
+            }
+
+            ///ospravedlnujem sa toto je asi bullshit ale mohlo by to mierne riesit situaciu
+            else {
+                switch (data->rightID->type) {
+                    case DTYPE_INT:
+                        stringAddChar(data->currentID->param, 'i');
+                        break;
+                    case DTYPE_DOUBLE:
+                        stringAddChar(data->currentID->param, 'f');
+                        break;
+                    case DTYPE_STRING:
+                        stringAddChar(data->currentID->param, 's');
+                        break;
+                    default:
+                        stringAddChar(data->currentID->param, 'u');
+                        break;
+                }
             }
             data->paramIndex += 1;
             //data->globalT->param[data->paramIndex] = '\0'; to uz robi addchar samotne
+
 
             bool errIntern;
             if (!(data->rightID = htabAddSymbol(&data->localT, data->Token.attribute.string->str, &errIntern))){
@@ -269,7 +295,7 @@ static int params(ParserData *data)
                 else return ERROR_PROGRAM_SEMANTIC; ///redefinicia
             }
 
-            GENERATE(genFunctionParam, data->Token.attribute.string->str, data->paramIndex);
+            GENERATE(declareFunctionParam, data->Token.attribute.string->str, data->paramIndex);
 
             //nacitavam dalsi token ak je ciarka ocakavam dalsi param.
             //21. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next>
@@ -323,6 +349,7 @@ static int params(ParserData *data)
                 params(data);	//<param_next>
             else if (data->Token.type == TYPE_RIGHT_PAR) {
                 data->leftID->paramCount = data->paramIndex;
+               
                 //ulozim ze dana funkcia ma zatial N paramaterov podla data->paramIndex
                 return SYNTAX_OK;
             }
@@ -566,14 +593,28 @@ static int statement(ParserData *data)
 //tak som sa rozhodol ze sa proste bude prepisovat globalna --fixed no more-uz sa bude upravovat lokalna
         else if (data->leftID->isGlobal == true) {
 
+
+
             if ((result = checkTokenType(&data->Token, TYPE_ASSIGN_VALUE)) == 0) {
+
+                if (data->in_function == 0 ) {
+                    char *frame= "GF";
+                    GENERATE(declareVar,frame,data->Token.attribute.string->str);
+                }
+
                 if (data->in_function == 1 ) {
                     if ((data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) {
+
+                        char *frame= "LF";
+                        GENERATE(declareVar,frame,data->Token.attribute.string->str);
+
                         ///pridam premennu lokalne vo funkci
                         if ((result = addToHash(data, true, 0)) != 0) return ERROR_INTERN;
                     }
                     //else -> nerobim nic - nepridavam do tabulky
                 }
+
+
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
                 if ((result = getNextToken(&data->Token)) != 0) return result;
                 if (data->Token.type == TYPE_KEYWORD && (data->Token.attribute.keyword == KEYWORD_INPUTI ||

@@ -45,8 +45,9 @@ bool generateLessEqual();
 bool generateSaveExprResult(char *id, char *frame);
 bool declareVar(char *frame, char *ID);
 bool genFunctionHead(char *ID);
-bool genFunctionParam(char *ID, int index);
+bool declareFunctionParam(char *ID, int index);
 bool generateReturn(char *ID);
+bool genFunctionEnd(char *ID);
 
 #define PRINT                                                                 \
         "LABEL $print \n"                                                     \

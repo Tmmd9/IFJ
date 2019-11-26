@@ -158,7 +158,7 @@ bool genFunctionHead(char *ID)
     return true;
 }
 
-bool genFunctionParam(char *ID, int index)
+bool declareFunctionParam(char *ID, int index)
 {
     addCode("DEFVAR LF@");
     addCode(ID);
@@ -172,11 +172,10 @@ bool genFunctionParam(char *ID, int index)
     return true;
 }
 
-bool generate_function_end(char *ID)
+bool genFunctionEnd(char *ID)
 {
-    addCode("# End of function "); 
-    addCode(ID); 
-    addCode("\n");
+    //addCode(ID);
+    //addCode("\n");
     
     addCode("LABEL $"); 
     addCode(ID); 
