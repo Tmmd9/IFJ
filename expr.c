@@ -738,6 +738,8 @@ int expression(ParserData *data)
             GENERATE(generateSaveExprResult, data->leftID->identifier, frame);
         }
     }
+    // Aby pri compare expr sa nepriradilo BOOL do leftID z riadka nadtym
+    data->leftID = NULL;
     symbol_free(symStack);
     return SYNTAX_OK;
 }
