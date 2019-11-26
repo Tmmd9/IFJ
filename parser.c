@@ -605,29 +605,47 @@ static int statement(ParserData *data)
                             ++(data->paramIndex);
                             //tu neviem ci to na analyzu kvoli typom treba poslat do expression ale asi ani nie
                             if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) != 0 &&
-                            (data->Token.type != TYPE_INT && data->Token.type != TYPE_STRING && data->Token.type != TYPE_FLOAT)) return result;
-
+                            (data->Token.type != TYPE_INT && data->Token.type != TYPE_STRING && data->Token.type != TYPE_FLOAT)) {
+                                if(data->Token.type == TYPE_RIGHT_PAR) return ERROR_WRONG_NUMBER_OF_PARAMS;
+                                else return result;
+                            }
                             if ((result = checkTokenType(&data->Token, TYPE_COMMA)) != 0) {
                                 if (data->Token.type == TYPE_RIGHT_PAR)
                                     result = 0;
                                 else return result;
                             }
                         }
+                        if (data->Token.type == TYPE_RIGHT_PAR) {
+                            if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
+
+                                return result = statement_next(data);
+
+                            } else if (result == 2 && data->Token.type == TYPE_EOF ) return SYNTAX_OK;
+                            else return result;
+                        } else if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 || data->Token.type == TYPE_INT ||
+                                   data->Token.type == TYPE_STRING || data->Token.type == TYPE_FLOAT)
+                            return result = ERROR_WRONG_NUMBER_OF_PARAMS;
+                        else return result = ERROR_PARSER;
                     }
                     else {
-                        if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
+                        if ((result = getNextToken(&data->Token)) != 0) return result;
+                        else if (data->Token.type == TYPE_RIGHT_PAR) {
+                            if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
+
+                                return result = statement_next(data);
+
+                            } else if (result == 2 && data->Token.type == TYPE_EOF) return SYNTAX_OK;
+                            else return result;
+                        } else if (data->Token.type == TYPE_IDENTIFIER || data->Token.type == TYPE_INT ||
+                        data->Token.type == TYPE_STRING || data->Token.type == TYPE_FLOAT) return result = ERROR_WRONG_NUMBER_OF_PARAMS;
+                        /*else if(data->Token.type == TYPE_COMMA) {
+                            if ((result = getNextToken(&data->Token)) != 0) return result;
+                            if (data->Token.type == TYPE_IDENTIFIER || data->Token.type == TYPE_INT ||
+                                data->Token.type == TYPE_STRING || data->Token.type == TYPE_FLOAT) return result = ERROR_WRONG_NUMBER_OF_PARAMS;
+                            else return result = ERROR_PARSER;
+                        } */
+                        else return result = ERROR_PARSER;
                     }
-
-                    if (data->Token.type == TYPE_RIGHT_PAR) {
-                        if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
-
-                            return result = statement_next(data);
-
-                        } else if (result == 2 && data->Token.type == TYPE_EOF ) return SYNTAX_OK;
-                        else return result;
-                    } else if (result == 2 && data->Token.type == TYPE_IDENTIFIER)
-                        return result = ERROR_WRONG_NUMBER_OF_PARAMS;
-                    else return result = ERROR_PARSER;
                 }
                     //ked s funkciou narabam ako s premennou e.g. foo = 2;
                 else if (result == 2 && data->Token.type == TYPE_ASSIGN_VALUE) return ERROR_PROGRAM_SEMANTIC;
