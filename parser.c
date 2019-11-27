@@ -205,11 +205,11 @@ static int prog(ParserData* data)
                 data->was_return = false;
 
         //if (data->Token.type == TYPE_DEDENT) {
-        if (data->Token.attribute.keyword == KEYWORD_DEF)       ///bez tohto sa potom v progu nepyta dalsi token
+        if (data->Token.attribute.keyword == KEYWORD_DEF) {     ///bez tohto sa potom v progu nepyta dalsi token
             data->Token.attribute.keyword = KEYWORD_PASS;       ///hocijaky iny keyword tu musim dat okrem DEF
+        }
 
-
-            while (data->Token.type != TYPE_DEDENT) {
+        while (data->Token.type != TYPE_DEDENT) {
             if (data->Token.type == TYPE_EOL) {
                 getNextToken(&data->Token);
             } else return ERROR_PARSER;
@@ -282,7 +282,7 @@ static int params(ParserData *data)
                         stringAddChar(data->currentID->param, 's');
                         break;
                     default:
-                        stringAddChar(data->currentID->param, 'i');     ///implicitne jej davam int, aj ked je to blbost, ale lepsie ako undefined
+                        stringAddChar(data->currentID->param, 'u');
                         break;
                 }
             }
@@ -371,7 +371,7 @@ static int params(ParserData *data)
                     stringAddChar(data->leftID->param, 'u');
                     break;
                 default:
-                    stringAddChar(data->leftID->param, 'i');
+                    stringAddChar(data->leftID->param, 'u');
                     break;
             }
             data->paramIndex += 1;
