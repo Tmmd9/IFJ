@@ -194,9 +194,9 @@ static int prog(ParserData* data)
                 }
             else return result;      //nieco sa posralo v statement
         }
-/*  *   *   *   *   pytam si dalsi token lebo statement si sam nepyta   *   *   *   *   *   *   */
-            if (data->was_return == true && result == 0) {
-                if ((result = getNextToken(&data->Token)) != 0) return result;      ///pytam si dalsi token lebo return nepyta
+        if (data->was_return == true && result == 0) {
+            if ((result = getNextToken(&data->Token)) != 0) return result;      ///pytam si dalsi token lebo return nepyta
+            result = 0;
             }
             else {
                 GENERATE(genFunctionReturn,DTYPE_UNDEFINED);
@@ -474,7 +474,7 @@ static int statement(ParserData *data)
 		}       //neprisiel EOL
 		else return result;
 		} 		//neprisiel COLON
-		else return result;
+		else return ERROR_PARSER;
     }//IF
 
 
