@@ -329,3 +329,10 @@ bool generateReturn(char *id)
     return true;
 }*/
 
+bool generateCALL(char *id) {
+    addCode("CALL $");
+    addCode(id);
+    addCode("\n");
+
+    return true;
+}

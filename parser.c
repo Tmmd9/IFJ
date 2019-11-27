@@ -581,9 +581,8 @@ static int statement(ParserData *data)
                         data->leftID->isGlobal = false; ///explicitne to musim prestavit
 
                         if ((result = params(data)) != 0) return result;
-
                         if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
-
+                            generateCALL(data->leftID->identifier);
                             return result = statement_next(data);
                         }
                         else return result;
@@ -631,7 +630,6 @@ static int statement(ParserData *data)
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
                ///tu moze byt aj EOF dont forget
                     if (data->Token.type == TYPE_EOL) {
-
                         return result = statement_next(data);
 
                     } else if (data->Token.type == TYPE_EOF) return SYNTAX_OK;
@@ -663,9 +661,13 @@ static int statement(ParserData *data)
                         if (data->Token.type == TYPE_RIGHT_PAR) {
                             if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
 
+                                generateCALL(data->currentID->identifier);
                                 return result = statement_next(data);
 
-                            } else if (result == 2 && data->Token.type == TYPE_EOF ) return SYNTAX_OK;
+                            } else if (result == 2 && data->Token.type == TYPE_EOF ) {
+                                generateCALL(data->currentID->identifier);
+                                return SYNTAX_OK;
+                            }
                             else return result;
                         } else if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 || data->Token.type == TYPE_INT ||
                                    data->Token.type == TYPE_STRING || data->Token.type == TYPE_FLOAT)
@@ -677,9 +679,13 @@ static int statement(ParserData *data)
                         else if (data->Token.type == TYPE_RIGHT_PAR) {
                             if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
 
+                                generateCALL(data->currentID->identifier);
                                 return result = statement_next(data);
 
-                            } else if (result == 2 && data->Token.type == TYPE_EOF) return SYNTAX_OK;
+                            } else if (result == 2 && data->Token.type == TYPE_EOF) {
+                                generateCALL(data->currentID->identifier);
+                                return SYNTAX_OK;
+                            }
                             else return result;
                         } else if (data->Token.type == TYPE_IDENTIFIER || data->Token.type == TYPE_INT ||
                         data->Token.type == TYPE_STRING || data->Token.type == TYPE_FLOAT) return result = ERROR_WRONG_NUMBER_OF_PARAMS;
@@ -745,6 +751,7 @@ static int statement(ParserData *data)
             data->leftID->type = DTYPE_STRING;
             data->leftID = NULL;
         }
+        generateCALL("inputs");
         if ((result = getNextToken(&data->Token)) != 0) return result;
         return result = statement_next(data);
     }
@@ -760,6 +767,7 @@ static int statement(ParserData *data)
             data->leftID->type = DTYPE_INT;
             data->leftID = NULL;
         }
+        generateCALL("inputi");
         if ((result = getNextToken(&data->Token)) != 0) return result;
         return result = statement_next(data);
     }
@@ -775,6 +783,7 @@ static int statement(ParserData *data)
             data->leftID->type = DTYPE_DOUBLE;
             data->leftID = NULL;
         }
+        generateCALL("inputf");
         if ((result = getNextToken(&data->Token)) != 0) return result;
         return result = statement_next(data);
     }
@@ -803,6 +812,7 @@ static int statement(ParserData *data)
             data->leftID->type = DTYPE_INT;
             data->leftID = NULL;
         }
+        generateCALL("len");
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
             if ((result = getNextToken(&data->Token)) != 0) return result;
             if (( result = statement_next(data)) != 0) return result;
@@ -887,6 +897,7 @@ static int statement(ParserData *data)
             data->leftID->type = DTYPE_STRING;
             data->leftID = NULL;
         }
+        generateCALL("substr");
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if (data->Token.type == TYPE_RIGHT_PAR) {
             if ((result = getNextToken(&data->Token)) != 0) return result;
@@ -920,6 +931,7 @@ static int statement(ParserData *data)
             data->leftID->type = DTYPE_STRING;
             data->leftID = NULL;
         }
+        generateCALL("chr");
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if (( result = statement_next(data)) != 0) return result;
@@ -983,6 +995,7 @@ static int statement(ParserData *data)
             data->leftID->type = DTYPE_STRING;
             data->leftID = NULL;
         }
+        generateCALL("ord");
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if (( result = statement_next(data)) != 0) return result;
