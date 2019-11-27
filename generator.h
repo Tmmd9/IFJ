@@ -49,6 +49,8 @@ bool declareFunctionParam(char *ID, int index);
 bool generateReturn(char *ID);
 bool genFunctionEnd(char *ID);
 bool generateCALL(char *id);
+bool genFunctionReturn(DataType type);
+
 
 #define PRINT                                                                 \
         "LABEL $print \n"                                                     \

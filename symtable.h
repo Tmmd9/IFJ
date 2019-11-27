@@ -40,6 +40,7 @@ typedef struct {
     bool isDefined;     //bool ci bola funkcia definovana
     bool isGlobal;      //bool na globalne premenne
     unsigned paramCount; //pocet parametrov vo funkci -neviem ci to je uplne potreba ked DH to nemal ale mne by t mohlo pomoct
+    bool previouslyCalled;  //pripad kedy je volana pred definovanim
 } Data;
 
 typedef struct item {

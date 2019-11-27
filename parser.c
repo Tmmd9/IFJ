@@ -183,17 +183,26 @@ static int prog(ParserData* data)
             data->in_function = 1;
             data->deepLabel += 1;    //mam indent, zmena urovne
 
+
 /*  *   *   *   *   pytam si dalsi token lebo statement si sam nepyta   *   *   *   *   *   *   */
             if ((result = getNextToken(&data->Token)) != 0) return result;
         if ((result = statement(data)) != 0) {
-            if (data->was_return == true && (result == 0 || result == 2)) {          ///bol return
-                data->was_return = false;
-                result = 0;
+            if (data->was_return == true && result == 2) {          ///bol return
+                //data->was_return = false;
+                //result = 0;
                 if ((result = getNextToken(&data->Token)) != 0) return result;      ///pytam si dalsi token lebo return nepyta
                 }
             else return result;      //nieco sa posralo v statement
         }
 /*  *   *   *   *   pytam si dalsi token lebo statement si sam nepyta   *   *   *   *   *   *   */
+            if (data->was_return == true && result == 0) {
+                if ((result = getNextToken(&data->Token)) != 0) return result;      ///pytam si dalsi token lebo return nepyta
+            }
+            else {
+                GENERATE(genFunctionReturn,DTYPE_UNDEFINED);
+            }
+
+                data->was_return = false;
 
         //if (data->Token.type == TYPE_DEDENT) {
         if (data->Token.attribute.keyword == KEYWORD_DEF)       ///bez tohto sa potom v progu nepyta dalsi token
@@ -254,6 +263,7 @@ static int params(ParserData *data)
 {
     static int result;
 
+
     //som vo deklaracii funkcie
     if ((data->leftID == NULL && data->in_declaration == 1) || (data->leftID !=NULL && data->in_declaration == 0 && data->leftID->isDefined == true)) {
         if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0) {
@@ -272,11 +282,10 @@ static int params(ParserData *data)
                         stringAddChar(data->currentID->param, 's');
                         break;
                     default:
-                        stringAddChar(data->currentID->param, 'u');
+                        stringAddChar(data->currentID->param, 'i');     ///implicitne jej davam int, aj ked je to blbost, ale lepsie ako undefined
                         break;
                 }
             }
-
             ///ospravedlnujem sa toto je asi bullshit ale mohlo by to mierne riesit situaciu
             else {
                 switch (data->rightID->type) {
@@ -311,6 +320,15 @@ static int params(ParserData *data)
             if ((result = checkTokenType(&data->Token, TYPE_COMMA)) == 0)
                 result = params(data);	//<param_next>
             else if (data->Token.type == TYPE_RIGHT_PAR) {
+
+                if (data->currentID->previouslyCalled == true) {        ///ak bola predtym volana ale nie definovana checknem ci sedi pocet parametrov
+                    if (data->currentID->paramCount != data->paramIndex) return ERROR_WRONG_NUMBER_OF_PARAMS;
+
+                    else {
+                        data->currentID->previouslyCalled = false;
+                        return SYNTAX_OK;
+                    }
+                }
                 data->currentID->paramCount = data->paramIndex;
                 //ulozim ze dana funkcia ma zatial N paramaterov podla data->paramIndex
                 return SYNTAX_OK;
@@ -320,6 +338,14 @@ static int params(ParserData *data)
             //nacitany token je prava zatvorka -> <params> -> ε
         else if ((data->Token.type == TYPE_RIGHT_PAR) && (data->paramIndex == 0)) {
             //ulozim ze dana funcia nepotrebuje parametre
+
+            if (data->currentID->previouslyCalled == true) {        ///ak bola predtym volana ale nie definovana checknem ci sedi pocet parametrov
+                if (data->currentID->paramCount != data->paramIndex) return ERROR_WRONG_NUMBER_OF_PARAMS;
+                else {
+                    data->currentID->previouslyCalled = false;
+                    return SYNTAX_OK;
+                }
+            }
             data->currentID->paramCount = data->paramIndex;
             return SYNTAX_OK;
         }
@@ -328,8 +354,9 @@ static int params(ParserData *data)
     }                            ///pripadne za ciarkou neprisiel dalsi identif
 
     //ten divny pripad kedy volam v definicii funkcie nedefinovanu funkciu
-    else if(data->leftID->isDefined == false && data->in_declaration == 1) {
-        if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0) {
+    else if(data->leftID->isDefined == false ){   //&& data->in_declaration == 1) {
+        if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0 || data->Token.type == TYPE_INT ||
+                data->Token.type == TYPE_FLOAT || data->Token.type == TYPE_STRING || data->Token.attribute.keyword == KEYWORD_NONE) {
             switch (data->Token.type) {
                 case TYPE_INT:
                     stringAddChar(data->leftID->param, 'i');
@@ -340,25 +367,29 @@ static int params(ParserData *data)
                 case TYPE_STRING:
                     stringAddChar(data->leftID->param, 's');
                     break;
-                default:
+                case KEYWORD_NONE:
                     stringAddChar(data->leftID->param, 'u');
+                    break;
+                default:
+                    stringAddChar(data->leftID->param, 'i');
                     break;
             }
             data->paramIndex += 1;
             //data->globalT->param[data->paramIndex] = '\0'; to uz robi addchar samotne
 
-            bool errIntern;
-            if (!(data->rightID = htabAddSymbol(&data->localT, data->Token.attribute.string->str, &errIntern))){
+          /*  bool errIntern;
+            if (!(data->rightID = htabAddSymbol(&data->localT, data->Token.attribute.string->str, &errIntern))){ toto by tu nemalo byt
                 if (errIntern == true) return ERROR_INTERN;
                 else return ERROR_PROGRAM_SEMANTIC; ///redefinicia
-            }
+            }*/
+
             //nacitavam dalsi token ak je ciarka ocakavam dalsi param.
             //21. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next>
             if ((result = checkTokenType(&data->Token, TYPE_COMMA)) == 0)
                 params(data);	//<param_next>
             else if (data->Token.type == TYPE_RIGHT_PAR) {
                 data->leftID->paramCount = data->paramIndex;
-               
+                data->leftID->previouslyCalled = true;
                 //ulozim ze dana funkcia ma zatial N paramaterov podla data->paramIndex
                 return SYNTAX_OK;
             }
@@ -368,6 +399,7 @@ static int params(ParserData *data)
         else if ((data->Token.type == TYPE_RIGHT_PAR) && (data->paramIndex == 0)) {
             //ulozim ze dana funcia nepotrebuje parametre
             data->leftID->paramCount = data->paramIndex;
+            data->leftID->previouslyCalled = true;
             return SYNTAX_OK;
         }
         else
@@ -497,6 +529,7 @@ static int statement(ParserData *data)
      else if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_RETURN)) {
         if (data->in_function < 1) return ERROR_SEMANTIC_OTHERS;    ///pokial sa vola mimo funkcie
         data->was_return=true;
+        data->leftID = htabSearch(&data->globalT, "%exp_result");
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if ((result = expression(data)) != 0 ) return result;
@@ -504,6 +537,7 @@ static int statement(ParserData *data)
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
         else if (data->Token.type == TYPE_EOL) {
+            GENERATE(genFunctionReturn, data->leftID->type);
             GENERATE(generateReturn, data->currentID->identifier);
             if ((result = getNextToken(&data->Token)) != 0) return result;
             else return result = SYNTAX_OK;
@@ -577,31 +611,30 @@ static int statement(ParserData *data)
 
                 }
                 else return ERROR_PARSER;
-
+                ///volam nedefinovanu funkciu
                 } else if (data->Token.type == TYPE_LEFT_PAR) {
-                if (data->in_declaration == 1) {
+               // if (data->in_declaration == 1) {
                     if ((result = addToHash(data, false, 0)) != 0) return ERROR_INTERN;
                     else {
                         data->leftID->isDefined = false;
                         data->leftID->isGlobal = false; ///explicitne to musim prestavit
-
+                        data->paramIndex = 0;
                         if ((result = params(data)) != 0) return result;
                         if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
+                            data->leftID->previouslyCalled = true;
                             generateCALL(data->leftID->identifier);
                             return result = statement_next(data);
                         }
                         else return result;
                     }
-                }
-                return result = ERROR_PROGRAM_SEMANTIC; //volanie funkcie ktora neexistuje
+              //  }
+               // return result = ERROR_PROGRAM_SEMANTIC; //volanie funkcie ktora neexistuje
             } else return result = ERROR_PARSER;
         }
 //ak uz je definovana globalne, lenze ak aj sme vo funkcii, nevieme ci prepisujeme
 // lokalnu alebo glob, lebo python
 //tak som sa rozhodol ze sa proste bude prepisovat globalna --fixed no more-uz sa bude upravovat lokalna
         else if (data->leftID->isGlobal == true) {
-
-
 
             if ((result = checkTokenType(&data->Token, TYPE_ASSIGN_VALUE)) == 0) {
 
@@ -672,11 +705,11 @@ static int statement(ParserData *data)
                         if (data->Token.type == TYPE_RIGHT_PAR) {
                             if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
 
-                                generateCALL(data->currentID->identifier);
+                                generateCALL(data->leftID->identifier);
                                 return result = statement_next(data);
 
                             } else if (result == 2 && data->Token.type == TYPE_EOF ) {
-                                generateCALL(data->currentID->identifier);
+                                generateCALL(data->leftID->identifier);
                                 return SYNTAX_OK;
                             }
                             else return result;
@@ -690,11 +723,11 @@ static int statement(ParserData *data)
                         else if (data->Token.type == TYPE_RIGHT_PAR) {
                             if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
 
-                                generateCALL(data->currentID->identifier);
+                                generateCALL(data->leftID->identifier);
                                 return result = statement_next(data);
 
                             } else if (result == 2 && data->Token.type == TYPE_EOF) {
-                                generateCALL(data->currentID->identifier);
+                                generateCALL(data->leftID->identifier);
                                 return SYNTAX_OK;
                             }
                             else return result;
@@ -713,8 +746,22 @@ static int statement(ParserData *data)
                 else if (result == 2 && data->Token.type == TYPE_ASSIGN_VALUE) return ERROR_PROGRAM_SEMANTIC;
                 else return result; ///neprisla mi zatvorka
         }
-        else return ERROR_PROGRAM_SEMANTIC; //bol to identifier ale nic z tohto tu
+        else if(data->leftID->isDefined == false && data->leftID->isGlobal == false){
+            unsigned checkParamCount = data->leftID->paramCount;
+            if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
+            data->paramIndex = 0;
+            if ((result = params(data)) != 0) return result;
+
+            if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
+                generateCALL(data->leftID->identifier);
+                if (checkParamCount != data->leftID->paramCount) return ERROR_WRONG_NUMBER_OF_PARAMS;
+                data->leftID->previouslyCalled = true;
+                return result = statement_next(data);
+            }
+            else return result;
         }
+        else return ERROR_PROGRAM_SEMANTIC; //bol to identifier ale nic z tohto tu
+    }
 
 
 
@@ -1120,14 +1167,14 @@ int variablesInit(ParserData *data)
 	if (!htabAddParam(id, DTYPE_INT)) 
 		return ERROR_INTERN;*/
 
-/*
+
 	// Global variable %exp_result for storing result of expression.
 	id = htabAddSymbol(&data->globalT, "%exp_result", &errIntern);
 	if (errIntern) return ERROR_INTERN;
 	id->isDefined = true;
-	id->type = TYPE_UNDEFINED;
+	id->type = DTYPE_UNDEFINED;
 	id->isGlobal = true;
-*/
+
 	return SYNTAX_OK;
 }
 

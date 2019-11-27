@@ -31,9 +31,7 @@ typedef struct {
     htab localT;        //na tabulku localnych symbolov (identifikatorov etc)
 
 	token Token;
-	/*
-	*	veci potrebne k tvorbe stromu
-	*/
+
 	Data * currentID;		//momentalne spracovavane
 	Data * leftID;			//lava strana premennej
 	Data * rightID;			//prava strana funkcie, vyrazu
@@ -50,9 +48,6 @@ typedef struct {
     unsigned in_if;
     unsigned in_while;
 
-  	//  tStack *stack;                  
-	//dunno if necessary ale tak kvoli INDENTOM pre 
-	//scanner mal by si to skener sam initnut
 } ParserData;
 
 //Main parsera

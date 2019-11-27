@@ -305,12 +305,54 @@ bool generateSaveExprResult(char *id, char *frame){
 
 bool generateReturn(char *id)
 {
-    addInstr("MOVE LF@retval GF@%return");
+    addInstr("MOVE LF@retval GF@%exp_return");
     addCode("JUMP $");
     addCode(id);
     addCode("%return\n");
     return true;
 }
+
+static bool genVarValue(DataType type)
+{
+    switch (type)
+    {
+        case DTYPE_INT:
+            addCode("int@0");
+            break;
+
+        case DTYPE_DOUBLE:
+            addCode("float@0.0");
+            break;
+
+        case DTYPE_STRING:
+            addCode("string@");
+            break;
+
+        case DTYPE_BOOL:
+            addCode("bool@false");
+            break;
+
+        case DTYPE_UNDEFINED:
+            addCode("nil@nil");
+            break;
+
+        default:
+            return false;
+    }
+    return true;
+}
+
+bool genFunctionReturn(DataType type)
+{
+    addInstr("DEFVAR LF@%retval");
+
+    addCode("MOVE LF@%retval ");
+    if (!genVarValue(type)) return false;
+    addCode("\n");
+
+    return true;
+}
+
 
 /*bool generateIf(char *ID, int *index)
 {
