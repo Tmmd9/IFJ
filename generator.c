@@ -102,6 +102,11 @@ bool generateMainEnd(){
 
 bool generateValue(token *token){
     char tempStr[30];
+    unsigned char c;
+
+    string help;
+    if (stringInit(&help)) return false;
+
     if (token->type == TYPE_INT){
         sprintf(tempStr,"%d",token->attribute.int_value);
         addCode("int@");
@@ -115,8 +120,20 @@ bool generateValue(token *token){
         addCode("\n");
         return true;
     } else if (token->type == TYPE_STRING){
-        addCode("string@");
-        addCode(token->attribute.string->str);
+        for (int i = 0; (c = (unsigned char) (token->attribute.string->str[i])) != '\0'; i++)
+        {
+            if (c == '#' || c == '\\' || c <= 32 || !isprint(c))
+            {
+                stringAddChar(&help, '\\');
+                sprintf(tempStr, "%03d", c);
+                stringAddConst(&help, tempStr);
+            }
+            else
+            {
+                stringAddChar(&help,(char) c);
+            }
+        }
+        addCode("string@"); addCode(help.str);
         addCode("\n");
         return true;
     } else if (token->type == TYPE_IDENTIFIER){
@@ -363,12 +380,12 @@ bool createFrameForParams()
     return true;
 }
 
-bool passParamsToFunction(token Token, int i)
+bool passParamsToFunction(token Token, int i, ParserData *data)
 {
     addCode("DEFVAR TF@%"); ADDCODEINT(i); addCode("\n");
 
     addCode("MOVE TF@%"); ADDCODEINT(i); addCode(" ");
-    if (!generateTerm(Token)) return false;
+    if (!generateTerm(Token, data)) return false;
     addCode("\n");
 
     return true;
@@ -397,7 +414,7 @@ bool convertPassedParams(DataType wrong, DataType converted, int index)
 }
 
 
-bool generateTerm(token Token) {
+bool generateTerm(token Token, ParserData *data) {
     char temp[MAX];
     unsigned char c;
 
@@ -434,7 +451,14 @@ bool generateTerm(token Token) {
             break;
 
         case TYPE_IDENTIFIER:
-            addCode("LF@"); addCode(Token.attribute.string->str);
+            if (data->leftID->isGlobal) {
+                addCode("GF@"); addCode(Token.attribute.string->str);
+/*            } else if (data->leftID->isGlobal) {
+                addCode("GF@"); addCode(Token.attribute.string->str);*/
+            } else {
+                addCode("LF@");
+                addCode(Token.attribute.string->str);
+            }
             break;
 
         default:
