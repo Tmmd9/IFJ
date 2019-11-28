@@ -50,6 +50,10 @@ bool generateReturn(char *ID);
 bool genFunctionEnd(char *ID);
 bool generateCALL(char *id);
 bool genFunctionReturn(DataType type);
+bool generateIfStart(int index);
+bool generateIf(int index);
+bool generateIfEnd();
+bool generateIfLabel(int index);
 
 
 #define PRINT                                                                 \
