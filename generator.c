@@ -13,6 +13,9 @@
 
 #include "generator.h"
 #include "scanner.h"
+#include <ctype.h>
+
+#define MAX 50 ///maximum pre convertovanie stringu
 
 #define ADDCODEINT(_code)													\
 	do {																	\
@@ -305,7 +308,7 @@ bool generateSaveExprResult(char *id, char *frame){
 
 bool generateReturn(char *id)
 {
-    addInstr("MOVE LF@retval GF@%exp_return");
+    addInstr("MOVE LF@retval GF@%$result");
     addCode("JUMP $");
     addCode(id);
     addCode("%return\n");
@@ -352,6 +355,120 @@ bool genFunctionReturn(DataType type)
 
     return true;
 }
+
+bool createFrameForParams()
+{
+    addInstr("CREATEFRAME");
+
+    return true;
+}
+
+bool passParamsToFunction(token Token, int i)
+{
+    addCode("DEFVAR TF@%"); ADDCODEINT(i); addCode("\n");
+
+    addCode("MOVE TF@%"); ADDCODEINT(i); addCode(" ");
+    if (!generateTerm(Token)) return false;
+    addCode("\n");
+
+    return true;
+}
+
+bool convertPassedParams(DataType wrong, DataType converted, int index)
+{
+    if (wrong == DTYPE_DOUBLE && converted == DTYPE_INT)
+    {
+        addCode("FLOAT2R2EINT TF@%");
+        ADDCODEINT(index);
+        addCode(" TF@%");
+        ADDCODEINT(index);
+        addCode("\n");
+    }
+    else if (wrong == DTYPE_INT && converted == DTYPE_DOUBLE)
+    {
+        addCode("INT2FLOAT TF@%");
+        ADDCODEINT(index);
+        addCode(" TF@%");
+        ADDCODEINT(index);
+        addCode("\n");
+    }
+
+    return true;
+}
+
+
+bool generateTerm(token Token) {
+    char temp[MAX];
+    unsigned char c;
+
+    string help;
+    if (stringInit(&help)) return false;
+
+    switch (Token.type)
+    {
+        case TYPE_INT:
+            sprintf(temp, "%d", Token.attribute.int_value);
+            addCode("int@"); addCode(temp);
+            break;
+
+        case TYPE_FLOAT:
+            sprintf(temp, "%g", Token.attribute.decimal_value);
+            addCode("float@"); addCode(temp);
+            break;
+
+        case TYPE_STRING:
+            for (int i = 0; (c = (unsigned char) (Token.attribute.string->str)[i]) != '\0'; i++)
+            {
+                if (c == '#' || c == '\\' || c <= 32 || !isprint(c))
+                {
+                    stringAddChar(&help, '\\');
+                    sprintf(temp, "%03d", c);
+                    stringAddConst(&help, temp);
+                }
+                else
+                {
+                    stringAddChar(&help, c);
+                }
+            }
+            addCode("string@"); addCode(help.str);
+            break;
+
+        case TYPE_IDENTIFIER:
+            addCode("LF@"); addCode(Token.attribute.string->str);
+            break;
+
+        default:
+            stringStrFree(&help);
+            return false;
+    }
+
+    stringStrFree(&help);
+
+    return true;
+}
+
+
+
+bool genFunctionRetValue(char *leftID, char *frame)//DataType leftT, DataType retT)
+{
+    /*if (leftT == DTYPE_INT && retT == DTYPE_DOUBLE)
+    {
+        addInstr("FLOAT2R2EINT TF@%return TF@%return");
+    }
+    else if (leftT == DTYPE_DOUBLE && retT == DTYPE_INT)
+    {
+        addInstr("INT2FLOAT TF@%return TF@%return");
+    }*/
+
+    addCode("MOVE ");
+    addCode(frame);
+    addCode("@");
+    addCode(leftID);
+    addCode(" TF@%return\n");
+
+    return true;
+}
+
 
 
 /*bool generateIf(char *ID, int *index)

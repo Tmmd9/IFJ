@@ -50,13 +50,18 @@ bool generateReturn(char *ID);
 bool genFunctionEnd(char *ID);
 bool generateCALL(char *id);
 bool genFunctionReturn(DataType type);
+bool createFrameForParams();
+bool generateTerm(token Token);
+bool passParamsToFunction(token Token, int i);
+bool convertPassedParams(DataType wrong, DataType converted, int index);
+bool genFunctionRetValue(char *leftID, char *frame); //DataType leftT, DataType retT,);
 
 
 #define PRINT                                                                 \
         "LABEL $print \n"                                                     \
         "PUSHFRAME \n"                                                        \
         "WRITE LF@%1 \n"                                                      \
-        "MOVE GF@$result nil@nil \n"                                          \
+        "MOVE GF@$return nil@nil \n"                                          \
         "POPFRAME \n"                                                         \
         "RETURN \n"                                                           \
 
@@ -96,6 +101,9 @@ bool genFunctionReturn(DataType type);
         "STRLEN LF@%return LF@%1 \n"                                          \
         "POPFRAME \n"                                                         \
         "RETURN \n"                                                           \
+
+
+        //        "MOVE GF@$retval int@return \n
 
 #define SUBSTR                                                                \
         "LABEL $substr \n"                                                    \
