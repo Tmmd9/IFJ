@@ -497,10 +497,14 @@ static int statement(ParserData *data)
     else if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_WHILE)) {
 		data->in_while = 1;
     	data->uniqLabel +=1;
+    	//vytvaram si to nato lebo vnutro WHILE by mohlo byt IF/WHILE co by inkrementovalo uniqLabel a dolny jump by som jumpoval zle
+    	int docasnyLabel = data->uniqLabel;
+    	generateWHILElabel(docasnyLabel);
         
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if ((result = expression(data)) != 0 ) return result;
+        generateWHILEcondition(docasnyLabel);
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
 		if(data->Token.type == TYPE_COLON) {
@@ -516,7 +520,9 @@ static int statement(ParserData *data)
 			data->in_while = 0;
         //    htabFree(&data->localT);
 /*  *   *   *   *   *   *   pokracovanie statementov    *   *   *   *   *   *   *   */
+            generateWHILEjumptostart(docasnyLabel);
             if ((result = getNextToken(&data->Token)) != 0) return result;
+            generateWHILEend(docasnyLabel);
             if((result = statement_next(data)) != SYNTAX_OK) return result;
 /*  *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   */
 	    }

@@ -506,6 +506,29 @@ bool generateCALL(char *id) {
     addCode("CALL $");
     addCode(id);
     addCode("\n");
-
+    return true;
+}
+bool generateWHILElabel(int label){
+    addCode("LABEL while");
+    ADDCODEINT(label);
+    addCode("\n");
+    return true;
+}
+bool generateWHILEjumptostart(int label){
+    addCode("JUMP while");
+    ADDCODEINT(label);
+    addCode("\n");
+    return true;
+}
+bool generateWHILEcondition(int label){
+    addCode("JUMPIFEQ end");
+    ADDCODEINT(label);
+    addCode(" GF@%return bool@false\n");
+    return true;
+}
+bool generateWHILEend(int label){
+    addCode("LABEL end");
+    ADDCODEINT(label);
+    addCode("\n");
     return true;
 }
