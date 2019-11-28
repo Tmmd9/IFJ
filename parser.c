@@ -432,6 +432,10 @@ static int statement(ParserData *data)
         if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {            
         if((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
         	data->deepLabel +=1;	//mam indent, zmena urovne
+		
+	    GENERATE(generateIfLabel,data->uniqLabel);
+            GENERATE(generateIfStart,data->uniqLabel);
+		
             //rekurzia pre vnutro IF-u
             if ((result = getNextToken(&data->Token)) != 0) return result;
 			if((result = statement(data)) != SYNTAX_OK) return result;
@@ -445,6 +449,9 @@ static int statement(ParserData *data)
 		if((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
 			data->deepLabel +=1;	//mam indent, zmena urovne
 			//rekurzia pre vnutro ELSE
+			
+			GENERATE(generateIf,data->uniqLabel);
+			
             if ((result = getNextToken(&data->Token)) != 0) return result;
             if((result = statement(data)) != SYNTAX_OK) return result;
 			//DEDENT zo statement_next sa mi vypytal dalsi token, nemusim pytat novy
@@ -452,6 +459,8 @@ static int statement(ParserData *data)
 			data->deepLabel -=1;
 			data->in_if = 0;
             //htabFree(&data->localT);        ///potrebne premazat lokalnu tabulku
+			
+			GENERATE(generateIfEnd);
 			
 /*  *   *   *   *   *   *   pokracovanie statementov    *   *   *   *   *   *   *   */
             if ((result = getNextToken(&data->Token)) != 0) return result;
