@@ -412,7 +412,7 @@ bool generateTerm(token Token) {
             break;
 
         case TYPE_FLOAT:
-            sprintf(temp, "%g", Token.attribute.decimal_value);
+            sprintf(temp, "%a", Token.attribute.decimal_value);
             addCode("float@"); addCode(temp);
             break;
 

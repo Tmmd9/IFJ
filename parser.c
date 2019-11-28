@@ -796,8 +796,8 @@ static int statement(ParserData *data)
             else return ERROR_PARSER;
 
             //if (data->Token.type != TYPE_COMMA) return ERROR_PARSER;
-
         }
+        GENERATE(addCode, "\n")
        // if ((result = expression(data)) != 0 ) return result;
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         if (data->Token.type == TYPE_RIGHT_PAR) {
