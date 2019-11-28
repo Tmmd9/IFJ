@@ -793,7 +793,7 @@ static int statement(ParserData *data)
 
             if (data->Token.type == TYPE_RIGHT_PAR) break;
 
-            GENERATE(passParamsToFunction,data->Token, 1);
+            GENERATE(passParamsToFunction,data->Token, 1, data);
 
             generateCALL("print");
 
@@ -918,10 +918,10 @@ static int statement(ParserData *data)
             if (((data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL))
             if (((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL))
                     return ERROR_PROGRAM_SEMANTIC;
-            GENERATE(passParamsToFunction,data->Token, 1);
+            GENERATE(passParamsToFunction,data->Token, 1, data);
             //if (data->rightID->type != DTYPE_STRING) return ERROR_ARTIHMETIC;
         }
-        else if (data->Token.type == TYPE_STRING) {GENERATE(passParamsToFunction,data->Token, 1);}
+        else if (data->Token.type == TYPE_STRING) {GENERATE(passParamsToFunction,data->Token, 1,data);}
         else return ERROR_PARSER;
 
         if (data->leftID != NULL) {
@@ -932,11 +932,11 @@ static int statement(ParserData *data)
         char *frame;
         if (data->in_function ==1){
             frame = "LF";
-            GENERATE(genFunctionRetValue,data->Token.attribute.string->str, frame );
+            GENERATE(genFunctionRetValue,data->leftID->identifier, frame );
         }
         else {
             frame = "GF";
-            GENERATE(genFunctionRetValue,data->Token.attribute.string->str, frame);
+            GENERATE(genFunctionRetValue,data->leftID->identifier, frame);
         }
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
             if ((result = getNextToken(&data->Token)) != 0) return result;
@@ -959,9 +959,10 @@ static int statement(ParserData *data)
                     {
                         if ((result = getNextToken(&data->Token)) != 0)
                             return result;
-                        if (data->Token.type == TYPE_STRING) {
+                        if (data->Token.type == TYPE_IDENTIFIER) {
+                            data->Token.type = TYPE_STRING;
                             i++;
-                            GENERATE(passParamsToFunction,data->Token, 1);
+                            GENERATE(passParamsToFunction,data->Token, 1,data);
                             if ((result = checkTokenType(&data->Token, TYPE_COMMA)) != 0) return result;
                             break;
                         } else if (data->Token.type == TYPE_IDENTIFIER) {
@@ -972,7 +973,7 @@ static int statement(ParserData *data)
 
                             //if (data->rightID->type != DTYPE_STRING) return ERROR_ARTIHMETIC;
                             i++;
-                            GENERATE(passParamsToFunction,data->Token, 1);
+                            GENERATE(passParamsToFunction,data->Token, 1,data);
                             if ((result = checkTokenType(&data->Token, TYPE_COMMA)) != 0) return result;
                             break;
                         } else if (data->Token.type != TYPE_STRING) return ERROR_ARTIHMETIC;
@@ -984,7 +985,7 @@ static int statement(ParserData *data)
                             return result;
                         if (data->Token.type == TYPE_INT) {
                             i++;
-                            GENERATE(passParamsToFunction,data->Token, 2);
+                            GENERATE(passParamsToFunction,data->Token, 2,data);
                             if ((result = checkTokenType(&data->Token, TYPE_COMMA)) != 0) return result;
                             break;
                         } else if (data->Token.type == TYPE_IDENTIFIER) {
@@ -995,7 +996,7 @@ static int statement(ParserData *data)
                                     return ERROR_PROGRAM_SEMANTIC;
                             if (data->rightID->type != DTYPE_INT) return ERROR_ARTIHMETIC;
                             i++;
-                            GENERATE(passParamsToFunction,data->Token, 2);
+                            GENERATE(passParamsToFunction,data->Token, 2,data);
                             if ((result = checkTokenType(&data->Token, TYPE_COMMA)) != 0) return result;
                             break;
                         }  else if (data->Token.type != TYPE_INT) return ERROR_ARTIHMETIC;
@@ -1007,7 +1008,7 @@ static int statement(ParserData *data)
                             return result;
                         if (data->Token.type == TYPE_INT) {
                             i++;
-                            GENERATE(passParamsToFunction,data->Token, 3);
+                            GENERATE(passParamsToFunction,data->Token, 3,data);
                             break;
                         } else if (data->Token.type == TYPE_IDENTIFIER) {
                             if (((data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL))
@@ -1015,7 +1016,7 @@ static int statement(ParserData *data)
                                     return ERROR_PROGRAM_SEMANTIC;
                             if (data->rightID->type != DTYPE_INT) return ERROR_ARTIHMETIC;
                             i++;
-                            GENERATE(passParamsToFunction,data->Token, 3);
+                            GENERATE(passParamsToFunction,data->Token, 3,data);
                             break;
                         }  else if (data->Token.type != TYPE_INT) return ERROR_ARTIHMETIC;
                         else return ERROR_PARSER;
@@ -1032,11 +1033,11 @@ static int statement(ParserData *data)
         char *frame;
         if (data->in_function ==1){
             frame = "LF";
-            GENERATE(genFunctionRetValue,data->Token.attribute.string->str, frame );
+            GENERATE(genFunctionRetValue,data->leftID->identifier, frame );
         }
         else {
             frame = "GF";
-            GENERATE(genFunctionRetValue,data->Token.attribute.string->str, frame);
+            GENERATE(genFunctionRetValue,data->leftID->identifier, frame);
         }
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if (data->Token.type == TYPE_RIGHT_PAR) {
@@ -1060,12 +1061,12 @@ static int statement(ParserData *data)
 
         //if (data->Token.type == TYPE_STRING || data->Token.type == TYPE_FLOAT) return ERROR_ARTIHMETIC;
 
-        if (data->Token.type == TYPE_IDENTIFIER) {
+        if (data->Token.type == TYPE_INT) {
             if (((data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL))
                 if (((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL))
                     return ERROR_PROGRAM_SEMANTIC;
 
-            GENERATE(passParamsToFunction,data->Token, 1);
+            GENERATE(passParamsToFunction,data->Token, 1,data);
 
             //if (data->rightID->type != DTYPE_INT) return ERROR_ARTIHMETIC;
         }
@@ -1080,11 +1081,11 @@ static int statement(ParserData *data)
         char *frame;
         if (data->in_function ==1){
             frame = "LF";
-            GENERATE(genFunctionRetValue,data->Token.attribute.string->str, frame );
+            GENERATE(genFunctionRetValue,data->leftID->identifier, frame );
         }
         else {
             frame = "GF";
-            GENERATE(genFunctionRetValue,data->Token.attribute.string->str, frame);
+            GENERATE(genFunctionRetValue,data->leftID->identifier, frame);
         }
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
         if ((result = getNextToken(&data->Token)) != 0) return result;
@@ -1107,19 +1108,20 @@ static int statement(ParserData *data)
                 case 0: {
                     if ((result = getNextToken(&data->Token)) != 0)
                         return result;
-                    if (data->Token.type == TYPE_STRING) {
+                    if (data->Token.type == TYPE_IDENTIFIER ||
+                        data->Token.type == TYPE_STRING) {
                         i++;
 
-                        GENERATE(passParamsToFunction,data->Token, 1);
+                        GENERATE(passParamsToFunction,data->Token, 1,data);
 
                         if ((result = checkTokenType(&data->Token, TYPE_COMMA)) != 0) return result;
                         break;
-                    } else if (data->Token.type == TYPE_IDENTIFIER) {
+                    } else if (data->Token.type == TYPE_INT) {
                         if (((data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL))
                             if (((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL))
                                 return ERROR_PROGRAM_SEMANTIC;
 
-                        GENERATE(passParamsToFunction,data->Token, 1);
+                        GENERATE(passParamsToFunction,data->Token, 1,data);
 
                         //if (data->rightID->type != DTYPE_STRING) return ERROR_ARTIHMETIC;
                         i++;
@@ -1134,16 +1136,15 @@ static int statement(ParserData *data)
                     if (data->Token.type == TYPE_INT) {
                         i++;
 
-                        GENERATE(passParamsToFunction,data->Token, 2);
+                        GENERATE(passParamsToFunction,data->Token, 2,data);
 
-                        if ((result = checkTokenType(&data->Token, TYPE_COMMA)) != 0) return result;
                         break;
                     } else if (data->Token.type == TYPE_IDENTIFIER) {
                         if (((data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL))
                             if (((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL))
                                 return ERROR_PROGRAM_SEMANTIC;
 
-                        GENERATE(passParamsToFunction,data->Token, 2);
+                        GENERATE(passParamsToFunction,data->Token, 2,data);
 
                         //if (data->rightID->type != DTYPE_INT) return ERROR_ARTIHMETIC;
                         i++;
@@ -1163,11 +1164,11 @@ static int statement(ParserData *data)
         char *frame;
         if (data->in_function ==1){
             frame = "LF";
-            GENERATE(genFunctionRetValue,data->Token.attribute.string->str, frame );
+            GENERATE(genFunctionRetValue,data->leftID->identifier, frame );
         }
         else {
             frame = "GF";
-            GENERATE(genFunctionRetValue,data->Token.attribute.string->str, frame);
+            GENERATE(genFunctionRetValue,data->leftID->identifier, frame);
         }
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
         if ((result = getNextToken(&data->Token)) != 0) return result;
@@ -1310,8 +1311,7 @@ int variablesInit(ParserData *data)
 
     // Ord(s =String, i =Integer) returns Integer
     id = htabAddSymbol(&data->globalT, "print", &errIntern);
-    if (errIntern)
-        return ERROR_INTERN;
+    if (errIntern) return ERROR_INTERN;
 
 	// Global variable %return for storing result of expression.
 	id = htabAddSymbol(&data->globalT, "%return", &errIntern);
@@ -1362,7 +1362,7 @@ int parse()
 			variablesFree(&data);
 			return ERROR_INTERN;
 		}
-
+        generateMain();
 		result = prog(&data);
 	}
 	stringStrFree(&parserStr);
