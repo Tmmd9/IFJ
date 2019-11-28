@@ -433,7 +433,6 @@ static int statement(ParserData *data)
         if((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
         	data->deepLabel +=1;	//mam indent, zmena urovne
 		
-	    GENERATE(generateIfLabel,data->uniqLabel);
             GENERATE(generateIfStart,data->uniqLabel);
 		
             //rekurzia pre vnutro IF-u
