@@ -422,6 +422,9 @@ static int statement(ParserData *data)
     	data->in_if = 1;
     	data->uniqLabel +=1;
 
+        data->leftID = htabSearch(&data->globalT,"%return");
+        if (!data->leftID) return ERROR_PROGRAM_SEMANTIC;
+        data->leftID->type = DTYPE_BOOL;
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if ((result = expression(data)) != 0 ) return result;
@@ -497,6 +500,10 @@ static int statement(ParserData *data)
     else if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_WHILE)) {
 		data->in_while = 1;
     	data->uniqLabel +=1;
+
+        data->leftID = htabSearch(&data->globalT,"%return");
+        if (!data->leftID) return ERROR_PROGRAM_SEMANTIC;
+        data->leftID->type = DTYPE_BOOL;
     	//vytvaram si to nato lebo vnutro WHILE by mohlo byt IF/WHILE co by inkrementovalo uniqLabel a dolny jump by som jumpoval zle
     	int docasnyLabel = data->uniqLabel;
     	generateWHILElabel(docasnyLabel);

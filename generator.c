@@ -47,7 +47,7 @@ bool generateHead(){
     addInstr("DEFVAR GF@$temp3");
     addInstr("DEFVAR GF@$result");
     addInstr("MOVE GF@$result nil@nil");
-    addInstr("DEFVAR GF@$return");
+    addInstr("DEFVAR GF@%return");
 
     addInstr("JUMP $$main");
 
@@ -144,9 +144,12 @@ bool generateValue(token *token){
     return false;
 }
 
-bool pushVar(token *token){
-    addCode("PUSHS LF@%1");
-    addCode(token->attribute.string->str);
+bool pushVar(token *token,ParserData *data){
+    //nechce s ami prepisovat funkcia tak tu hadzem tento nezmysel
+    int bs = token->attribute.int_value;
+    token->attribute.int_value = bs;
+    addCode("PUSHS ");
+    if (!generateTerm(data->Token,data)) return false;
     addCode("\n");
     return true;
 }
@@ -254,10 +257,7 @@ bool generateDivs(){
 }
 
 bool generateIDivs(){
-    addInstr("POPS GF@$temp1");
-    addInstr("INT2FLOATS");
-    addInstr("PUSHS GF@$temp1");
-
+    addInstr("IDIVS");
     return true;
 }
 

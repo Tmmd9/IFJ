@@ -26,7 +26,7 @@ bool generateCode();
 bool writeCodeToStdout();
 bool generateMain();
 bool generateMainEnd();
-bool pushVar(token *token);
+bool pushVar(token *token,ParserData *data);
 bool pushValue(token *token);
 bool op1ToDouble();
 bool op3ToDouble();

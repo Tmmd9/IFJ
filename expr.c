@@ -731,7 +731,7 @@ int expression(ParserData *data)
 
                      if (sym_in_token == ID_SYM) {
                          if (!symStack->top->isNone)
-                         GENERATE(pushVar, &data->Token);
+                         GENERATE(pushVar, &data->Token, data);
                      }
                      if (sym_in_token == INT_SYM || sym_in_token == FLOAT_SYM || sym_in_token == STR_SYM){
                          GENERATE(pushValue, &data->Token);
