@@ -504,6 +504,7 @@ bool genFunctionRetValue(char *leftID, char *frame)//DataType leftT, DataType re
 
 bool generateIfStart(int index)
 {
+
     addInstr("# If Else");
     addCode("JUMPIFEQ $");
     addCode("Else");
@@ -513,22 +514,32 @@ bool generateIfStart(int index)
 
     return true;
 }
+bool generateIfPre(int index)
+{
 
+        addCode("JUMP $EndIf%");
+        ADDCODEINT(index);
+        addCode("\n");
+        return true;
+}
 bool generateIf(int index)
 {
-    addCode("JUMP $EndIf\n");
     addInstr("# Else");
     addCode("LABEL $Else%");
-    ADDCODEINT(index);
+    ADDCODEINT(index-1);
     addCode("\n");
+
 
     return true;
 }
 
-bool generateIfEnd()
+bool generateIfEnd(int index)
 {
+
     addInstr("# End If");
-    addInstr("LABEL $EndIf");
+    addCode("LABEL $EndIf%");
+    ADDCODEINT(index);
+    addCode("\n");
 
     return true;
 }
