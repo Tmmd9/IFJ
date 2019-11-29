@@ -844,6 +844,7 @@ static int statement(ParserData *data)
             data->leftID->type = DTYPE_STRING;
          //   data->leftID = NULL;
         }
+        GENERATE(createFrameForParams);
         generateCALL("inputs");
 
         char *frame;
@@ -871,6 +872,7 @@ static int statement(ParserData *data)
             data->leftID->type = DTYPE_INT;
             //data->leftID = NULL;
         }
+        GENERATE(createFrameForParams);
         generateCALL("inputi");
         char *frame;
         if (data->in_function ==1){
@@ -897,6 +899,7 @@ static int statement(ParserData *data)
             data->leftID->type = DTYPE_DOUBLE;
            // data->leftID = NULL;
         }
+        GENERATE(createFrameForParams);
         generateCALL("inputf");
         char *frame;
         if (data->in_function ==1){
@@ -1373,6 +1376,7 @@ int parse()
 			return ERROR_INTERN;
 		}
         generateMain();
+		data.Token.attribute.keyword = KEYWORD_PASS;
 		result = prog(&data);
 	}
 	stringStrFree(&parserStr);

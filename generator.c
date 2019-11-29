@@ -176,6 +176,7 @@ bool genFunctionHead(char *ID)
     addCode("LABEL $");
     addCode(ID);
     addCode("\n");
+    addCode("CREATEFRAME");
     addCode("PUSHFRAME");
     addCode("\n");
 

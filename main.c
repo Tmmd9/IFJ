@@ -10,9 +10,9 @@
 
 int main(void) {
     // pre testovanie namiesto stdin vlozit fopen("cesta k testovaciemu suboru","r");
-    FILE *source = fopen("/Users/tereziabobosova/Documents/VUT/3.semester/IFJ/test.txt", "r");
+  //  FILE *source = fopen("/Users/tereziabobosova/Documents/VUT/3.semester/IFJ/test.txt", "r");
     //FILE *source = fopen("C:\\Users\\orave\\CLionProjects\\untitled4\\project\\cmake-build-debug\\CMakeFiles\\cmake-build-debug.dir\\test.txt", "r");
-    //FILE *source = stdin;
+    FILE *source = stdin;
     int result = 0;
 
 
