@@ -548,7 +548,7 @@ static int statement(ParserData *data)
 *   *   *   *   *   *   *   *7. <statement> -> KEYWORD_RETURN <expression> *   *   *   *   *   *   *
 ****************************************************************************************************/
      else if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_RETURN)) {
-        if (data->in_function < 1) return ERROR_SEMANTIC_OTHERS;    ///pokial sa vola mimo funkcie
+        if (data->in_function < 1) return ERROR_PARSER;//ERROR_SEMANTIC_OTHERS;    ///pokial sa vola mimo funkcie
         data->was_return=true;
         data->leftID = htabSearch(&data->globalT, "%return");
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
