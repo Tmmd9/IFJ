@@ -617,6 +617,10 @@ static int statement(ParserData *data)
                     {
                         return result = statement(data);
                     }
+                  /*  else if ((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) &&
+                                (data->rightID->isDefined == true) ) {
+
+                    }*/
                     else if ((result = expression(data)) != 0 ) return result;
 
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
@@ -810,17 +814,23 @@ static int statement(ParserData *data)
             if (data->Token.type == TYPE_RIGHT_PAR) break;
 
             GENERATE(passParamsToFunction,data->Token, 1, data);
+                    generateCALL("print");
 
-            generateCALL("print");
+            GENERATE(addCode,"WRITE ");
+            GENERATE(addCode,"string@\\032");
+            GENERATE(addCode, "\n");
 
-            if ((result = getNextToken(&data->Token)) != 0) return result;
+
+                    if ((result = getNextToken(&data->Token)) != 0) return result;
             if (data->Token.type == TYPE_RIGHT_PAR || data->Token.type == TYPE_COMMA) {;}        ////vy ste toto nejako menili v expression?
             else return ERROR_PARSER;
 
             //if (data->Token.type != TYPE_COMMA) return ERROR_PARSER;
         }
+        GENERATE(addCode,"WRITE ");
+        GENERATE(addCode,"string@");
+        GENERATE(addCode,"\\010 ");
         GENERATE(addCode, "\n");
-       // if ((result = expression(data)) != 0 ) return result;
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         if (data->Token.type == TYPE_RIGHT_PAR) {
             if ((result = getNextToken(&data->Token)) != 0) return result;
@@ -1384,6 +1394,7 @@ int parse()
         generateMain();
 		data.Token.attribute.keyword = KEYWORD_PASS;
 		result = prog(&data);
+		generateMainEnd();
 	}
 	stringStrFree(&parserStr);
 	variablesFree(&data);
