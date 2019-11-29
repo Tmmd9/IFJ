@@ -816,15 +816,18 @@ static int statement(ParserData *data)
             GENERATE(passParamsToFunction,data->Token, 1, data);
                     generateCALL("print");
 
-            GENERATE(addCode,"WRITE ");
-            GENERATE(addCode,"string@\\032");
-            GENERATE(addCode, "\n");
-
 
                     if ((result = getNextToken(&data->Token)) != 0) return result;
-            if (data->Token.type == TYPE_RIGHT_PAR || data->Token.type == TYPE_COMMA) {;}        ////vy ste toto nejako menili v expression?
-            else return ERROR_PARSER;
 
+            if (data->Token.type == TYPE_RIGHT_PAR || data->Token.type == TYPE_COMMA) {
+                if (data->Token.type == TYPE_COMMA) {
+                    GENERATE(addCode, "WRITE ");
+                    GENERATE(addCode, "string@\\032");
+                    GENERATE(addCode, "\n");
+                }
+            }
+
+            else return ERROR_PARSER;
             //if (data->Token.type != TYPE_COMMA) return ERROR_PARSER;
         }
         GENERATE(addCode,"WRITE ");
@@ -1402,11 +1405,3 @@ int parse()
 	return result;
 }
 
-/***************UŽ LEN LADÍM*************I*ENDED*UP*HERE*****************************************
-*               __________                   ________    _______    .        .                  *
-*                   |       |       |       |           |       |   |\      /|                  *
-*                   |       |       |       |_______    |       |   | \    / |                  *
-*                   |       |       |               |   |       |   |  \  /  |                  *
-*                   |       |_______|       ________|   |_______|   |   \/   |                  *
-*                                                                                               *
-*****************************************TU*SOM*SKONČIL****UŽ LEN LADÍM**************************/
