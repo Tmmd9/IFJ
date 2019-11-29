@@ -790,7 +790,17 @@ static int statement(ParserData *data)
         while (data->Token.type != TYPE_RIGHT_PAR) {
             GENERATE(createFrameForParams);
             if ((result = getNextToken(&data->Token)) != 0) return result;
-
+            if (data->Token.type == TYPE_IDENTIFIER) {
+                if (data->in_function == 1) {
+                    if ((data->currentID = htabSearch(&data->localT, data->Token.attribute.string->str)) ==NULL)
+                        if ((data->currentID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==NULL)
+                            return result = ERROR_PROGRAM_SEMANTIC;
+                }
+                else {
+                    if ((data->currentID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL)
+                        return result = ERROR_PROGRAM_SEMANTIC;
+                }
+            }
             if (data->Token.type == TYPE_RIGHT_PAR) break;
 
             GENERATE(passParamsToFunction,data->Token, 1, data);
@@ -837,7 +847,7 @@ static int statement(ParserData *data)
         generateCALL("inputs");
 
         char *frame;
-        if (data->in_function ==1){
+        if (data->in_function == 1){
             frame = "LF";
             GENERATE(genFunctionRetValue,data->Token.attribute.string->str, frame );
         }
