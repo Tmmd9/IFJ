@@ -659,19 +659,18 @@ static int statement(ParserData *data)
 
             if ((result = checkTokenType(&data->Token, TYPE_ASSIGN_VALUE)) == 0) {
 
-                if (data->in_function == 0 ) {
+               /* if (data->in_function == 0 ) {
                     char *frame= "GF";
                     GENERATE(declareVar,frame,data->Token.attribute.string->str);
-                }
+                }*/
 
                 if (data->in_function == 1 ) {
                     if ((data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) {
-
-                        char *frame= "LF";
-                        GENERATE(declareVar,frame,data->Token.attribute.string->str);
-
                         ///pridam premennu lokalne vo funkci
                         if ((result = addToHash(data, true, 0)) != 0) return ERROR_INTERN;
+
+                            char *frame= "LF";
+                            GENERATE(declareVar,frame,data->Token.attribute.string->str);
                     }
                     //else -> nerobim nic - nepridavam do tabulky
                 }
