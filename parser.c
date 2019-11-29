@@ -429,12 +429,11 @@ static int statement(ParserData *data)
 
         //COLON a.k.a dvojbodka	, pytal som si token v expression
         if(data->Token.type == TYPE_COLON) {      
-        if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {            
+        if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {  
+		GENERATE(generateIfStart,data->deepLabel);
         if((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
         	data->deepLabel +=1;	//mam indent, zmena urovne
-		
-            GENERATE(generateIfStart,data->uniqLabel);
-		
+				
             //rekurzia pre vnutro IF-u
             if ((result = getNextToken(&data->Token)) != 0) return result;
 			if((result = statement(data)) != SYNTAX_OK) return result;
@@ -443,13 +442,14 @@ static int statement(ParserData *data)
 			data->deepLabel -=1;
 		if (((result = checkTokenType(&data->Token, TYPE_KEYWORD)) == 0) &&
 			data->Token.attribute.keyword == KEYWORD_ELSE) {
+			GENERATE(generateIfPre,data->deepLabel);
 		if((result = checkTokenType(&data->Token, TYPE_COLON)) == 0) {
 		if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
 		if((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
 			data->deepLabel +=1;	//mam indent, zmena urovne
 			//rekurzia pre vnutro ELSE
 			
-			GENERATE(generateIf,data->uniqLabel);
+			GENERATE(generateIf,data->deepLabel);
 			
             if ((result = getNextToken(&data->Token)) != 0) return result;
             if((result = statement(data)) != SYNTAX_OK) return result;
@@ -459,7 +459,7 @@ static int statement(ParserData *data)
 			data->in_if = 0;
             //htabFree(&data->localT);        ///potrebne premazat lokalnu tabulku
 			
-			GENERATE(generateIfEnd);
+			GENERATE(generateIfEnd,data->deepLabel);
 			
 /*  *   *   *   *   *   *   pokracovanie statementov    *   *   *   *   *   *   *   */
             if ((result = getNextToken(&data->Token)) != 0) return result;
