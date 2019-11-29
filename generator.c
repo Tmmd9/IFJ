@@ -451,14 +451,21 @@ bool generateTerm(token Token, ParserData *data) {
             break;
 
         case TYPE_IDENTIFIER:
-            if (data->leftID->isGlobal) {
-                addCode("GF@"); addCode(Token.attribute.string->str);
-/*            } else if (data->leftID->isGlobal) {
-                addCode("GF@"); addCode(Token.attribute.string->str);*/
-            } else {
-                addCode("LF@");
-                addCode(Token.attribute.string->str);
-            }
+            if (data->leftID != NULL){
+                if (data->leftID->isGlobal){
+                    addCode("GF@"); addCode(Token.attribute.string->str);
+                } else {
+                    addCode("LF@");
+                    addCode(Token.attribute.string->str);
+                }
+            } else if (data->currentID != NULL) {
+                if (data->currentID->isGlobal){
+                    addCode("GF@"); addCode(Token.attribute.string->str);
+                } else {
+                    addCode("LF@");
+                    addCode(Token.attribute.string->str);
+                }
+            } else return false;
             break;
 
         default:
