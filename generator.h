@@ -57,6 +57,7 @@ bool generateWHILEend(int label);
 bool generateIfStart(int index);
 bool generateIf(int index);
 bool generateIfEnd();
+bool generateIfPre(int index);
 bool generateIfLabel(int index);
 bool createFrameForParams();
 bool generateTerm(token Token, ParserData *data);
