@@ -865,15 +865,15 @@ static int statement(ParserData *data)
         }
         GENERATE(createFrameForParams);
         generateCALL("inputs");
-
-        char *frame;
-        if (data->in_function == 1){
-            frame = "LF";
-            GENERATE(genFunctionRetValue,data->Token.attribute.string->str, frame );
-        }
-        else {
-            frame = "GF";
-            GENERATE(genFunctionRetValue,data->Token.attribute.string->str, frame);
+        if(data->leftID !=NULL) {               ///toto potrebuje check
+            char *frame;
+            if (data->in_function == 1) {
+                frame = "LF";
+                GENERATE(genFunctionRetValue, data->Token.attribute.string->str, frame);
+            } else {
+                frame = "GF";
+                GENERATE(genFunctionRetValue, data->Token.attribute.string->str, frame);
+            }
         }
         if ((result = getNextToken(&data->Token)) != 0) return result;
         return result = statement_next(data);
@@ -893,14 +893,15 @@ static int statement(ParserData *data)
         }
         GENERATE(createFrameForParams);
         generateCALL("inputi");
-        char *frame;
-        if (data->in_function ==1){
-            frame = "LF";
-            GENERATE(genFunctionRetValue,data->Token.attribute.string->str, frame );
-        }
-        else {
-            frame = "GF";
-            GENERATE(genFunctionRetValue,data->Token.attribute.string->str, frame);
+        if(data->leftID !=NULL) {               ///toto potrebuje check
+            char *frame;
+            if (data->in_function == 1) {
+                frame = "LF";
+                GENERATE(genFunctionRetValue, data->Token.attribute.string->str, frame);
+            } else {
+                frame = "GF";
+                GENERATE(genFunctionRetValue, data->Token.attribute.string->str, frame);
+            }
         }
         if ((result = getNextToken(&data->Token)) != 0) return result;
         return result = statement_next(data);
@@ -920,14 +921,15 @@ static int statement(ParserData *data)
         }
         GENERATE(createFrameForParams);
         generateCALL("inputf");
-        char *frame;
-        if (data->in_function ==1){
-            frame = "LF";
-            GENERATE(genFunctionRetValue,data->Token.attribute.string->str, frame );
-        }
-        else {
-            frame = "GF";
-            GENERATE(genFunctionRetValue,data->Token.attribute.string->str, frame);
+        if(data->leftID !=NULL) {               ///toto potrebuje check
+            char *frame;
+            if (data->in_function == 1) {
+                frame = "LF";
+                GENERATE(genFunctionRetValue, data->Token.attribute.string->str, frame);
+            } else {
+                frame = "GF";
+                GENERATE(genFunctionRetValue, data->Token.attribute.string->str, frame);
+            }
         }
         if ((result = getNextToken(&data->Token)) != 0) return result;
         return result = statement_next(data);
@@ -961,14 +963,15 @@ static int statement(ParserData *data)
           //  data->leftID = NULL;
         }
         generateCALL("len");
-        char *frame;
-        if (data->in_function ==1){
-            frame = "LF";
-            GENERATE(genFunctionRetValue,data->leftID->identifier, frame );
-        }
-        else {
-            frame = "GF";
-            GENERATE(genFunctionRetValue,data->leftID->identifier, frame);
+        if (data->leftID != NULL) {
+            char *frame;
+            if (data->in_function == 1) {
+                frame = "LF";
+                GENERATE(genFunctionRetValue, data->leftID->identifier, frame);
+            } else {
+                frame = "GF";
+                GENERATE(genFunctionRetValue, data->leftID->identifier, frame);
+            }
         }
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
             if ((result = getNextToken(&data->Token)) != 0) return result;
@@ -1062,14 +1065,15 @@ static int statement(ParserData *data)
          //   data->leftID = NULL;
         }
         generateCALL("substr");
-        char *frame;
-        if (data->in_function ==1){
-            frame = "LF";
-            GENERATE(genFunctionRetValue,data->leftID->identifier, frame );
-        }
-        else {
-            frame = "GF";
-            GENERATE(genFunctionRetValue,data->leftID->identifier, frame);
+        if (data->leftID != NULL) {
+            char *frame;
+            if (data->in_function == 1) {
+                frame = "LF";
+                GENERATE(genFunctionRetValue, data->leftID->identifier, frame);
+            } else {
+                frame = "GF";
+                GENERATE(genFunctionRetValue, data->leftID->identifier, frame);
+            }
         }
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if (data->Token.type == TYPE_RIGHT_PAR) {
@@ -1110,14 +1114,15 @@ static int statement(ParserData *data)
          //   data->leftID = NULL;
         }
         generateCALL("chr");
-        char *frame;
-        if (data->in_function ==1){
-            frame = "LF";
-            GENERATE(genFunctionRetValue,data->leftID->identifier, frame );
-        }
-        else {
-            frame = "GF";
-            GENERATE(genFunctionRetValue,data->leftID->identifier, frame);
+        if (data->leftID != NULL) {
+            char *frame;
+            if (data->in_function == 1) {
+                frame = "LF";
+                GENERATE(genFunctionRetValue, data->leftID->identifier, frame);
+            } else {
+                frame = "GF";
+                GENERATE(genFunctionRetValue, data->leftID->identifier, frame);
+            }
         }
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
         if ((result = getNextToken(&data->Token)) != 0) return result;
@@ -1193,14 +1198,15 @@ static int statement(ParserData *data)
          //   data->leftID = NULL;
         }
         generateCALL("ord");
-        char *frame;
-        if (data->in_function ==1){
-            frame = "LF";
-            GENERATE(genFunctionRetValue,data->leftID->identifier, frame );
-        }
-        else {
-            frame = "GF";
-            GENERATE(genFunctionRetValue,data->leftID->identifier, frame);
+        if (data->leftID != NULL) {
+            char *frame;
+            if (data->in_function == 1) {
+                frame = "LF";
+                GENERATE(genFunctionRetValue, data->leftID->identifier, frame);
+            } else {
+                frame = "GF";
+                GENERATE(genFunctionRetValue, data->leftID->identifier, frame);
+            }
         }
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
         if ((result = getNextToken(&data->Token)) != 0) return result;
