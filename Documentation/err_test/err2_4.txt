@@ -1,0 +1,5 @@
+if(5>2):
+    pass
+    pass
+else pass
+    print('auto')

@@ -1,0 +1,32 @@
+#!/bin/sh
+cd ~/IFJ1/IFJ1
+./IFJ19 <err1.txt >result.txt
+./ic19int result.txt
+./IFJ19 <err1_1.txt >result.txt
+./ic19int result.txt
+./IFJ19 <err1_2.txt >result.txt
+./ic19int result.txt
+./IFJ19 <err2.txt >result.txt
+./ic19int result.txt
+./IFJ19 <err2_1.txt >result.txt
+./ic19int result.txt
+./IFJ19 <err2_2.txt >result.txt
+./ic19int result.txt
+./IFJ19 <err2_3.txt >result.txt
+./ic19int result.txt
+./IFJ19 <err2_4.txt >result.txt
+./ic19int result.txt
+./IFJ19 <err3.txt >result.txt
+./ic19int result.txt
+./IFJ19 <err3_1.txt >result.txt
+./ic19int result.txt
+./IFJ19 <err3_2.txt >result.txt
+./ic19int result.txt
+./IFJ19 <err4.txt >result.txt
+./ic19int result.txt
+./IFJ19 <err4_1.txt >result.txt
+./ic19int result.txt
+./IFJ19 <err9.txt >result.txt
+./ic19int result.txt
+./IFJ19 <err9_1.txt >result.txt
+./ic19int result.txt
