@@ -314,13 +314,11 @@ static int params(ParserData *data)
             }
 
             GENERATE(declareFunctionParam, data->Token.attribute.string->str, data->paramIndex);
-
             //nacitavam dalsi token ak je ciarka ocakavam dalsi param.
             //21. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next>
-            if ((result = checkTokenType(&data->Token, TYPE_COMMA)) == 0)
-                result = params(data);	//<param_next>
-            else if (data->Token.type == TYPE_RIGHT_PAR) {
-
+            if ((result = checkTokenType(&data->Token, TYPE_COMMA)) == 0) {
+                result = params(data);    //<param_next>
+            } else if (data->Token.type == TYPE_RIGHT_PAR) {
                 if (data->currentID->previouslyCalled == true) {        ///ak bola predtym volana ale nie definovana checknem ci sedi pocet parametrov
                     if (data->currentID->paramCount != data->paramIndex) return ERROR_WRONG_NUMBER_OF_PARAMS;
 
@@ -332,7 +330,7 @@ static int params(ParserData *data)
                 data->currentID->paramCount = data->paramIndex;
                 //ulozim ze dana funkcia ma zatial N paramaterov podla data->paramIndex
                 return SYNTAX_OK;
-            }
+            } else if (result == 1) return ERROR_SCANNER;
             else return ERROR_PARSER;   //neprisla ciarka ani prava zatvorka
         }
             //nacitany token je prava zatvorka -> <params> -> ε
@@ -423,8 +421,11 @@ static int statement(ParserData *data)
     	data->uniqLabel +=1;
 
         data->leftID = htabSearch(&data->globalT,"%return");
-        if (!data->leftID) return ERROR_PROGRAM_SEMANTIC;
-        data->leftID->type = DTYPE_BOOL;
+        if (data->leftID) {
+            data->leftID->type = DTYPE_BOOL;
+        } else if (data->currentID) data->currentID->type = data->currentID->type;
+        else return ERROR_PROGRAM_SEMANTIC;
+
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if ((result = expression(data)) != 0 ) return result;
@@ -502,8 +503,9 @@ static int statement(ParserData *data)
     	data->uniqLabel +=1;
 
         data->leftID = htabSearch(&data->globalT,"%return");
-        if (!data->leftID) return ERROR_PROGRAM_SEMANTIC;
-        data->leftID->type = DTYPE_BOOL;
+        if (data->leftID) {
+            data->leftID->type = DTYPE_BOOL;
+        } else if (data->currentID) data->currentID->type = data->currentID->type ;
     	//vytvaram si to nato lebo vnutro WHILE by mohlo byt IF/WHILE co by inkrementovalo uniqLabel a dolny jump by som jumpoval zle
     	int docasnyLabel = data->uniqLabel;
     	generateWHILElabel(docasnyLabel);
@@ -558,10 +560,18 @@ static int statement(ParserData *data)
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
         else if (data->Token.type == TYPE_EOL) {
-            GENERATE(genFunctionReturn, data->leftID->type);
+            if (data->leftID != NULL) {
+                GENERATE(genFunctionReturn, data->leftID->type);
+            } else {
+                addCode("DEFVAR LF@retval");
+                addCode("\n");
+                addCode("MOVE GF@$result GF@%return");
+                addCode("\n");
+            }
             GENERATE(generateReturn, data->currentID->identifier);
-            if ((result = getNextToken(&data->Token)) != 0) return result;
-            else return result = SYNTAX_OK;
+            return result = SYNTAX_OK;
+            /*if ((result = getNextToken(&data->Token)) != 0) return result;
+            else return result = SYNTAX_OK;*/
 
         }
         else return ERROR_PARSER;
@@ -956,6 +966,9 @@ static int statement(ParserData *data)
             //if (data->rightID->type != DTYPE_STRING) return ERROR_ARTIHMETIC;
         }
         else if (data->Token.type == TYPE_STRING) {GENERATE(passParamsToFunction,data->Token, 1,data);}
+        else if (data->Token.attribute.keyword == KEYWORD_NONE && data->Token.type == TYPE_KEYWORD){
+            GENERATE(passParamsToFunction,data->Token, 1,data);
+        }
         else return ERROR_PARSER;
 
         if (data->leftID != NULL) {
@@ -994,8 +1007,7 @@ static int statement(ParserData *data)
                     {
                         if ((result = getNextToken(&data->Token)) != 0)
                             return result;
-                        if (data->Token.type == TYPE_IDENTIFIER) {
-                            data->Token.type = TYPE_STRING;
+                        if (data->Token.type == TYPE_STRING) {
                             i++;
                             GENERATE(passParamsToFunction,data->Token, 1,data);
                             if ((result = checkTokenType(&data->Token, TYPE_COMMA)) != 0) return result;
@@ -1097,16 +1109,18 @@ static int statement(ParserData *data)
 
         //if (data->Token.type == TYPE_STRING || data->Token.type == TYPE_FLOAT) return ERROR_ARTIHMETIC;
 
-        if (data->Token.type == TYPE_INT) {
+        if (data->Token.type == TYPE_IDENTIFIER) {
             if (((data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL))
                 if (((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL))
                     return ERROR_PROGRAM_SEMANTIC;
 
             GENERATE(passParamsToFunction,data->Token, 1,data);
 
-            //if (data->rightID->type != DTYPE_INT) return ERROR_ARTIHMETIC;
+            if (data->rightID->type != DTYPE_INT) return ERROR_ARTIHMETIC;
         }
-        else if (data->Token.type == TYPE_INT) {;}
+        else if (data->Token.type == TYPE_INT) {
+            GENERATE(passParamsToFunction,data->Token, 1,data);
+        } else if (data->Token.type != TYPE_INT) return ERROR_ARTIHMETIC;
         else return ERROR_PARSER;
 
         if (data->leftID != NULL) {
@@ -1145,22 +1159,21 @@ static int statement(ParserData *data)
                 case 0: {
                     if ((result = getNextToken(&data->Token)) != 0)
                         return result;
-                    if (data->Token.type == TYPE_IDENTIFIER ||
-                        data->Token.type == TYPE_STRING) {
+                    if (data->Token.type == TYPE_STRING) {
                         i++;
 
                         GENERATE(passParamsToFunction,data->Token, 1,data);
 
                         if ((result = checkTokenType(&data->Token, TYPE_COMMA)) != 0) return result;
                         break;
-                    } else if (data->Token.type == TYPE_INT) {
+                    } else if (data->Token.type == TYPE_IDENTIFIER) {
                         if (((data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL))
                             if (((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL))
                                 return ERROR_PROGRAM_SEMANTIC;
 
                         GENERATE(passParamsToFunction,data->Token, 1,data);
 
-                        //if (data->rightID->type != DTYPE_STRING) return ERROR_ARTIHMETIC;
+                        if (data->rightID->type != DTYPE_STRING) return ERROR_ARTIHMETIC;
                         i++;
                         if ((result = checkTokenType(&data->Token, TYPE_COMMA)) != 0) return result;
                         break;
@@ -1183,7 +1196,7 @@ static int statement(ParserData *data)
 
                         GENERATE(passParamsToFunction,data->Token, 2,data);
 
-                        //if (data->rightID->type != DTYPE_INT) return ERROR_ARTIHMETIC;
+                        if (data->rightID->type != DTYPE_INT) return ERROR_ARTIHMETIC;
                         i++;
                         break;
                     } else if (data->Token.type != TYPE_INT) return ERROR_ARTIHMETIC;
@@ -1266,10 +1279,13 @@ int variablesInit(ParserData *data)
 	data->currentID = NULL;
 	data->leftID = NULL;
 	data->rightID = NULL;
+    data->leftID->previouslyCalled = false;
+    data->currentID->previouslyCalled = false;
+    data->rightID->previouslyCalled = false;
 
 	data->paramIndex = 0;
 	data->uniqLabel = 0;
-	data->deepLabel = 0;		//DH tu ma -1 dunno why
+	data->deepLabel = 0;
 
 	data->in_function = 0;
 	data->in_declaration = 0;

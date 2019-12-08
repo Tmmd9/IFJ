@@ -156,35 +156,3 @@ void htabFree(htab *table){
         (*table)[i] = NULL;
     }
 }
-
-bool htabDelete(htab *table, const char *key){
-    if (!table || !key) return NULL;
-
-    unsigned int hash = htab_hash_function(key);
-    htabItem *item = (*table)[hash];
-    htabItem *nextItem, *prevItem = NULL;
-
-    while (item){
-        nextItem = item->next;
-        if (!strcmp(item->key,key)){    //ak sa keys zhoduju
-            if (!prevItem){ //a polozka nema pred sebou ziadnu inu
-                //nasledujucu polozku ukladam priamo do tabulky na dany index
-                (*table)[hash] = nextItem;
-            } else {
-                //predchadzajuca polozka ma ukazatel na nasledujucu
-                prevItem->next = nextItem;
-            }
-            free(item->key);
-
-            if (!item->data.param){
-                stringFree(item->data.param);
-                free(item->data.param);
-            }
-            free(item);
-            return true;
-        }
-        prevItem = item;	//ukladam aktualnu polozku ako predchadzajucu
-        item = nextItem;	//aktualna polozka bude dalsou polozkou
-    }
-    return false;
-}

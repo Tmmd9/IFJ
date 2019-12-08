@@ -33,6 +33,7 @@ static int returnCode(int exitCode, string *s) {
 
 // funkcia na ziskanie tokenu typu integer
 int intValue(string *s, token *token) {
+    if (s->str[0] == '0' && s->str[1]) return returnCode(ERROR_SCANNER,s);
     char *endptr;
     int value = (int) strtol(s->str, &endptr, 10);
     if (*endptr) {

@@ -332,7 +332,9 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
 
 	if (rule == OPERAND && item1->data_type == DTYPE_BOOL)
 	{
-		return ERROR_ARTIHMETIC;
+        if (!item1->isNone && !please){
+            return ERROR_PROGRAM_SEMANTIC; // nedefinovana premenna
+        }
 	}
 
 	if (rule != LBR_NT_RBR) {
@@ -345,7 +347,8 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
             }
             if (item3->data_type == DTYPE_UNDEFINED) {
                 if (!please) {
-                    if (item3->isNone) return ERROR_ARTIHMETIC;
+                    if (item3->isNone && (rule != NT_NEQ_NT && rule != NT_EQ_NT)) return ERROR_ARTIHMETIC;
+                    else if (item3->isNone && (rule == NT_NEQ_NT || rule == NT_EQ_NT));
                     else return ERROR_PROGRAM_SEMANTIC;
                 }
             }
@@ -469,8 +472,21 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
         }
 
 		//string > string
-		else if(item1->data_type == DTYPE_STRING && item3->data_type == DTYPE_STRING)
+		else if(item1->data_type == DTYPE_STRING && item3->data_type == DTYPE_STRING) {
+            *final = DTYPE_BOOL;
+        } else if (item1->data_type == DTYPE_STRING && item3->isNone){
 		    *final = DTYPE_BOOL;
+		} else if (item1->data_type == DTYPE_INT && item3->isNone){
+            *final = DTYPE_BOOL;
+        } else if (item1->data_type == DTYPE_DOUBLE && item3->isNone){
+            *final = DTYPE_BOOL;
+        } else if (item3->data_type == DTYPE_STRING && item1->isNone){
+            *final = DTYPE_BOOL;
+        } else if (item3->data_type == DTYPE_INT && item3->isNone){
+            *final = DTYPE_BOOL;
+        } else if (item3->data_type == DTYPE_DOUBLE && item3->isNone){
+            *final = DTYPE_BOOL;
+        }
 
 		else return ERROR_ARTIHMETIC;
 	}
@@ -731,7 +747,9 @@ int expression(ParserData *data)
 
                      if (sym_in_token == ID_SYM) {
                          if (!symStack->top->isNone)
-                         GENERATE(pushVar, &data->Token, data);
+                            GENERATE(pushVar, &data->Token, data);
+                         else if (symStack->top->isNone)
+                             GENERATE(pushVar, &data->Token, data);
                      }
                      if (sym_in_token == INT_SYM || sym_in_token == FLOAT_SYM || sym_in_token == STR_SYM){
                          GENERATE(pushValue, &data->Token);
@@ -749,14 +767,14 @@ int expression(ParserData *data)
                     break;
                 default:
                     if (sym_on_top->symbol == DOLLAR_SYM && sym_in_token == DOLLAR_SYM){
-                        if (data->Token.attribute.keyword == KEYWORD_NONE){
+                        if (data->Token.attribute.keyword == KEYWORD_NONE && data->Token.type == TYPE_KEYWORD){
                             getNextToken(&data->Token);
                             break;
-                        }
+                        } 
                         end = true;
                     } else {
                         symbol_free(symStack);
-                        return ERROR_PARSER;
+                        return ERROR_PROGRAM_SEMANTIC;
                     }
          }
     } while (!end);
@@ -807,6 +825,37 @@ int expression(ParserData *data)
             GENERATE(generateSaveExprResult, data->leftID->identifier, frame);
         }  else if (data->leftID->type == DTYPE_UNDEFINED) {
             GENERATE(generateSaveExprResult, data->leftID->identifier, frame);
+        }
+    } else if (data->currentID){
+        char *frame = "LF";
+        if (data->currentID->isGlobal) frame = "GF";
+
+        if (data->currentID->type == DTYPE_INT) {
+            if (finite->data_type == DTYPE_STRING) {
+                symbol_free(symStack);
+                return ERROR_ARTIHMETIC;
+            }
+            GENERATE(generateSaveExprResult, data->currentID->identifier, frame);
+        } else if (data->currentID->type == DTYPE_DOUBLE){
+            if (finite->data_type == DTYPE_STRING){
+                symbol_free(symStack);
+                return ERROR_ARTIHMETIC;
+            }
+            GENERATE(generateSaveExprResult, data->currentID->identifier, frame);
+        } else if (data->currentID->type == DTYPE_STRING) {
+            /*if (finite->data_type != DTYPE_STRING) {
+                symbol_free(symStack);
+                return ERROR_ARTIHMETIC;
+            }*/
+            GENERATE(generateSaveExprResult, data->currentID->identifier, frame);
+        }  else if (data->currentID->type == DTYPE_BOOL) {
+            if (finite->data_type != DTYPE_BOOL) {
+                symbol_free(symStack);
+                return ERROR_ARTIHMETIC;
+            }
+            GENERATE(generateSaveExprResult, data->currentID->identifier, frame);
+        }  else if (data->currentID->type == DTYPE_UNDEFINED) {
+            GENERATE(generateSaveExprResult, data->currentID->identifier, frame);
         }
     }
     // Aby pri compare expr sa nepriradilo BOOL do leftID z riadka nadtym

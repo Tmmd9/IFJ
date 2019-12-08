@@ -39,12 +39,12 @@ typedef struct {
     char *identifier;   //identifikator                     
     bool isDefined;     //bool ci bola funkcia definovana
     bool isGlobal;      //bool na globalne premenne
-    unsigned paramCount; //pocet parametrov vo funkci -neviem ci to je uplne potreba ked DH to nemal ale mne by t mohlo pomoct
+    unsigned paramCount;
     bool previouslyCalled;  //pripad kedy je volana pred definovanim
 } Data;
 
 typedef struct item {
-    char *key;      //identifikator (kluc)              ///toto bude nazov definicie funkcie/premennej?
+    char *key;      //identifikator (kluc)
     Data data;      //data o polozke
     struct item *next;  //ukazatel na dalsiu polozku
 } htabItem;
@@ -81,13 +81,5 @@ Data *htabSearch(htab *table, const char *key);
  * vracia true, ak sa podari pridanie, inak false
  */
 bool htabAddParam(Data *data, unsigned int DataType);
-
-/*
- * Funkcia na odstranenie urcitej polozky z tabulky
- *
- * vracia true ked sa odstranenie podari, inak false
- */
-bool htabDelete(htab *table, const char *key);
-
 
 #endif // _SYMTABLE_H

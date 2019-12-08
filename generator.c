@@ -149,7 +149,9 @@ bool pushVar(token *token,ParserData *data){
     int bs = token->attribute.int_value;
     token->attribute.int_value = bs;
     addCode("PUSHS ");
-    if (!generateTerm(data->Token,data)) return false;
+    if (data->Token.attribute.keyword == KEYWORD_NONE){
+        addCode("nil@nil");
+    } else if (!generateTerm(data->Token,data)) return false;
     addCode("\n");
     return true;
 }
@@ -179,8 +181,8 @@ bool genFunctionHead(char *ID)
     addCode("LABEL $");
     addCode(ID);
     addCode("\n");
-    addCode("CREATEFRAME");
-    addCode("PUSHFRAME");
+    addInstr("CREATEFRAME");
+    addInstr("PUSHFRAME");
     addCode("\n");
 
     return true;
@@ -326,7 +328,7 @@ bool generateSaveExprResult(char *id, char *frame){
 
 bool generateReturn(char *id)
 {
-    addInstr("MOVE LF@retval GF@%$result");
+    addInstr("MOVE LF@retval GF@$result");
     addCode("JUMP $");
     addCode(id);
     addCode("%return\n");
@@ -386,7 +388,9 @@ bool passParamsToFunction(token Token, int i, ParserData *data)
     addCode("DEFVAR TF@%"); ADDCODEINT(i); addCode("\n");
 
     addCode("MOVE TF@%"); ADDCODEINT(i); addCode(" ");
-    if (!generateTerm(Token, data)) return false;
+    if (data->Token.attribute.keyword == KEYWORD_NONE){
+        addCode("nil@nil");
+    } else if (!generateTerm(Token, data)) return false;
     addCode("\n");
 
     return true;
@@ -422,53 +426,60 @@ bool generateTerm(token Token, ParserData *data) {
     string help;
     if (stringInit(&help)) return false;
 
-    switch (Token.type)
-    {
+    switch (Token.type) {
         case TYPE_INT:
             sprintf(temp, "%d", Token.attribute.int_value);
-            addCode("int@"); addCode(temp);
+            addCode("int@");
+            addCode(temp);
             break;
 
         case TYPE_FLOAT:
             sprintf(temp, "%a", Token.attribute.decimal_value);
-            addCode("float@"); addCode(temp);
+            addCode("float@");
+            addCode(temp);
             break;
 
         case TYPE_STRING:
-            for (int i = 0; (c = (unsigned char) (Token.attribute.string->str)[i]) != '\0'; i++)
-            {
-                if (c == '#' || c == '\\' || c <= 32 || !isprint(c))
-                {
+            for (int i = 0; (c = (unsigned char) (Token.attribute.string->str)[i]) != '\0'; i++) {
+                if (c == '#' || c == '\\' || c <= 32 || !isprint(c)) {
                     stringAddChar(&help, '\\');
                     sprintf(temp, "%03d", c);
                     stringAddConst(&help, temp);
-                }
-                else
-                {
+                } else {
                     stringAddChar(&help, c);
                 }
             }
-            addCode("string@"); addCode(help.str);
+            addCode("string@");
+            addCode(help.str);
             break;
 
         case TYPE_IDENTIFIER:
-            if (data->leftID != NULL){
-                if (data->leftID->isGlobal){
-                    addCode("GF@"); addCode(Token.attribute.string->str);
+            if (data->leftID != NULL) {
+                if (data->leftID->isGlobal) {
+                    addCode("GF@");
+                    addCode(Token.attribute.string->str);
                 } else {
                     addCode("LF@");
                     addCode(Token.attribute.string->str);
                 }
             } else if (data->currentID != NULL) {
-                if (data->currentID->isGlobal){
-                    addCode("GF@"); addCode(Token.attribute.string->str);
+                if (data->currentID->isGlobal) {
+                    addCode("GF@");
+                    addCode(Token.attribute.string->str);
+                } else {
+                    addCode("LF@");
+                    addCode(Token.attribute.string->str);
+                }
+            } else if (data->rightID != NULL) {
+                if (data->rightID->isGlobal) {
+                    addCode("GF@");
+                    addCode(Token.attribute.string->str);
                 } else {
                     addCode("LF@");
                     addCode(Token.attribute.string->str);
                 }
             } else return false;
             break;
-
         default:
             stringStrFree(&help);
             return false;
@@ -552,25 +563,25 @@ bool generateCALL(char *id) {
     return true;
 }
 bool generateWHILElabel(int label){
-    addCode("LABEL while");
+    addCode("LABEL $while");
     ADDCODEINT(label);
     addCode("\n");
     return true;
 }
 bool generateWHILEjumptostart(int label){
-    addCode("JUMP while");
+    addCode("JUMP $while");
     ADDCODEINT(label);
     addCode("\n");
     return true;
 }
 bool generateWHILEcondition(int label){
-    addCode("JUMPIFEQ end");
+    addCode("JUMPIFEQ $end");
     ADDCODEINT(label);
     addCode(" GF@%return bool@false\n");
     return true;
 }
 bool generateWHILEend(int label){
-    addCode("LABEL end");
+    addCode("LABEL $end");
     ADDCODEINT(label);
     addCode("\n");
     return true;
