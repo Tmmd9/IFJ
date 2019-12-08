@@ -1,0 +1,7 @@
+a=5
+b='auto'
+c=0
+if(5>2):
+    c=(a+b)
+else:
+    pass
