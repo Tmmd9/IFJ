@@ -419,6 +419,7 @@ static int statement(ParserData *data)
     if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_IF)) {
     	data->in_if = 1;
     	data->uniqLabel +=1;
+    	int tempLabel = data->uniqLabel;
 
         data->leftID = htabSearch(&data->globalT,"%return");
         if (data->leftID) {
@@ -434,7 +435,7 @@ static int statement(ParserData *data)
         //COLON a.k.a dvojbodka	, pytal som si token v expression
         if(data->Token.type == TYPE_COLON) {      
         if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {  
-		GENERATE(generateIfStart,data->deepLabel);
+		GENERATE(generateIfStart,tempLabel);
         if((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
         	data->deepLabel +=1;	//mam indent, zmena urovne
 				
@@ -446,14 +447,14 @@ static int statement(ParserData *data)
 			data->deepLabel -=1;
 		if (((result = checkTokenType(&data->Token, TYPE_KEYWORD)) == 0) &&
 			data->Token.attribute.keyword == KEYWORD_ELSE) {
-			GENERATE(generateIfPre,data->deepLabel);
+			GENERATE(generateIfPre,tempLabel);
 		if((result = checkTokenType(&data->Token, TYPE_COLON)) == 0) {
 		if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
 		if((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
 			data->deepLabel +=1;	//mam indent, zmena urovne
 			//rekurzia pre vnutro ELSE
 			
-			GENERATE(generateIf,data->deepLabel);
+			GENERATE(generateIf,tempLabel);
 			
             if ((result = getNextToken(&data->Token)) != 0) return result;
             if((result = statement(data)) != SYNTAX_OK) return result;
@@ -463,7 +464,7 @@ static int statement(ParserData *data)
 			data->in_if = 0;
             //htabFree(&data->localT);        ///potrebne premazat lokalnu tabulku
 			
-			GENERATE(generateIfEnd,data->deepLabel);
+			GENERATE(generateIfEnd,tempLabel);
 			
 /*  *   *   *   *   *   *   pokracovanie statementov    *   *   *   *   *   *   *   */
             if ((result = getNextToken(&data->Token)) != 0) return result;
@@ -1279,9 +1280,7 @@ int variablesInit(ParserData *data)
 	data->currentID = NULL;
 	data->leftID = NULL;
 	data->rightID = NULL;
-    data->leftID->previouslyCalled = false;
-    data->currentID->previouslyCalled = false;
-    data->rightID->previouslyCalled = false;
+
 
 	data->paramIndex = 0;
 	data->uniqLabel = 0;

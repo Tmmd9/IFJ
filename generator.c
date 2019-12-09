@@ -538,7 +538,7 @@ bool generateIf(int index)
 {
     addInstr("# Else");
     addCode("LABEL $Else%");
-    ADDCODEINT(index-1);
+    ADDCODEINT(index);
     addCode("\n");
 
 
