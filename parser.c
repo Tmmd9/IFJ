@@ -27,6 +27,7 @@ static int statement(ParserData *data);
 
 static int statement_next(ParserData *data);
 
+
 /*
  *  Funkcia na porovnavanie očakávaného token.typu
  *  s tym co nam realne prijde so suboru vo forme dalsieho
@@ -44,6 +45,7 @@ int checkTokenType(token *Token, token_type type)
     }
     return returncode;
 }
+
 
 /*	
 *	Funkcia na zabezpecenie spravnej syntaxe
@@ -66,6 +68,7 @@ int isComment(ParserData *data)
 	else if (data->Token.type == TYPE_EOL) return SYNTAX_OK;
 	else return ERROR_PARSER;
 }
+
 
 /*
 *   Pomocna funkcia, aby som usetril riadky a zvysil prehladnost
@@ -122,7 +125,7 @@ int addToHash(ParserData *data, bool isLocal, int position) {
 
 
 /*
- * pravidlo <prog>
+ * PRAVIDLO <prog>
  */
 static int prog(ParserData* data)
 {
@@ -135,8 +138,9 @@ static int prog(ParserData* data)
 
 /*  *   *   *   *   *   *   *   vzdy si na zaciatku pytam token     *   *   *   *   *   *   */
 
-/*1.<prog> -> KEYWORD_DEF TYPE_IDENTIFIER(<params>)TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <prog>*/
-
+/**************************************************** D E F **************************************************************
+*1.<prog> -> KEYWORD_DEF TYPE_IDENTIFIER(<params>)TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <prog>*
+**************************************************************************************************************************/
     if (data->Token.attribute.keyword == KEYWORD_DEF && data->Token.type == TYPE_KEYWORD) {
         data->in_declaration = 1;           //je true
 
@@ -245,6 +249,13 @@ static int prog(ParserData* data)
 	}
 }
 
+
+
+/*
+ * FUNKCIA NA PRIRADENIE PARAMETROV DO FUNKCIE
+ * PRÍPADNE KONTROLA ČI SÚ PRI VOLANÍ FUNKCIE
+ * SPRÁVNE VOLANÉ VŠETKY PARAMETRE
+ */
 static int params(ParserData *data)
 {
     static int result;
@@ -378,14 +389,18 @@ static int params(ParserData *data)
         else
             return ERROR_PARSER; ///param index bol vacsi ako nula ale dosla mi hned zatvorka
     }                            ///pripadne za ciarkou neprisiel dalsi identif
-
     return result;
 }
 
 
+/*
+ * PRAVIDLO STATEMENT
+ */
 static int statement(ParserData *data)
 { 
     static int result;
+
+
 /******************************************** I F *************************************************      
 *            	5. 	<statement> -> KEYWORD_IF <expression> TYPE_COLON                             *
 *            	TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT KEYWORD_ELSE TYPE_COLON              *
@@ -478,6 +493,7 @@ static int statement(ParserData *data)
 		else return ERROR_PARSER;
     }
 
+
 /******************************************** W H I L E********************************************      
 *               6. <statement> -> KEYWORD_WHILE <expression> TYPE_COLON                           *
 *                   TYPE_EOL TYPE_INDENT <statement> TYPE_EOL                                     *
@@ -543,6 +559,7 @@ static int statement(ParserData *data)
 	    else return ERROR_PARSER; //neprisiel COLON
     }
 
+
 /******************************************** R E T U R N *******************************************   
 *   *   *   *   *   *   *   *7. <statement> -> KEYWORD_RETURN <expression> *   *   *   *   *   *   *
 ****************************************************************************************************/
@@ -571,6 +588,7 @@ static int statement(ParserData *data)
         }
         else return ERROR_PARSER;
     }
+
 
 /*******   DEKLARACIA PREMENNYCH || VOLANIE FUNKCIE || PRIRADOVANIE HODNOTY DO PREMENNEJ   **********
 *  *    tu moze nastat jednak definicia a jednak len priradenie hodnoty dolezite hlavne pri WHILE   *
@@ -616,7 +634,6 @@ static int statement(ParserData *data)
                         return result = statement(data);
                     }
                     else if ((result = expression(data)) != 0 ) return result;
-
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
                     if (data->Token.type == TYPE_EOL) {
@@ -659,7 +676,6 @@ static int statement(ParserData *data)
                     }
                     //else -> nerobim nic - nepridavam do tabulky
                 }
-
 
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
                 if ((result = getNextToken(&data->Token)) != 0) return result;
@@ -747,13 +763,13 @@ static int statement(ParserData *data)
     }
 
 
-
-
+/******************************************** P R I N T *******************************************
+*   *   *   *   *   *11. <statement> -> KEYWORD_PRINT(<expression>) <statement_next>  *   *   *   *
+****************************************************************************************************/
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_PRINT) {
         static int result;
         data->rightID = htabSearch(&data->globalT, "print");
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
-/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
         while (data->Token.type != TYPE_RIGHT_PAR) {
             GENERATE(createFrameForParams);
@@ -788,7 +804,7 @@ static int statement(ParserData *data)
         GENERATE(addCode,"string@");
         GENERATE(addCode,"\\010 ");
         GENERATE(addCode, "\n");
-/*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
+
         if (data->Token.type == TYPE_RIGHT_PAR) {
             if ((result = getNextToken(&data->Token)) != 0) return result;
             return result = statement_next(data);
@@ -797,8 +813,9 @@ static int statement(ParserData *data)
     }
 
 
-
-
+/******************************************** P A S S ***********************************************
+*   *   *   *   *   *12. 	<statement> -> KEYWORD_PASS <statement_next>*   *   *   *   *   *   *   *
+****************************************************************************************************/
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_PASS) {
         static int result;
         if ((result = getNextToken(&data->Token)) != 0) return result;
@@ -806,8 +823,9 @@ static int statement(ParserData *data)
     }
 
 
-
-
+/******************************************** I N P U T S  *******************************************
+*   *   *   *   *   *13. 	<statement> -> KEYWORD_INPUTS() <statement_next>    *   *   *   *   *   *
+****************************************************************************************************/
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_INPUTS) {
         static int result;
         data->rightID = htabSearch(&data->globalT, "inputs");
@@ -834,8 +852,9 @@ static int statement(ParserData *data)
     }
 
 
-
-
+/******************************************** I N P U T I  *******************************************
+*   *   *   *   *   *14. 	<statement> -> KEYWORD_INPUTI() <statement_next>    *   *   *   *   *   *
+****************************************************************************************************/
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_INPUTI) {
         static int result;
         data->rightID = htabSearch(&data->globalT, "inputi");
@@ -862,8 +881,9 @@ static int statement(ParserData *data)
     }
 
 
-
-
+/******************************************** I N P U T F  *******************************************
+*   *   *   *   *   *15. 	<statement> -> KEYWORD_INPUTF() <statement_next>    *   *   *   *   *   *
+****************************************************************************************************/
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_INPUTF) {
         static int result;
         data->rightID = htabSearch(&data->globalT, "inputf");
@@ -890,8 +910,9 @@ static int statement(ParserData *data)
     }
 
 
-
-
+/*********************************************** L E N  *********************************************
+*   *   *   *   *   *16. 	<statement> -> KEYWORD_LEN(TYPE_STRING) <statement_next>    *   *   *   *
+****************************************************************************************************/
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_LEN) {
         static int result;
         data->rightID = htabSearch(&data->globalT, "len");
@@ -933,8 +954,9 @@ static int statement(ParserData *data)
     }
 
 
-
-
+/********************************************* S U B S T R ******************************************
+17. <statement> -> KEYWORD_SUBSTR(TYPE_STRING TYPE_COMMA TYPE_INT TYPE_COMMA TYPE_INT) <statement_next>
+****************************************************************************************************/
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_SUBSTR) {
         static int result;
         data->rightID = htabSearch(&data->globalT, "substr");
@@ -1033,8 +1055,9 @@ static int statement(ParserData *data)
     }
 
 
-
-
+/*********************************************** C H R  *********************************************
+*   *   18. <statement> -> KEYWORD_CHR(TYPE_STRING TYPE_COMMA TYPE_INT) <statement_next>   *   *   *
+****************************************************************************************************/
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_CHR) {
         static int result;
         data->rightID = htabSearch(&data->globalT, "chr");
@@ -1077,8 +1100,9 @@ static int statement(ParserData *data)
     }
 
 
-
-
+/*********************************************** O R D  *********************************************
+*   *   *   *   *   *19. 	<statement> -> KEYWORD_ORD(TYPE_INT) <statement_next>   *   *   *   *   *
+****************************************************************************************************/
     else if (data->Token.type == TYPE_KEYWORD && data->Token.attribute.keyword == KEYWORD_ORD) {
         static int result;
         data->rightID = htabSearch(&data->globalT, "ord");
@@ -1156,7 +1180,6 @@ static int statement(ParserData *data)
         if ((result = checkTokenType(&data->Token, TYPE_RIGHT_PAR)) != 0) return result;
         if ((result = getNextToken(&data->Token)) != 0) return result;
         if (( result = statement_next(data)) != 0) return result;
-
     }
 
 
@@ -1175,9 +1198,12 @@ static int statement(ParserData *data)
 }
 
 
-/*                                                                                          *
-*                       10.  <statement_next> -> TYPE_EOL <statement>                       *
-*                                                                                           */
+
+/******************************** <s t a t e m e n t _ n e x t >    *****************************
+*                                                                                               *
+*                       10.  <statement_next> -> TYPE_EOL <statement>                           *
+*                                                                                               *
+*************************************************************************************************/
 static int statement_next(ParserData *data) 
 {
 	static int result;
@@ -1187,7 +1213,9 @@ static int statement_next(ParserData *data)
             return result = statement(data);
         else return result;
     }
-/*  *   *   *   *   *   *   *    25.  <statement_next>  ->  ε   *   *   *   *   *   *   *   */
+/**************************** <s t a t e m e n t _ n e x t >  ->  ε  ****************************
+*   *   *   *   *   *   *   *    25.  <statement_next>  ->  ε   *   *   *   *   *   *   *   *   *
+*************************************************************************************************/
 /*  *   *  koniec zacyklenia <statement> a <statement_next> -> vrati sa do <prog>   *   *   */
     else if(data->Token.type == TYPE_EOF || data->Token.type == TYPE_DEDENT)
         return result = SYNTAX_OK;
@@ -1317,6 +1345,11 @@ void variablesFree(ParserData *data)
 	htabFree(&data->localT);
 }
 
+/*
+ *
+ *  MAIN PARSERU
+ *
+ */
 int parse()
 {
 	int result = 0;
