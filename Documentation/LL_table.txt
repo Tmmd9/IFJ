@@ -1,19 +1,14 @@
-
 1.	<prog> -> KEYWORD_DEF 		TYPE_IDENTIFIER(<params>)TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT <prog>
 2.	<prog> -> TYPE_EOL <prog>
 3.	<prog> -> <statement> TYPE_EOL <prog>
-4. 	<prog> -> TYPE_EOF <end> 							//po kazdom statemente alebo progu sa znova zacina prog, 
-											cize posledny krok pri parsovani sa podla mna bude zacinat 
-											iba <prog> , dalej ziska token TYPE_EOF a skoci to 
-											koncoveho stavu <end> kde uz neparsuje 	
-
+4. 	<prog> -> TYPE_EOF <end> 
 5. 	<statement> -> KEYWORD_IF <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT KEYWORD_ELSE TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_DEDENT <statement_next>
 6.	<statement> -> KEYWORD_WHILE <expression> TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <statement_next>
-7. 	<statement> -> KEYWORD_RETURN <expression>	//aj funkcia
+7. 	<statement> -> KEYWORD_RETURN <expression>	
 8. 	<statement> -> TYPE_IDENTIFIER TYPE_ASSIGN_VALUE <expression> <statement_next>	//mysliet ze tam moze byt aj funkcia
-9. 	<statement> -> TYPE_IDENTIFIER(<params>) <statement_next> ///nasa LL nevedela volat nadefinovane funkcie
-10.	<statement_next> -> TYPE_EOL <statement> 		//aby mohlo byt viac statementov zasebou
-11. 	<statement> -> KEYWORD_PRINT(<expression>) <statement_next>        	//co ked je prazdny print/komentar v printe
+9. 	<statement> -> TYPE_IDENTIFIER(<params>) <statement_next> 
+10.	<statement_next> -> TYPE_EOL <statement>
+11. 	<statement> -> KEYWORD_PRINT(<expression>) <statement_next>
 12. 	<statement> -> KEYWORD_PASS <statement_next>
 13. 	<statement> -> KEYWORD_INPUTS() <statement_next>
 14.	<statement> -> KEYWORD_INPUTI() <statement_next>
@@ -22,32 +17,9 @@
 17. 	<statement> -> KEYWORD_SUBSTR(TYPE_STRING TYPE_COMMA TYPE_INT TYPE_COMMA TYPE_INT) <statement_next>
 18. 	<statement> -> KEYWORD_CHR(TYPE_STRING TYPE_COMMA TYPE_INT) <statement_next>
 19. 	<statement> -> KEYWORD_ORD(TYPE_INT) <statement_next>
-
 20.	<params> -> TYPE_IDENTIFIER <param_next> 
 21.	<params> -> ε
 22. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next>
 23. 	<param_next> -> ε
 24.	<end> -> ε
 25. 	<statement_next> -> ε
-//26.	<statement> -> <expression> <statement_next>
-
-
-
-
-
-/// <statement> -> EOF <end> ///neplati viz.3 a 18
-
-//// neplati ////
-
-<expression> -> TYPE_IDENTIFIER
-<expression> -> 'TYPE_CHR'
-<expression> -> 'TYPE_CHR' TYPE_COMMA TYPE_IDENTIFIER , <expression_n>
-<expression> -> ε
-<expression_n> -> TYPE_COMMA <expression_n>
-<expression_n> -> ε
-//////////////////
-
-
-
-
-
