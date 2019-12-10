@@ -50,7 +50,7 @@ IFJ19: expr.o generator.o main.o parser.o scanner.o stack.o str.o symstack.o sym
 	$(CC) $(CFLAGS) expr.o generator.o main.o parser.o scanner.o stack.o str.o symstack.o symtable.o -o $@
 
 pack:
-	zip xbobos00.zip *.c *.h Makefile README.md rozdeleni
+	zip xbobos00.zip *.c *.h Makefile README.md rozdeleni *.pdf
 
 clean:
-	rm -f *.o
+	rm -f *.o xbobos00.zip *.pdf
