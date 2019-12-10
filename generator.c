@@ -13,6 +13,7 @@
 
 #include "generator.h"
 #include "scanner.h"
+#include "str.h"
 #include <ctype.h>
 
 #define MAX 50 ///maximum pre convertovanie stringu
@@ -159,7 +160,7 @@ bool pushVar(token *token,ParserData *data){
 bool pushValue(token *token){
     addCode("PUSHS ");
     generateValue(token);
-    //addCode("\n");
+
     return true;
 }
 
@@ -176,8 +177,7 @@ bool declareVar(char *frame, char *ID)
 
 bool genFunctionHead(char *ID)
 {
-    //addCode(ID);
-    //addCode("\n");
+
     addCode("LABEL $");
     addCode(ID);
     addCode("\n");
@@ -204,9 +204,7 @@ bool declareFunctionParam(char *ID, int index)
 
 bool genFunctionEnd(char *ID)
 {
-    //addCode(ID);
-    //addCode("\n");
-    
+
     addCode("LABEL $"); 
     addCode(ID); 
     addCode("%return\n");

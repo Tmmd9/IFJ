@@ -47,7 +47,7 @@ typedef enum {
     STATE_INDENT,                   //  konecny stav {F23}     24
     STATE_DEDENT,                   //  konecny stav {F24}     25
     STATE_INDENT_OR_DEDENT,         //  medzistav (Q15}        26
-    STATE_BLOCK_STRING_ESC,
+    STATE_BLOCK_STRING_ESC,         //
 } state;
 
 typedef enum {
@@ -66,12 +66,6 @@ typedef enum {
     KEYWORD_SUBSTR,                 //substr funkcia            12
     KEYWORD_CHR,                    //chr funkcia               13
     KEYWORD_ORD,                    //ord funkcia               14
-    //KEYWORD_FOR,					//v rozsireniach (12.7.1)
-    //KEYWORD_BREAK,
-    //KEYWORD_CONINUE,
-    //KEYWORD_ELIF,
-    //KEYWORD_TRUE,
-    //KEYWORD_FALSE,
 } Keyword;
 
 typedef enum
@@ -132,7 +126,6 @@ typedef struct {
     token_attribute attribute;
 } token;
 
-// hlavicka funkcia ktora je docasna, kvoli testovaniu
 int getNextToken(token *token);
 void sourceFile(FILE *f);
 void setString(string *s);

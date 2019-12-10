@@ -64,5 +64,3 @@ void stackPush(tStack *s, char c) {
         s->arr[s->top] = c;    //vlozenie znaku na vrch stacku
     }
 }
-
-/* Konec c202.c */

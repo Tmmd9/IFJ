@@ -1,17 +1,21 @@
-//testovaci mainik na scanner, niektore funkcie museli byt modifikovane
-//aby som mohol testovat
+/*
+ *	Predmet : Formální jazyky a překladače
+ *	Projekt : Implementace překladače imperativního jazyka IFJ19
+ *	Súbor	: main.c
+ *				-hlavný spúšťací modul IFJ19
+ *	Tím		: číslo 10 / varianta II
+ *	Autori	: Dominik Boboš (xbobos00)
+ *			  Peter Hudeček (xhudec34)
+ *			  Timotej Kováčik (xkovac49)
+ *			  Dávid Oravec (xorave05)
+ *
+ */
 
-#include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
-
 #include "generator.h"
 #include "parser.h"
 
 int main(void) {
-    // pre testovanie namiesto stdin vlozit fopen("cesta k testovaciemu suboru","r");
-  //  FILE *source = fopen("/Users/tereziabobosova/Documents/VUT/3.semester/IFJ/test.txt", "r");
-    //FILE *source = fopen("C:\\Users\\orave\\CLionProjects\\untitled4\\project\\cmake-build-debug\\CMakeFiles\\cmake-build-debug.dir\\test.txt", "r");
     FILE *source = stdin;
     int result = 0;
 

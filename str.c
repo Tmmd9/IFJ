@@ -36,7 +36,7 @@ void stringStrFree(string *s) {
 //struct string uvedeny do povodneho stavu
 void stringFree(string *s) {
     s->length = 0;
-    s->allocSize = 0;   //toto tam nechybalo nahodou?
+    s->allocSize = 0;
     stringStrFree(s);
 }
 
@@ -64,6 +64,7 @@ int stringAddConst(string *s, const char *str) {
         preto chcem reallokovat pokial je aj dlzka slova 7
         preto je takato podmienka
     */
+
     if (s->length + newStrLength + 1 >= s->allocSize) {
         //	+1 kvoli '\0'
         unsigned int newLength = s->length + newStrLength + 1;

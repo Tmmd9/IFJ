@@ -18,20 +18,14 @@
 #include <ctype.h>
 #include "generator.h"
 
-
-
-//FILE *source;
+#define TRUE 1
+#define FALSE 0
 
 static int params(ParserData *data);
 
 static int statement(ParserData *data);
 
 static int statement_next(ParserData *data);
-
-
-//        void sourceFile(FILE *f) {
-//    source = f;
-//}
 
 /*
  *  Funkcia na porovnavanie očakávaného token.typu
@@ -41,9 +35,9 @@ static int statement_next(ParserData *data);
 int checkTokenType(token *Token, token_type type)
 {
     int returncode = 0;
-    if((returncode = getNextToken(Token)) == TOKEN_OK)	///neviem ci som dobre napisal to stack
-    {																///pri debuggingu dat doraz na toto 
-        if (type == Token->type)										///rovnako ako aj pri samotnej ParserData
+    if((returncode = getNextToken(Token)) == TOKEN_OK)
+    {
+        if (type == Token->type)
             return SYNTAX_OK;
         else
             return ERROR_PARSER;
@@ -72,14 +66,6 @@ int isComment(ParserData *data)
 	else if (data->Token.type == TYPE_EOL) return SYNTAX_OK;
 	else return ERROR_PARSER;
 }
-/*
-*	 _______________________________________
-*	|										|
-*	| ZA KAŽDÝM EOL KONTROLUJ isComment()!	|
-*	|_______________________________________|
-*
-*/
-
 
 /*
 *   Pomocna funkcia, aby som usetril riadky a zvysil prehladnost
@@ -135,7 +121,9 @@ int addToHash(ParserData *data, bool isLocal, int position) {
 }
 
 
-
+/*
+ * pravidlo <prog>
+ */
 static int prog(ParserData* data)
 {
 	static int result;
@@ -148,6 +136,7 @@ static int prog(ParserData* data)
 /*  *   *   *   *   *   *   *   vzdy si na zaciatku pytam token     *   *   *   *   *   *   */
 
 /*1.<prog> -> KEYWORD_DEF TYPE_IDENTIFIER(<params>)TYPE_COLON TYPE_EOL TYPE_INDENT <statement> TYPE_EOL TYPE_DEDENT <prog>*/
+
     if (data->Token.attribute.keyword == KEYWORD_DEF && data->Token.type == TYPE_KEYWORD) {
         data->in_declaration = 1;           //je true
 
@@ -178,58 +167,54 @@ static int prog(ParserData* data)
         if (data->Token.type == TYPE_RIGHT_PAR) {  //toto je hlavne test, ptom sa toto ifko moze odstranit
         if ((result = checkTokenType(&data->Token, TYPE_COLON)) == 0) {
     	if (((result = checkTokenType(&data->Token, TYPE_EOL)) == 0)) {
-        if ((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
+        while (data->Token.type != TYPE_INDENT) {
+            if (data->Token.type == TYPE_EOL) {
+                if ((result = getNextToken(&data->Token)) != 0) return result;
+            } else return ERROR_PARSER;
+        }
+        if(data->Token.type == TYPE_INDENT) {
 
             data->in_function = 1;
-            data->deepLabel += 1;    //mam indent, zmena urovne
 
 
 /*  *   *   *   *   pytam si dalsi token lebo statement si sam nepyta   *   *   *   *   *   *   */
-            if ((result = getNextToken(&data->Token)) != 0) return result;
+        if ((result = getNextToken(&data->Token)) != 0) return result;
         if ((result = statement(data)) != 0) {
-            if (data->was_return == true && result == 2) {          ///bol return
-                //data->was_return = false;
-                //result = 0;
+            if (data->was_return == TRUE && result == 2) {          ///bol return
                 if ((result = getNextToken(&data->Token)) != 0) return result;      ///pytam si dalsi token lebo return nepyta
                 }
             else return result;      //nieco sa posralo v statement
         }
-        if (data->was_return == true && result == 0) {
+        if (data->was_return == TRUE && result == 0) {
             if ((result = getNextToken(&data->Token)) != 0) return result;      ///pytam si dalsi token lebo return nepyta
             result = 0;
-            }
-            else {
-                GENERATE(genFunctionReturn,DTYPE_UNDEFINED);
-            }
+        } else {
+            GENERATE(genFunctionReturn,DTYPE_UNDEFINED);
+        }
+        data->was_return = FALSE;
 
-                data->was_return = false;
-
-        //if (data->Token.type == TYPE_DEDENT) {
         if (data->Token.attribute.keyword == KEYWORD_DEF) {     ///bez tohto sa potom v progu nepyta dalsi token
             data->Token.attribute.keyword = KEYWORD_PASS;       ///hocijaky iny keyword tu musim dat okrem DEF
         }
 
         while (data->Token.type != TYPE_DEDENT) {
             if (data->Token.type == TYPE_EOL) {
-                getNextToken(&data->Token);
+                if ((result = getNextToken(&data->Token)) != 0) return result;
             } else return ERROR_PARSER;
         }
-            data->in_declaration = 0;
-            data->in_function = 0;
-            data->deepLabel -= 1;
+        data->in_declaration = 0;
+        data->in_function = 0;
 
-            GENERATE(genFunctionEnd, data->currentID->identifier);
+        GENERATE(genFunctionEnd, data->currentID->identifier);
 
-            if(data->Token.type == TYPE_EOF) return SYNTAX_OK;
-            //rekurzia aby som sa vratil spat do <prog>
-            else {
-                //po kazdej definicii funkcie treba uvolnovat tabulku lokalnych premennych
-                htabFree(&data->localT);
-                return result = prog(data);
-            }
+        if(data->Token.type == TYPE_EOF) return SYNTAX_OK;
+        //rekurzia aby som sa vratil spat do <prog>
+        else {
+            //po kazdej definicii funkcie treba uvolnovat tabulku lokalnych premennych
+            htabFree(&data->localT);
+            return result = prog(data);
+        }
 
-       // }
-       // else return result; //neprisiel DEDENT
         }
         else return result;	//neprisiel indent
    		}
@@ -237,7 +222,7 @@ static int prog(ParserData* data)
         }
         else return ERROR_PARSER;  //neprisla ':'
         }
-        else return ERROR_PARSER;  ///ked sa nieco posralo a neprisla mi z params(&data) ')'
+        else return ERROR_PARSER;  ///ked sa nieco pokazilo a neprisla mi z params(&data) ')'
         }
         else return result;
         }
@@ -250,12 +235,13 @@ static int prog(ParserData* data)
     else if (data->Token.type == TYPE_EOF) {
         return result = SYNTAX_OK;
     }
-	else if ((result = isComment(data)) == 0) {    //ak dokumentacny retazec alebo basic EOL
+    else if ((result = isComment(data)) == 0) {    //ak dokumentacny retazec alebo basic EOL
         return result = prog(data);
     }
 /*  *   *   *   *   * 3.  <prog> -> <statement> TYPE_EOL <prog> *   *   *   *   *   *   */
     else {
-	    return result = statement(data);
+        if (result == 1) return result;
+	    else return result = statement(data);
 	}
 }
 
@@ -264,13 +250,12 @@ static int params(ParserData *data)
     static int result;
 
 
-    //som vo deklaracii funkcie
-    if ((data->leftID == NULL && data->in_declaration == 1) ){//|| (data->leftID !=NULL && data->in_declaration == 0 && data->leftID->isDefined == true)) {
+    //som v deklaracii funkcie
+    if ((data->leftID == NULL && data->in_declaration == 1) ) {
         if ((result = checkTokenType(&data->Token, TYPE_IDENTIFIER)) == 0) {
         
             if ((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL) {
-                
-        
+
                 switch (data->Token.type) {
                     case TYPE_INT:
                         stringAddChar(data->currentID->param, 'i');
@@ -286,7 +271,6 @@ static int params(ParserData *data)
                         break;
                 }
             }
-            ///ospravedlnujem sa toto je asi bullshit ale mohlo by to mierne riesit situaciu
             else {
                 switch (data->rightID->type) {
                     case DTYPE_INT:
@@ -304,10 +288,8 @@ static int params(ParserData *data)
                 }
             }
             data->paramIndex += 1;
-            //data->globalT->param[data->paramIndex] = '\0'; to uz robi addchar samotne
-
-
             bool errIntern;
+
             if (!(data->rightID = htabAddSymbol(&data->localT, data->Token.attribute.string->str, &errIntern))){
                 if (errIntern == true) return ERROR_INTERN;
                 else return ERROR_PROGRAM_SEMANTIC; ///redefinicia
@@ -319,11 +301,11 @@ static int params(ParserData *data)
             if ((result = checkTokenType(&data->Token, TYPE_COMMA)) == 0) {
                 result = params(data);    //<param_next>
             } else if (data->Token.type == TYPE_RIGHT_PAR) {
-                if (data->currentID->previouslyCalled == true) {        ///ak bola predtym volana ale nie definovana checknem ci sedi pocet parametrov
+                if (data->currentID->previouslyCalled == TRUE) {        ///ak bola predtym volana ale nie definovana checknem ci sedi pocet parametrov
                     if (data->currentID->paramCount != data->paramIndex) return ERROR_WRONG_NUMBER_OF_PARAMS;
 
                     else {
-                        data->currentID->previouslyCalled = false;
+                        data->currentID->previouslyCalled = FALSE;
                         return SYNTAX_OK;
                     }
                 }
@@ -333,14 +315,14 @@ static int params(ParserData *data)
             } else if (result == 1) return ERROR_SCANNER;
             else return ERROR_PARSER;   //neprisla ciarka ani prava zatvorka
         }
-            //nacitany token je prava zatvorka -> <params> -> ε
+        //nacitany token je prava zatvorka -> <params> -> ε
         else if ((data->Token.type == TYPE_RIGHT_PAR) && (data->paramIndex == 0)) {
             //ulozim ze dana funcia nepotrebuje parametre
 
-            if (data->currentID->previouslyCalled == true) {        ///ak bola predtym volana ale nie definovana checknem ci sedi pocet parametrov
+            if (data->currentID->previouslyCalled == TRUE) {        ///ak bola predtym volana ale nie definovana checknem ci sedi pocet parametrov
                 if (data->currentID->paramCount != data->paramIndex) return ERROR_WRONG_NUMBER_OF_PARAMS;
                 else {
-                    data->currentID->previouslyCalled = false;
+                    data->currentID->previouslyCalled = FALSE;
                     return SYNTAX_OK;
                 }
             }
@@ -373,13 +355,6 @@ static int params(ParserData *data)
                     break;
             }
             data->paramIndex += 1;
-            //data->globalT->param[data->paramIndex] = '\0'; to uz robi addchar samotne
-
-          /*  bool errIntern;
-            if (!(data->rightID = htabAddSymbol(&data->localT, data->Token.attribute.string->str, &errIntern))){ toto by tu nemalo byt
-                if (errIntern == true) return ERROR_INTERN;
-                else return ERROR_PROGRAM_SEMANTIC; ///redefinicia
-            }*/
 
             //nacitavam dalsi token ak je ciarka ocakavam dalsi param.
             //21. 	<param_next> -> TYPE_COMMA TYPE_IDENTIFIER <param_next>
@@ -387,17 +362,17 @@ static int params(ParserData *data)
                 params(data);	//<param_next>
             else if (data->Token.type == TYPE_RIGHT_PAR) {
                 data->leftID->paramCount = data->paramIndex;
-                data->leftID->previouslyCalled = true;
+                data->leftID->previouslyCalled = TRUE;
                 //ulozim ze dana funkcia ma zatial N paramaterov podla data->paramIndex
                 return SYNTAX_OK;
             }
             else return ERROR_PARSER;   //neprisla ciarka ani prava zatvorka
         }
-            //nacitany token je prava zatvorka -> <params> -> ε
+        //nacitany token je prava zatvorka -> <params> -> ε
         else if ((data->Token.type == TYPE_RIGHT_PAR) && (data->paramIndex == 0)) {
             //ulozim ze dana funcia nepotrebuje parametre
             data->leftID->paramCount = data->paramIndex;
-            data->leftID->previouslyCalled = true;
+            data->leftID->previouslyCalled = TRUE;
             return SYNTAX_OK;
         }
         else
@@ -436,39 +411,52 @@ static int statement(ParserData *data)
         if(data->Token.type == TYPE_COLON) {      
         if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {  
 		GENERATE(generateIfStart,tempLabel);
-        if((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
-        	data->deepLabel +=1;	//mam indent, zmena urovne
-				
+        while (data->Token.type != TYPE_INDENT) {
+            if (data->Token.type == TYPE_EOL) {
+                if ((result = getNextToken(&data->Token)) != 0) return result;
+            } else return ERROR_PARSER;
+        }
+        if(data->Token.type == TYPE_INDENT) {
             //rekurzia pre vnutro IF-u
             if ((result = getNextToken(&data->Token)) != 0) return result;
 			if((result = statement(data)) != SYNTAX_OK) return result;
-			//DEDENT zo statement_next sa mi vypytal dalsi token, nemusim pytat novy
+		//DEDENT zo statement_next sa mi vypytal dalsi token, nemusim pytat novy
 		if(data->Token.type == TYPE_DEDENT) {
-			data->deepLabel -=1;
 		if (((result = checkTokenType(&data->Token, TYPE_KEYWORD)) == 0) &&
 			data->Token.attribute.keyword == KEYWORD_ELSE) {
 			GENERATE(generateIfPre,tempLabel);
 		if((result = checkTokenType(&data->Token, TYPE_COLON)) == 0) {
 		if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
-		if((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
-			data->deepLabel +=1;	//mam indent, zmena urovne
+        while (data->Token.type != TYPE_INDENT) {
+            if (data->Token.type == TYPE_EOL) {
+                if ((result = getNextToken(&data->Token)) != 0) return result;
+            } else return ERROR_PARSER;
+        }
+            if(data->Token.type == TYPE_INDENT) {
 			//rekurzia pre vnutro ELSE
 			
 			GENERATE(generateIf,tempLabel);
 			
             if ((result = getNextToken(&data->Token)) != 0) return result;
             if((result = statement(data)) != SYNTAX_OK) return result;
-			//DEDENT zo statement_next sa mi vypytal dalsi token, nemusim pytat novy
+            if (data->was_return == TRUE) {
+                if ((result = getNextToken(&data->Token)) != 0) return result;
+                data->was_return=FALSE;
+            }
+		//DEDENT zo statement_next sa mi vypytal dalsi token, nemusim pytat novy
+        while (data->Token.type != TYPE_DEDENT) {
+            if (data->Token.type == TYPE_EOL) {
+                if ((result = getNextToken(&data->Token)) != 0) return result;
+            } else return ERROR_PARSER;
+        }
 		if(data->Token.type == TYPE_DEDENT) {
-			data->deepLabel -=1;
 			data->in_if = 0;
-            //htabFree(&data->localT);        ///potrebne premazat lokalnu tabulku
 			
 			GENERATE(generateIfEnd,tempLabel);
 			
 /*  *   *   *   *   *   *   pokracovanie statementov    *   *   *   *   *   *   *   */
             if ((result = getNextToken(&data->Token)) != 0) return result;
-			if((result = statement_next(data)) != SYNTAX_OK) return result;
+			if ((result = statement_next(data)) != SYNTAX_OK) return result;
 /*  *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   */
 		}       //neprisiel DEDENT
 		else return ERROR_PARSER;
@@ -488,9 +476,7 @@ static int statement(ParserData *data)
 		else return result;
 		} 		//neprisiel COLON
 		else return ERROR_PARSER;
-    }//IF
-
-
+    }
 
 /******************************************** W H I L E********************************************      
 *               6. <statement> -> KEYWORD_WHILE <expression> TYPE_COLON                           *
@@ -517,24 +503,36 @@ static int statement(ParserData *data)
         generateWHILEcondition(docasnyLabel);
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
-		if(data->Token.type == TYPE_COLON) {
-	    if((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
-	    if((result = checkTokenType(&data->Token, TYPE_INDENT)) == 0) {
-			data->deepLabel +=1;	//mam indent, zmena urovne
+		if (data->Token.type == TYPE_COLON) {
+	    if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
+        while (data->Token.type != TYPE_INDENT) {
+            if (data->Token.type == TYPE_EOL) {
+                if ((result = getNextToken(&data->Token)) != 0) return result;
+            } else return ERROR_PARSER;
+        }
+        if(data->Token.type == TYPE_INDENT) {
 
-			    //vnutro while-u rekurzia statementu
+		// vnutro while-u rekurzia statementu
         if ((result = getNextToken(&data->Token)) != 0) return result;
 	    if ((result = statement(data)) != SYNTAX_OK) return result;
+        while (data->Token.type != TYPE_DEDENT) {
+            if (data->Token.type == TYPE_EOL) {
+                if ((result = getNextToken(&data->Token)) != 0) return result;
+            } else return ERROR_PARSER;
+        }
 	    if (data->Token.type == TYPE_DEDENT) {
-			data->deepLabel -=1;	//mam dedent, zmena urovne
 			data->in_while = 0;
-        //    htabFree(&data->localT);
+
 /*  *   *   *   *   *   *   pokracovanie statementov    *   *   *   *   *   *   *   */
             generateWHILEjumptostart(docasnyLabel);
             if ((result = getNextToken(&data->Token)) != 0) return result;
             generateWHILEend(docasnyLabel);
             if((result = statement_next(data)) != SYNTAX_OK) return result;
 /*  *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   */
+            if (data->was_return ==TRUE) {
+                if ((result = getNextToken(&data->Token)) != 0) return result;
+                data->was_return=FALSE;
+            }
 	    }
 	    else return result; //neprisiel dedent
 	    }
@@ -543,16 +541,14 @@ static int statement(ParserData *data)
 	    else return result; //neprisiel EOL
 	    }
 	    else return ERROR_PARSER; //neprisiel COLON
-    } //WHILE
-
-
+    }
 
 /******************************************** R E T U R N *******************************************   
 *   *   *   *   *   *   *   *7. <statement> -> KEYWORD_RETURN <expression> *   *   *   *   *   *   *
 ****************************************************************************************************/
      else if ((data->Token.type == TYPE_KEYWORD) && (data->Token.attribute.keyword == KEYWORD_RETURN)) {
         if (data->in_function < 1) return ERROR_PARSER;//ERROR_SEMANTIC_OTHERS;    ///pokial sa vola mimo funkcie
-        data->was_return=true;
+        data->was_return=TRUE;
         data->leftID = htabSearch(&data->globalT, "%return");
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
         if ((result = getNextToken(&data->Token)) != 0) return result;
@@ -561,6 +557,7 @@ static int statement(ParserData *data)
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
         else if (data->Token.type == TYPE_EOL) {
+            data->leftID = htabSearch(&data->globalT, "%return");
             if (data->leftID != NULL) {
                 GENERATE(genFunctionReturn, data->leftID->type);
             } else {
@@ -571,15 +568,9 @@ static int statement(ParserData *data)
             }
             GENERATE(generateReturn, data->currentID->identifier);
             return result = SYNTAX_OK;
-            /*if ((result = getNextToken(&data->Token)) != 0) return result;
-            else return result = SYNTAX_OK;*/
-
         }
         else return ERROR_PARSER;
-
-    } //end of return
-
-
+    }
 
 /*******   DEKLARACIA PREMENNYCH || VOLANIE FUNKCIE || PRIRADOVANIE HODNOTY DO PREMENNEJ   **********
 *  *    tu moze nastat jednak definicia a jednak len priradenie hodnoty dolezite hlavne pri WHILE   *
@@ -598,7 +589,7 @@ static int statement(ParserData *data)
 
                     if ((data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) {
                         ///pridam premennu lokalne vo funkci
-                        if ((result = addToHash(data, true, 0)) != 0) return ERROR_INTERN;
+                        if ((result = addToHash(data, true, LEFT)) != 0) return ERROR_INTERN;
                         char *frame= "LF";
                         GENERATE(declareVar,frame,data->Token.attribute.string->str);
                     }
@@ -606,17 +597,13 @@ static int statement(ParserData *data)
                 }
                 else {
                     //pridavam premennu globalne
-                    if ((result = addToHash(data, false, 0)) != 0) return ERROR_INTERN;
+                    if ((result = addToHash(data, false, LEFT)) != 0) return ERROR_INTERN;
                     char *frame= "GF";
                     GENERATE(declareVar,frame,data->Token.attribute.string->str);
                 }
 
                 if (data->Token.type == TYPE_ASSIGN_VALUE) {
-
-                    //tuto poslem timkovi vyraz na rozparsovanie//
-
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
-                    //GENERATE(pushDeclareVar, data->Token.attribute.string->str);
                     if ((result = getNextToken(&data->Token)) != 0) return result;
                     if (data->Token.type == TYPE_KEYWORD && (   data->Token.attribute.keyword == KEYWORD_INPUTI ||
                                                                 data->Token.attribute.keyword == KEYWORD_INPUTS ||
@@ -628,36 +615,27 @@ static int statement(ParserData *data)
                     {
                         return result = statement(data);
                     }
-                  /*  else if ((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) &&
-                                (data->rightID->isDefined == true) ) {
-
-                    }*/
                     else if ((result = expression(data)) != 0 ) return result;
 
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
-                    ///tu moze byt aj EOF dont forget
                     if (data->Token.type == TYPE_EOL) {
-
                         return result = statement_next(data);
-
-                    }
-                    else if (data->Token.type == TYPE_EOF) return SYNTAX_OK;
+                    } else if (data->Token.type == TYPE_EOF) return SYNTAX_OK;
                     else return ERROR_PARSER;
-
                 }
                 else return ERROR_PARSER;
                 ///volam nedefinovanu funkciu
                 } else if (data->Token.type == TYPE_LEFT_PAR) {
                 if (data->in_declaration == 1) {
-                    if ((result = addToHash(data, false, 0)) != 0) return ERROR_INTERN;
+                    if ((result = addToHash(data, false, LEFT)) != 0) return ERROR_INTERN;
                     else {
                         data->leftID->isDefined = false;
                         data->leftID->isGlobal = false; ///explicitne to musim prestavit
                         data->paramIndex = 0;
                         if ((result = params(data)) != 0) return result;
                         if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
-                            data->leftID->previouslyCalled = true;
+                            data->leftID->previouslyCalled = TRUE;
                             generateCALL(data->leftID->identifier);
                             return result = statement_next(data);
                         }
@@ -667,22 +645,14 @@ static int statement(ParserData *data)
                 return result = ERROR_PROGRAM_SEMANTIC; //volanie funkcie ktora neexistuje
             } else return ERROR_PARSER;
         }
-//ak uz je definovana globalne, lenze ak aj sme vo funkcii, nevieme ci prepisujeme
-// lokalnu alebo glob, lebo python
-//tak som sa rozhodol ze sa proste bude prepisovat globalna --fixed no more-uz sa bude upravovat lokalna
         else if (data->leftID->isGlobal == true) {
 
             if ((result = checkTokenType(&data->Token, TYPE_ASSIGN_VALUE)) == 0) {
 
-               /* if (data->in_function == 0 ) {
-                    char *frame= "GF";
-                    GENERATE(declareVar,frame,data->Token.attribute.string->str);
-                }*/
-
                 if (data->in_function == 1 ) {
                     if ((data->leftID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL) {
                         ///pridam premennu lokalne vo funkci
-                        if ((result = addToHash(data, true, 0)) != 0) return ERROR_INTERN;
+                        if ((result = addToHash(data, true, LEFT)) != 0) return ERROR_INTERN;
 
                             char *frame= "LF";
                             GENERATE(declareVar,frame,data->Token.attribute.string->str);
@@ -701,13 +671,11 @@ static int statement(ParserData *data)
                 }
                 else if ((result = expression(data)) != 0 ) return result;
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
-               ///tu moze byt aj EOF dont forget
-                    if (data->Token.type == TYPE_EOL) {
-                        return result = statement_next(data);
+                if (data->Token.type == TYPE_EOL) {
+                    return result = statement_next(data);
 
-                    } else if (data->Token.type == TYPE_EOF) return SYNTAX_OK;
-                    else return ERROR_PARSER;
-
+                } else if (data->Token.type == TYPE_EOF) return SYNTAX_OK;
+                else return ERROR_PARSER;
             } else return result = ERROR_PARSER;
         }
         /*  *   *   *   *   *   *   VOLANIE FUNKCIE    *   *   *   *   *   *   */
@@ -768,33 +736,13 @@ static int statement(ParserData *data)
                             else return result;
                         } else if (data->Token.type == TYPE_IDENTIFIER || data->Token.type == TYPE_INT ||
                         data->Token.type == TYPE_STRING || data->Token.type == TYPE_FLOAT) return result = ERROR_WRONG_NUMBER_OF_PARAMS;
-                        /*else if(data->Token.type == TYPE_COMMA) {
-                            if ((result = getNextToken(&data->Token)) != 0) return result;
-                            if (data->Token.type == TYPE_IDENTIFIER || data->Token.type == TYPE_INT ||
-                                data->Token.type == TYPE_STRING || data->Token.type == TYPE_FLOAT) return result = ERROR_WRONG_NUMBER_OF_PARAMS;
-                            else return result = ERROR_PARSER;
-                        } */
                         else return result = ERROR_PARSER;
                     }
                 }
-                    //ked s funkciou narabam ako s premennou e.g. foo = 2;
+                //ked s funkciou narabam ako s premennou e.g. foo = 2;
                 else if (result == 2 && data->Token.type == TYPE_ASSIGN_VALUE) return ERROR_PROGRAM_SEMANTIC;
                 else return result; ///neprisla mi zatvorka
         }
-/*        else if(data->leftID->isDefined == false && data->leftID->isGlobal == false){
-            unsigned checkParamCount = data->leftID->paramCount;
-            if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
-            data->paramIndex = 0;
-            if ((result = params(data)) != 0) return result;
-
-            if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) {
-                generateCALL(data->leftID->identifier);
-                if (checkParamCount != data->leftID->paramCount) return ERROR_WRONG_NUMBER_OF_PARAMS;
-                data->leftID->previouslyCalled = true;
-                return result = statement_next(data);
-            }
-            else return result;
-        }*/
         else return ERROR_PROGRAM_SEMANTIC; //bol to identifier ale nic z tohto tu
     }
 
@@ -805,7 +753,6 @@ static int statement(ParserData *data)
         static int result;
         data->rightID = htabSearch(&data->globalT, "print");
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
-        //poslem do expr
 /*  *   *   *   *   *   *   *   *   posielam expression do Expr.c   *   *   *   *   *   *   *   *   */
 
         while (data->Token.type != TYPE_RIGHT_PAR) {
@@ -826,10 +773,7 @@ static int statement(ParserData *data)
 
             GENERATE(passParamsToFunction,data->Token, 1, data);
                     generateCALL("print");
-
-
-                    if ((result = getNextToken(&data->Token)) != 0) return result;
-
+            if ((result = getNextToken(&data->Token)) != 0) return result;
             if (data->Token.type == TYPE_RIGHT_PAR || data->Token.type == TYPE_COMMA) {
                 if (data->Token.type == TYPE_COMMA) {
                     GENERATE(addCode, "WRITE ");
@@ -839,7 +783,6 @@ static int statement(ParserData *data)
             }
 
             else return ERROR_PARSER;
-            //if (data->Token.type != TYPE_COMMA) return ERROR_PARSER;
         }
         GENERATE(addCode,"WRITE ");
         GENERATE(addCode,"string@");
@@ -957,14 +900,12 @@ static int statement(ParserData *data)
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
             if ((result = getNextToken(&data->Token)) != 0) return result;
 
-        //if (data->Token.type == TYPE_INT || data->Token.type == TYPE_FLOAT) return ERROR_ARTIHMETIC;
 
         if (data->Token.type == TYPE_IDENTIFIER) {
             if (((data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL))
             if (((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL))
                     return ERROR_PROGRAM_SEMANTIC;
             GENERATE(passParamsToFunction,data->Token, 1, data);
-            //if (data->rightID->type != DTYPE_STRING) return ERROR_ARTIHMETIC;
         }
         else if (data->Token.type == TYPE_STRING) {GENERATE(passParamsToFunction,data->Token, 1,data);}
         else if (data->Token.attribute.keyword == KEYWORD_NONE && data->Token.type == TYPE_KEYWORD){
@@ -974,7 +915,6 @@ static int statement(ParserData *data)
 
         if (data->leftID != NULL) {
             data->leftID->type = DTYPE_INT;
-          //  data->leftID = NULL;
         }
         generateCALL("len");
         if (data->leftID != NULL) {
@@ -999,7 +939,6 @@ static int statement(ParserData *data)
         static int result;
         data->rightID = htabSearch(&data->globalT, "substr");
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
-        //zavolam expr
         GENERATE(createFrameForParams);
             int i = 0;
             while (i < 3) {
@@ -1018,8 +957,6 @@ static int statement(ParserData *data)
                                 if (((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==
                                  NULL))
                                     return ERROR_PROGRAM_SEMANTIC;
-
-                            //if (data->rightID->type != DTYPE_STRING) return ERROR_ARTIHMETIC;
                             i++;
                             GENERATE(passParamsToFunction,data->Token, 1,data);
                             if ((result = checkTokenType(&data->Token, TYPE_COMMA)) != 0) return result;
@@ -1075,7 +1012,6 @@ static int statement(ParserData *data)
             }
         if (data->leftID != NULL) {
             data->leftID->type = DTYPE_STRING;
-         //   data->leftID = NULL;
         }
         generateCALL("substr");
         if (data->leftID != NULL) {
@@ -1107,9 +1043,6 @@ static int statement(ParserData *data)
         if ((result = checkTokenType(&data->Token, TYPE_LEFT_PAR)) != 0) return result;
         //zavolam expr
         if ((result = getNextToken(&data->Token)) != 0) return result;
-
-        //if (data->Token.type == TYPE_STRING || data->Token.type == TYPE_FLOAT) return ERROR_ARTIHMETIC;
-
         if (data->Token.type == TYPE_IDENTIFIER) {
             if (((data->rightID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL))
                 if (((data->rightID = htabSearch(&data->globalT, data->Token.attribute.string->str)) == NULL))
@@ -1126,7 +1059,6 @@ static int statement(ParserData *data)
 
         if (data->leftID != NULL) {
             data->leftID->type = DTYPE_STRING;
-         //   data->leftID = NULL;
         }
         generateCALL("chr");
         if (data->leftID != NULL) {
@@ -1209,7 +1141,6 @@ static int statement(ParserData *data)
         }
         if (data->leftID != NULL) {
             data->leftID->type = DTYPE_STRING;
-         //   data->leftID = NULL;
         }
         generateCALL("ord");
         if (data->leftID != NULL) {
@@ -1234,10 +1165,10 @@ static int statement(ParserData *data)
 /*	*   overujem ci nahodou nenastala situacia s komentom alebo je tam len prosté EOL   *   */
     else if ((result = isComment(data)) == 0) return statement_next(data);
 /*  *   *  koniec zacyklenia <statement> a <statement_next> -> vrati sa do <prog>   *   *   */
-    else if(data->Token.type == TYPE_EOF || data->Token.type == TYPE_DEDENT)    ///latest change BE AWARE                                   ///latest change BE AWARE
-        return result = SYNTAX_OK;                                             ///latest change BE AWARE
-    else if (data->Token.attribute.keyword == KEYWORD_DEF)                  ///latest change BE AWARE
-        return result = prog(data);                                        ///latest change BE AWARE                                       ///latest change BE AWARE
+    else if(data->Token.type == TYPE_EOF || data->Token.type == TYPE_DEDENT)
+        return result = SYNTAX_OK;
+    else if (data->Token.attribute.keyword == KEYWORD_DEF)
+        return result = prog(data);
     else return result;
 
     return result;
@@ -1258,11 +1189,10 @@ static int statement_next(ParserData *data)
     }
 /*  *   *   *   *   *   *   *    25.  <statement_next>  ->  ε   *   *   *   *   *   *   *   */
 /*  *   *  koniec zacyklenia <statement> a <statement_next> -> vrati sa do <prog>   *   *   */
-    else if(data->Token.type == TYPE_EOF || data->Token.type == TYPE_DEDENT)  ///latest change BE AWARE                        ///latest change BE AWARE
-        return result = SYNTAX_OK;                                           ///latest change BE AWARE
-    else if (data->Token.attribute.keyword == KEYWORD_DEF)                  ///latest change BE AWARE
-    	return result = prog(data);                                        ///latest change BE AWARE
-    //BE AWARE OF THIS, COULD BE SHIT
+    else if(data->Token.type == TYPE_EOF || data->Token.type == TYPE_DEDENT)
+        return result = SYNTAX_OK;
+    else if (data->Token.attribute.keyword == KEYWORD_DEF)
+    	return result = prog(data);
     else if (data->Token.type == TYPE_KEYWORD || data->Token.type == TYPE_IDENTIFIER) return result = statement(data);
     else if ((result = checkTokenType(&data->Token, TYPE_EOL)) == 0) return result = statement(data);
     else return result;
@@ -1281,16 +1211,14 @@ int variablesInit(ParserData *data)
 	data->leftID = NULL;
 	data->rightID = NULL;
 
-
 	data->paramIndex = 0;
 	data->uniqLabel = 0;
-	data->deepLabel = 0;
 
+    data->was_return = 0;
 	data->in_function = 0;
 	data->in_declaration = 0;
 	data->in_if = 0;
 	data->in_while = 0;
-	//data->not_declared_function = 0;
 
 	/*
 	*	inicializacia 
@@ -1300,7 +1228,7 @@ int variablesInit(ParserData *data)
 	bool errIntern;
 	Data* id;
 
-	// Len(s) returns int
+	// Len(s)
 	id = htabAddSymbol(&data->globalT, "len", &errIntern);
 	if (errIntern) 
 		return ERROR_INTERN;
@@ -1310,7 +1238,7 @@ int variablesInit(ParserData *data)
 	if (!htabAddParam(id, DTYPE_STRING)) 
 		return ERROR_INTERN;
 
-	// SubStr(s =string, i =Integer, n =Integer) returns String
+	// SubStr(s =string, i =Integer, n =Integer)
 	id = htabAddSymbol(&data->globalT, "substr", &errIntern);
 	if (errIntern) 
 		return ERROR_INTERN;
@@ -1324,7 +1252,7 @@ int variablesInit(ParserData *data)
 	if (!htabAddParam(id, DTYPE_INT)) 
 		return ERROR_INTERN;
 
-	// Ord(s =String, i =Integer) returns Integer
+	// Ord(s =String, i =Integer)
 	id = htabAddSymbol(&data->globalT, "ord", &errIntern);
 	if (errIntern) 
 		return ERROR_INTERN;
@@ -1362,9 +1290,12 @@ int variablesInit(ParserData *data)
     id->isDefined = true;
     id->type = DTYPE_STRING;
 
-    // Ord(s =String, i =Integer) returns Integer
-    id = htabAddSymbol(&data->globalT, "print", &errIntern);
+    // Chr(i =integer) returns String
+    id = htabAddSymbol(&data->globalT, "chr", &errIntern);
     if (errIntern) return ERROR_INTERN;
+    id->isDefined = true;
+    id->type = DTYPE_STRING;
+    if (!htabAddParam(id, DTYPE_INT)) return ERROR_INTERN;
 
 	// Global variable %return for storing result of expression.
 	id = htabAddSymbol(&data->globalT, "%return", &errIntern);
@@ -1388,8 +1319,6 @@ void variablesFree(ParserData *data)
 
 int parse()
 {
-
-	//subor sa otvara v maine
 	int result = 0;
 
 	string parserStr;
@@ -1403,26 +1332,19 @@ int parse()
 		stringStrFree(&parserStr);
 		return ERROR_INTERN;
 	}
+    if (!generateCode())
+    {
+        stringStrFree(&parserStr);
+        variablesFree(&data);
+        return ERROR_INTERN;
+    }
+    generateMain();
+    data.Token.attribute.keyword = KEYWORD_PASS;
+    result = prog(&data);
+    generateMainEnd();
 
-	//if ((result = getNextToken(&data.Token)) == TOKEN_OK) ->tohle uz nedelaaam
-
-	{
-
-		//nemame nic z generatoru zatial
-		if (!generateCode())
-		{
-			stringStrFree(&parserStr);
-			variablesFree(&data);
-			return ERROR_INTERN;
-		}
-        generateMain();
-		data.Token.attribute.keyword = KEYWORD_PASS;
-		result = prog(&data);
-		generateMainEnd();
-	}
 	stringStrFree(&parserStr);
 	variablesFree(&data);
 
 	return result;
 }
-

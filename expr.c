@@ -482,9 +482,21 @@ static int prec_rule_semantics (Prec_rules rule, s_item* item1, s_item* item2, s
             *final = DTYPE_BOOL;
         } else if (item3->data_type == DTYPE_STRING && item1->isNone){
             *final = DTYPE_BOOL;
-        } else if (item3->data_type == DTYPE_INT && item3->isNone){
+        } else if (item3->data_type == DTYPE_INT && item1->isNone){
             *final = DTYPE_BOOL;
-        } else if (item3->data_type == DTYPE_DOUBLE && item3->isNone){
+        } else if (item3->data_type == DTYPE_DOUBLE && item1->isNone){
+            *final = DTYPE_BOOL;
+        } else if(item1->data_type == DTYPE_UNDEFINED && item3->data_type == DTYPE_STRING) {
+            *final = DTYPE_BOOL;
+        } else if (item1->data_type == DTYPE_STRING && item3->data_type == DTYPE_UNDEFINED){
+            *final = DTYPE_BOOL;
+        } else if (item1->data_type == DTYPE_INT && item3->data_type == DTYPE_UNDEFINED){
+            *final = DTYPE_BOOL;
+        } else if (item1->data_type == DTYPE_UNDEFINED && item3->data_type == DTYPE_INT){
+            *final = DTYPE_BOOL;
+        } else if (item3->data_type == DTYPE_DOUBLE && item1->data_type == DTYPE_UNDEFINED){
+            *final = DTYPE_BOOL;
+        } else if (item3->data_type == DTYPE_UNDEFINED && item1->data_type == DTYPE_DOUBLE) {
             *final = DTYPE_BOOL;
         }
 
@@ -649,12 +661,6 @@ static int justTrying(ParserData *data){
                 return justTrying(data);
             } else if (data->Token.type == TYPE_RIGHT_PAR){
                 if (counter == data->paramIndex){
-                    //TU TREBA GENEROVAT CALL FUNKCIE JE TO TU DOCASNE
-                    /*
-                    addCode("JUMP $");
-                    addCode(data->currentID->identifier);
-                    addCode("\n");
-                     */
                     char *frame;
                     if (data->leftID) {
                         frame = "LF";
@@ -679,6 +685,8 @@ static int justTrying(ParserData *data){
 int expression(ParserData *data)
 {
     //Pocitadlo compare operatorov
+    if ((data->Token.attribute.keyword == KEYWORD_IF || data->Token.attribute.keyword == KEYWORD_WHILE)
+        && data->Token.type == TYPE_COLON) return ERROR_PARSER;
     compareCount = 0;
     //alokacia pamate pre stack, pri nepodarenej alokacii vracia error
     symStack = (sstack *) malloc(MAX_STACK_SIZE * sizeof(sstack));
@@ -773,10 +781,18 @@ int expression(ParserData *data)
                         } 
                         end = true;
                     } else {
+                        if ((data->currentID = htabSearch(&data->localT, data->Token.attribute.string->str)) == NULL){
+                            if ((data->currentID = htabSearch(&data->globalT, data->Token.attribute.string->str)) ==
+                                NULL) {
+                                //if (data->Token.type == TYPE_LEFT_PAR && symStack->top->symbol == ID_SYM) return ERROR_PARSER;
+                                symbol_free(symStack);
+                                return ERROR_PROGRAM_SEMANTIC;
+                            }
+                        }
                         symbol_free(symStack);
-                        return ERROR_PROGRAM_SEMANTIC;
+                        return ERROR_PARSER;
                     }
-         }
+             }
     } while (!end);
 
     s_item *finite = symbol_top(symStack);

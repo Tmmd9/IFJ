@@ -40,7 +40,7 @@ typedef struct {
     bool isDefined;     //bool ci bola funkcia definovana
     bool isGlobal;      //bool na globalne premenne
     unsigned paramCount;
-    bool previouslyCalled;  //pripad kedy je volana pred definovanim
+    unsigned previouslyCalled;  //pripad kedy je volana pred definovanim
 } Data;
 
 typedef struct item {

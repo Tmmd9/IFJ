@@ -13,14 +13,14 @@
 #ifndef _PARSER_H
 #define _PARSER_H
 
-#include "scanner.h" //ziskavanie tokenov
-#include "stack.h" //indent/dedent + neviem co vsetko
+#include "scanner.h"
+#include "stack.h"
 #include "error.h"
-#include "symtable.h"	//tabulka symbolov
+#include "symtable.h"
 #include <stdbool.h>
 
 
-/* 	pre pomocnu funkciu addToHash	*/
+/* 	pre pomocnu funkciu addToHash udáva position */
 #define LEFT 0
 #define CURRENT 1
 #define RIGHT 2
@@ -39,11 +39,9 @@ typedef struct {
     // ked checkujem parametre, tak index toho ktory momentalne spracovavam
 	unsigned paramIndex;
 	int uniqLabel;			//pre asembly napr. pre rozlisenie while1, while2 a tak :)
-	int deepLabel;			//zanorenie
 
     unsigned in_declaration;        //bool ci sa momentalne nachadzam v deklaracii funkcie
-    //unsigned not_declared_function; //bool ci sa nachadzam este v nedeklarovanej funkci bullshit
-    bool was_return;
+    unsigned was_return;
     unsigned in_function;
     unsigned in_if;
     unsigned in_while;

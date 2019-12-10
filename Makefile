@@ -1,3 +1,16 @@
+#                                                                   \
+ 	Predmet : Formální jazyky a překladače                          \
+ 	Projekt : Implementace překladače imperativního jazyka IFJ19    \
+ 	Súbor	: Makefile                                              \
+ 				-makefile pre zostavenie projektu IFJ19             \
+	Tím		: číslo 10 / varianta II                                \
+ 	Autori	: Dominik Boboš (xbobos00)                              \
+ 			  Peter Hudeček (xhudec34)                              \
+ 			  Timotej Kováčik (xkovac49)                            \
+ 			  Dávid Oravec (xorave05)                               \
+
+
+
 CC=gcc
 CFLAGS= -std=c99 -pedantic -Wall -Wextra -g
 
@@ -35,6 +48,9 @@ symtable.o: symtable.c symtable.h str.h
 
 IFJ19: expr.o generator.o main.o parser.o scanner.o stack.o str.o symstack.o symtable.o
 	$(CC) $(CFLAGS) expr.o generator.o main.o parser.o scanner.o stack.o str.o symstack.o symtable.o -o $@
+
+pack:
+    zip xbobos00.zip *.c *.h Makefile *.md
 
 clean:
 	rm -f *.o

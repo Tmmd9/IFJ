@@ -63,7 +63,7 @@ bool createFrameForParams();
 bool generateTerm(token Token, ParserData *data);
 bool passParamsToFunction(token Token, int i, ParserData *data);
 bool convertPassedParams(DataType wrong, DataType converted, int index);
-bool genFunctionRetValue(char *leftID, char *frame); //DataType leftT, DataType retT,);
+bool genFunctionRetValue(char *leftID, char *frame);
 
 
 #define PRINT                                                                 \
@@ -107,13 +107,11 @@ bool genFunctionRetValue(char *leftID, char *frame); //DataType leftT, DataType 
         "RETURN \n"                                                           \
 
 
-        //        "MOVE GF@$retval int@return \n
-
 #define SUBSTR                                                                \
         "LABEL $substr \n"                                                    \
         "PUSHFRAME \n"                                                        \
         "DEFVAR LF@%return \n"                                                \
-        "MOVE LF@%return string@ \n"                                      \
+        "MOVE LF@%return string@ \n"                                          \
         "DEFVAR LF@%length \n"                                                \
         "CREATEFRAME \n"                                                      \
         "DEFVAR TF@%1 \n"                                                     \
@@ -131,11 +129,11 @@ bool genFunctionRetValue(char *leftID, char *frame); //DataType leftT, DataType 
         "JUMPIFEQ $substr$ret LF@%help bool@true \n"                          \
         "EQ LF@%help LF@%length int@0 \n"                                     \
         "JUMPIFEQ $substr$ret LF@%help bool@true \n"                          \
-        "EQ LF@%help LF@%3 int@0 \n"                                     \
+        "EQ LF@%help LF@%3 int@0 \n"                                          \
         "JUMPIFEQ $substr$ret LF@%help bool@true \n"                          \
         "DEFVAR LF@%len_i \n"                                                 \
         "MOVE LF@%len_i LF@%length \n"                                        \
-        "SUB LF@%len_i LF@%len_i LF@%2 \n"                                   \
+        "SUB LF@%len_i LF@%len_i LF@%2 \n"                                    \
         "ADD LF@%len_i LF@%len_i int@1 \n"                                    \
         "GT LF@%help LF@%3 LF@%len_i \n"                                      \
         "JUMPIFEQ $edit LF@%help bool@true \n"                                \
@@ -168,7 +166,7 @@ bool genFunctionRetValue(char *leftID, char *frame); //DataType leftT, DataType 
         "MOVE LF@%return int@0 \n"                                            \
         "DEFVAR LF@%help \n"                                                  \
         "LT LF@%help LF@%2 int@1 \n"                                          \
-        "JUMPIFEQ $ord$ret LF@%help bool@true \n"                              \
+        "JUMPIFEQ $ord$ret LF@%help bool@true \n"                             \
         "DEFVAR LF@%length \n"                                                \
         "CREATEFRAME \n"                                                      \
         "DEFVAR TF@%1 \n"                                                     \
@@ -178,7 +176,7 @@ bool genFunctionRetValue(char *leftID, char *frame); //DataType leftT, DataType 
         "LT LF@%help LF@%length LF@%2 \n"                                     \
         "JUMPIFEQ $ord$ret LF@%help bool@true \n"                             \
         "SUB LF@%2 LF@%2 int@1 \n"                                            \
-        "STRI2INT LF@%return LF@%1 LF@%2 \n"                                   \
+        "STRI2INT LF@%return LF@%1 LF@%2 \n"                                  \
         "LABEL $ord$ret \n"                                                   \
         "POPFRAME \n"                                                         \
         "RETURN \n"                                                           \

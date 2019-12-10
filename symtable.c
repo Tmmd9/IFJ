@@ -52,8 +52,8 @@ Data *htabAddSymbol(htab *table, const char *key, bool *allocErr){
         if(!strcmp(tmp->key, key)){
             return NULL;
         }
-        tmp = tmp->next;
         last = tmp;
+        tmp = tmp->next;
     }
     //alokacia pamate na novu polozku v tabulke
     htabItem *newItem = (htabItem *) malloc(sizeof(htabItem));
@@ -106,7 +106,7 @@ bool htabAddParam(Data *data, unsigned int DataType){
             return false;
         }
     } else if (DataType == DTYPE_DOUBLE){
-        if (stringAddChar(data->param,'d')) {
+        if (stringAddChar(data->param,'f')) {
             return false;
         }
     } else if (DataType == DTYPE_STRING) {
